@@ -1,0 +1,74 @@
+{
+  "name": "Finclass",
+  "platform": "Salesforce Marketing Cloud (SFMC)",
+  "colors": {
+    "primary": "#00e7f9",
+    "secondary": "#0a0e27",
+    "background": "#FFFFFF",
+    "card_bg": "#FFFFFF",
+    "text": "#000000",
+    "text_light": "#555555",
+    "text_on_dark": "#D5D5D5",
+    "cta_bg": "#00e7f9",
+    "cta_text": "#000000",
+    "footer_bg": "#FFFFFF",
+    "footer_text": "#4c4c4c",
+    "footer_links": "#cacaca",
+    "footer_accent": "#9ba7e0",
+    "footer_border": "#9ba7e0",
+    "divider": "#9ba7e0",
+    "hr_header": "#01bbe9"
+  },
+  "fonts": {
+    "heading": "Arial, Helvetica, sans-serif",
+    "body": "Arial, Helvetica, sans-serif"
+  },
+  "sizes": {
+    "h1": "28px",
+    "h2": "22px",
+    "h3": "18px",
+    "body": "16px",
+    "small": "13px",
+    "footer": "12px"
+  },
+  "logo": {
+    "url": "https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png",
+    "alt": "Finclass",
+    "width": 180
+  },
+  "footer": {
+    "company": "Finclass",
+    "address_sfmc": "%%Member_Busname%% %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%",
+    "unsubscribe_url_sfmc": "%%=CloudPagesURL(35, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%",
+    "profile_center_url_sfmc": "%%profile_center_url%%",
+    "terms_url": "",
+    "privacy_url": "",
+    "social": {
+      "instagram": {
+        "url": "https://www.instagram.com/finclass_grupoprimo/",
+        "icon": "https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/a3e829ef-bf3f-4862-b6e4-0241fe9aa5e0.png"
+      },
+      "youtube": {
+        "url": "https://www.youtube.com/@Finclass",
+        "icon": "https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/b5c20e96-3fba-4250-a410-91c7f3b85553.png"
+      },
+      "linkedin": {
+        "url": "https://www.linkedin.com/company/finclass/",
+        "icon": "https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/721e1e52-8ba6-4ab1-93c5-2081c39f1e97.png"
+      },
+      "tiktok": {
+        "url": "https://www.tiktok.com/@finclass_br",
+        "icon": "https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/dfc57152-cb95-4e55-b0dd-5536373b373f.png"
+      }
+    }
+  },
+  "sfmc": {
+    "preheader_ampscript": "%%=AttributeValue(\"_Preheader\")=%%",
+    "view_email_url": "%%view_email_url%%",
+    "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
+    "user_match": "<custom name=\"usermatch\" type=\"tracking\"/>",
+    "category_id": 320763,
+    "category_path": "Content Builder/Email/Claude Code"
+  },
+  "tone": "Premium, educativo, aspiracional. Linguagem sofisticada e acessivel sobre investimentos e educacao financeira. Voltado para quem busca aprender com os melhores do mercado."
+}

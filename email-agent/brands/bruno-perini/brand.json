@@ -1,0 +1,71 @@
+{
+  "name": "Bruno Perini",
+  "platform": "Salesforce Marketing Cloud (SFMC)",
+  "colors": {
+    "primary": "#b2ec05",
+    "secondary": "#0f1014",
+    "background": "#FFFFFF",
+    "card_bg": "#FFFFFF",
+    "text": "#000000",
+    "text_light": "#555555",
+    "text_on_dark": "#D5D5D5",
+    "cta_bg": "#b2ec05",
+    "cta_text": "#000000",
+    "footer_bg": "#0f1014",
+    "footer_text": "#818181",
+    "footer_links": "#D5D5D5",
+    "footer_accent": "#9dcc0a",
+    "footer_border": "#9dcc0a",
+    "divider": "#E5E7EB"
+  },
+  "fonts": {
+    "heading": "Arial, Helvetica, sans-serif",
+    "body": "Arial, Helvetica, sans-serif"
+  },
+  "sizes": {
+    "h1": "28px",
+    "h2": "22px",
+    "h3": "18px",
+    "body": "15px",
+    "small": "13px",
+    "footer": "12px"
+  },
+  "logo": {
+    "url": "https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/813699e2-15be-49d3-943e-705a97294c2c.png",
+    "alt": "Bruno Perini",
+    "width": 150
+  },
+  "footer": {
+    "company": "Bruno Perini",
+    "address_sfmc": "%%Member_Busname%% %%Member_Addr%%, %%Member_City%%, %%Member_State%%, %%Member_PostalCode%% %%Member_Country%%",
+    "unsubscribe_url_sfmc": "%%=CloudPagesURL(905, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%",
+    "privacy_url": "https://sp.cursoviverderenda.com/paradigma/privacy.html",
+    "viver_de_renda_url": "https://sp.cursoviverderenda.com/",
+    "social": {
+      "instagram": {
+        "url": "https://www.instagram.com/bruno_perini/",
+        "icon": "https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/a7134293-755e-4dcd-b2dd-19273f863232.png"
+      },
+      "twitter": {
+        "url": "https://twitter.com/perinibruno",
+        "icon": "https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/648b810f-2754-483f-a14e-073c1973773f.png"
+      },
+      "youtube": {
+        "url": "https://www.youtube.com/channel/UCCE-jo1GvBJqyj1b287h7jA",
+        "icon": "https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/b5d47e22-8f9b-4ba7-b608-586ccca413e5.png"
+      },
+      "site": {
+        "url": "https://sp.cursoviverderenda.com/",
+        "icon": "https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/4f774713-1485-4e1c-bde5-97233051fe52.png"
+      }
+    }
+  },
+  "sfmc": {
+    "preheader_ampscript": "%%=AttributeValue(\"_Preheader\")=%%",
+    "view_email_url": "%%view_email_url%%",
+    "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
+    "category_id": 320764,
+    "category_path": "Content Builder/Claude Code"
+  },
+  "tone": "Neutro, objetivo, educativo. Linguagem clara e direta sobre investimentos e educacao financeira."
+}

@@ -1,0 +1,66 @@
+{
+  "name": "Thiago Nigro",
+  "platform": "Salesforce Marketing Cloud (SFMC)",
+  "colors": {
+    "primary": "#ff4900",
+    "secondary": "#ff9500",
+    "background": "#FFFFFF",
+    "card_bg": "#FFFFFF",
+    "text": "#000000",
+    "text_light": "#555555",
+    "text_on_dark": "#D5D5D5",
+    "cta_bg": "#ff4900",
+    "cta_text": "#FFFFFF",
+    "footer_bg": "#ebebeb",
+    "footer_social_bg": "#FFFFFF",
+    "footer_social_border": "#ff9500",
+    "footer_text": "#808080",
+    "footer_links": "#808080",
+    "divider": "#E5E7EB"
+  },
+  "fonts": {
+    "heading": "Arial, Helvetica, sans-serif",
+    "body": "Arial, Helvetica, sans-serif"
+  },
+  "sizes": {
+    "h1": "28px",
+    "h2": "22px",
+    "h3": "18px",
+    "body": "16px",
+    "small": "13px",
+    "footer": "12px"
+  },
+  "logo": {
+    "url": "https://image.mail.oprimorico.com.br/lib/fe3011717d64047b771776/m/1/9475f340-442b-4e35-9f2b-17fa10f7d0e4.png",
+    "alt": "O Primo Rico",
+    "width": 180
+  },
+  "footer": {
+    "company": "Thiago Nigro",
+    "address_sfmc": "%%Member_Busname%% %%Member_Addr%%, %%Member_City%%, %%Member_State%%, %%Member_PostalCode%% %%Member_Country%%",
+    "unsubscribe_url_sfmc": "%%=RedirectTo(CloudPagesURL(135, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_))=%%",
+    "privacy_url": "https://sp.oprimorico.com.br/privacy.html",
+    "social": {
+      "instagram": {
+        "url": "https://www.instagram.com/thiago.nigro/",
+        "icon": "https://image.mail.oprimorico.com.br/lib/fe3011717d64047b771776/m/1/90a8eec3-ff07-4e0c-9b49-716cdf4c570e.png"
+      },
+      "youtube": {
+        "url": "https://www.youtube.com/@OPrimoRico",
+        "icon": "https://image.mail.oprimorico.com.br/lib/fe3011717d64047b771776/m/1/a359d9da-f002-4536-9258-2c0d6c53fae5.png"
+      },
+      "facebook": {
+        "url": "https://www.facebook.com/oprimorico",
+        "icon": "https://image.mail.oprimorico.com.br/lib/fe3011717d64047b771776/m/1/be2be1c3-9ee8-42d4-9374-23d9ba5d0298.png"
+      }
+    }
+  },
+  "sfmc": {
+    "preheader_ampscript": "%%=AttributeValue(\"_Preheader\")=%%",
+    "view_email_url": "%%view_email_url%%",
+    "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
+    "category_id": 320765,
+    "category_path": "Content Builder/Claude Code"
+  },
+  "tone": "Energico, motivacional, direto. Linguagem acessivel e provocativa sobre investimentos, empreendedorismo e mentalidade financeira. Fala de igual para igual com o leitor."
+}

@@ -1,0 +1,71 @@
+{
+  "name": "Faculdade Hub",
+  "platform": "Salesforce Marketing Cloud (SFMC)",
+  "colors": {
+    "primary": "#000000",
+    "secondary": "#FFFFFF",
+    "background": "#FFFFFF",
+    "card_bg": "#FFFFFF",
+    "text": "#000000",
+    "text_light": "#555555",
+    "text_on_dark": "#D5D5D5",
+    "cta_bg": "#000000",
+    "cta_text": "#FFFFFF",
+    "footer_bg": "#0f1014",
+    "footer_text": "#818181",
+    "footer_links": "#D5D5D5",
+    "footer_accent": "#dfe1d9",
+    "footer_border": "#dfe1d9",
+    "divider": "#E5E7EB"
+  },
+  "fonts": {
+    "heading": "Arial, Helvetica, sans-serif",
+    "body": "Arial, Helvetica, sans-serif"
+  },
+  "sizes": {
+    "h1": "28px",
+    "h2": "22px",
+    "h3": "18px",
+    "body": "16px",
+    "small": "13px",
+    "footer": "12px"
+  },
+  "logo": {
+    "url": "https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/4127a0f5-8fef-456f-b13e-760099d30ccc.png",
+    "alt": "Faculdade Hub",
+    "width": 150,
+    "requires_dark_bg": true,
+    "header_bg": "#0f1014",
+    "_nota": "Logo é branca — NUNCA colocar sobre fundo branco. Sempre usar fundo escuro no header."
+  },
+  "footer": {
+    "company": "Faculdade Hub",
+    "address_sfmc": "%%Member_Busname%% %%Member_Addr%%, %%Member_City%%, %%Member_State%%, %%Member_PostalCode%% %%Member_Country%%",
+    "unsubscribe_url_sfmc": "%%=CloudPagesURL(31, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%",
+    "profile_center_url_sfmc": "%%profile_center_url%%",
+    "privacy_url": "https://sp.oprimorico.com.br/privacy.html",
+    "site_url": "https://faculdadehub.com.br/",
+    "social": {
+      "linkedin": {
+        "url": "https://www.linkedin.com/school/faculdadehub/",
+        "icon": "https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/8757d30d-95e7-4e18-90f7-3aa6a291f8c7.png"
+      },
+      "instagram": {
+        "url": "https://www.instagram.com/faculdadehub/",
+        "icon": "https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/840a5d53-33a4-4ae3-aab3-340e416a7c4a.png"
+      },
+      "site": {
+        "url": "https://faculdadehub.com.br/",
+        "icon": "https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/f69c22d4-6a07-4a10-a925-ee0eb71f89e4.png"
+      }
+    }
+  },
+  "sfmc": {
+    "preheader_ampscript": "%%=AttributeValue(\"_Preheader\")=%%",
+    "view_email_url": "%%view_email_url%%",
+    "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
+    "category_id": 320766,
+    "category_path": "Content Builder/Claude Code"
+  },
+  "tone": "Profissional, confiavel, academico. Linguagem clara e objetiva sobre educacao superior, MBA e desenvolvimento de carreira."
+}

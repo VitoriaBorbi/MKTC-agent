@@ -1,0 +1,16 @@
+# Output gerado
+output/*.html
+
+# macOS
+.DS_Store
+
+# Arquivos temporários de conversão
+inbox/*.html
+inbox/*.txt
+*.tmp
+
+# Imagens já processadas
+docs/img/uploaded/
+
+# Credenciais
+.env
