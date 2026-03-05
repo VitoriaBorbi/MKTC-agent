@@ -53,7 +53,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     'campaign_linked', 'is_recurrent', 'impact_type', 'type',
   ]
   // Campos extras permitidos para squad (com token)
-  const SQUAD_FIELDS = [...STAKEHOLDER_FIELDS, 'status', 'assigned_to', 'assignee_name', 'priority_score', 'priority_label']
+  const SQUAD_FIELDS = [...STAKEHOLDER_FIELDS, 'status', 'assigned_to', 'assignee_name', 'priority_score', 'priority_label', 'internal_notes']
 
   const isSquad =
     !!process.env.OPS_INTERNAL_TOKEN &&

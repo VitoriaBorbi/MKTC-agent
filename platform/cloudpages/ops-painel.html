@@ -169,6 +169,10 @@
           <option value="outros">Outros</option>
         </select>
         <div class="flex-1"></div>
+        <button class="btn btn-primary text-xs gap-1.5" @click="openAddModal()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Nova task
+        </button>
         <button class="btn btn-ghost text-xs gap-1.5" @click="showArchived = !showArchived"
           :class="showArchived ? 'text-zinc-300' : 'text-zinc-600'">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
@@ -464,6 +468,24 @@
         </div>
       </div>
 
+      <!-- Notas internas -->
+      <div class="rounded-lg bg-zinc-900 p-3 mb-5">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs font-medium text-zinc-400">Notas internas</p>
+          <div class="flex items-center gap-2">
+            <span x-show="notesSaved" class="text-xs text-green-400 transition-opacity">Salvo ✓</span>
+            <button class="btn text-xs py-1 px-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+              :disabled="notesSaving" @click="saveNotes()"
+              x-text="notesSaving ? 'Salvando...' : 'Salvar'">
+            </button>
+          </div>
+        </div>
+        <textarea class="input w-full text-xs" rows="4" x-model="notesValue"
+          placeholder="Anotações visíveis apenas para a squad — contexto, próximos passos, blockers..."
+          @keydown.ctrl.enter.prevent="saveNotes()"></textarea>
+        <p class="text-xs text-zinc-700 mt-1">Ctrl+Enter para salvar</p>
+      </div>
+
       <!-- Detalhes -->
       <div class="space-y-4 text-sm">
         <div x-show="selectedTask.description">
@@ -533,6 +555,78 @@
 <!-- Overlay drawer -->
 <div x-show="selectedTask" class="fixed inset-0 z-40 bg-black/20" @click="selectedTask=null" style="display:none"></div>
 
+<!-- MODAL: nova task (squad) -->
+<div x-show="addModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+  <div class="absolute inset-0 bg-black/50" @click="addModal=false"></div>
+  <div class="card p-6 w-full max-w-md relative z-10">
+    <h3 class="font-semibold mb-4">Nova task</h3>
+
+    <div x-show="addErrors.general" class="bg-red-950 border border-red-800 text-red-400 text-xs rounded-lg p-2 mb-3" x-text="addErrors.general"></div>
+
+    <div class="space-y-3">
+      <div class="field">
+        <label>Título *</label>
+        <input class="input" type="text" x-model="addForm.title" :class="addErrors.title ? 'input-err' : ''" placeholder="Ex: Email Black Friday — Finclass" @keydown.enter="submitAddTask()">
+        <span class="err-msg" x-show="addErrors.title" x-text="addErrors.title"></span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="field">
+          <label>Tipo *</label>
+          <select class="input" x-model="addForm.type" :class="addErrors.type ? 'input-err' : ''">
+            <option value="">Selecione</option>
+            <option value="email">Email</option>
+            <option value="mensagem-wpp">WPP</option>
+            <option value="sms">SMS</option>
+            <option value="outros">Outros</option>
+          </select>
+          <span class="err-msg" x-show="addErrors.type" x-text="addErrors.type"></span>
+        </div>
+        <div class="field">
+          <label>BU *</label>
+          <select class="input" x-model="addForm.bu" :class="addErrors.bu ? 'input-err' : ''">
+            <option value="">Selecione</option>
+            <option>Finclass</option>
+            <option>Bruno Perini</option>
+            <option>Faculdade Hub</option>
+            <option>Thiago Nigro</option>
+            <option>Portfel</option>
+            <option>Grão</option>
+          </select>
+          <span class="err-msg" x-show="addErrors.bu" x-text="addErrors.bu"></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="field">
+          <label>Prazo</label>
+          <input class="input" type="date" x-model="addForm.requested_deadline">
+        </div>
+        <div class="field">
+          <label>Impacto</label>
+          <select class="input" x-model="addForm.impact_type">
+            <option value="">Nenhum</option>
+            <option value="vendas">Vendas</option>
+            <option value="captacao">Captação</option>
+            <option value="fup">FUP</option>
+            <option value="operacional">Operacional</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descrição / contexto</label>
+        <textarea class="input" rows="3" x-model="addForm.description" placeholder="Briefing, referências, o que precisa ser feito..."></textarea>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mt-5">
+      <button class="btn btn-outline flex-1" @click="addModal=false">Cancelar</button>
+      <button class="btn btn-primary flex-1" :disabled="addLoading" @click="submitAddTask()" x-text="addLoading ? 'Criando...' : 'Criar task'"></button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: parar timer -->
 <div x-show="stopModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
   <div class="absolute inset-0 bg-black/50" @click="stopModal=false"></div>
@@ -596,6 +690,17 @@ function opsPanel() {
     // Drag & drop
     draggedTask: null,
     dragOverCol: null,
+
+    // Nova task (squad)
+    addModal: false,
+    addForm: { title: '', type: '', bu: '', description: '', requested_deadline: '', impact_type: '' },
+    addErrors: {},
+    addLoading: false,
+
+    // Notas internas (por task)
+    notesValue: '',
+    notesSaving: false,
+    notesSaved: false,
 
     // Kanban columns
     kanbanCols: [
@@ -691,13 +796,17 @@ function opsPanel() {
       this.selectedTask = task
       this.drawerStatus = task.status
       this.drawerAssignee = task.assignee_name || ''
+      this.notesValue = task.internal_notes || ''
       // Busca detalhes completos com anexos
       try {
         const res = await fetch(`${API}/api/ops/tasks/${task.id}`, {
           headers: { 'Authorization': `Bearer ${this.session.token}` },
         })
         const data = await res.json()
-        if (data.task) { this.selectedTask = data.task }
+        if (data.task) {
+          this.selectedTask = data.task
+          this.notesValue = data.task.internal_notes || ''
+        }
       } catch {}
     },
 
@@ -842,6 +951,68 @@ function opsPanel() {
       const entries = Object.entries(obj)
       if (!entries.length) return '—'
       return entries.sort((a, b) => b[1] - a[1])[0][0]
+    },
+
+    // ─── Nova task ───
+    openAddModal() {
+      this.addForm = { title: '', type: '', bu: '', description: '', requested_deadline: '', impact_type: '' }
+      this.addErrors = {}
+      this.addModal = true
+    },
+
+    async submitAddTask() {
+      this.addErrors = {}
+      if (!this.addForm.title.trim()) { this.addErrors.title = 'Obrigatório'; return }
+      if (!this.addForm.type)         { this.addErrors.type  = 'Obrigatório'; return }
+      if (!this.addForm.bu)           { this.addErrors.bu    = 'Obrigatório'; return }
+
+      this.addLoading = true
+      try {
+        const res = await fetch(`${API}/api/ops/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title:              this.addForm.title.trim(),
+            type:               this.addForm.type,
+            bu:                 this.addForm.bu,
+            description:        this.addForm.description,
+            requested_deadline: this.addForm.requested_deadline || null,
+            impact_type:        this.addForm.impact_type || null,
+            requester_name:     this.session.name,
+            requester_email:    'squad@interno',
+          }),
+        })
+        const data = await res.json()
+        if (!data.success) throw new Error(data.error || 'Erro ao criar task')
+        this.addModal = false
+        await this.loadTasks()
+      } catch (e) {
+        this.addErrors.general = e.message
+      } finally {
+        this.addLoading = false
+      }
+    },
+
+    // ─── Notas internas ───
+    async saveNotes() {
+      if (!this.selectedTask) return
+      this.notesSaving = true
+      try {
+        const res = await fetch(`${API}/api/ops/tasks/${this.selectedTask.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.session.token}` },
+          body: JSON.stringify({ internal_notes: this.notesValue }),
+        })
+        const data = await res.json()
+        if (data.task) {
+          this.selectedTask = data.task
+          const idx = this.tasks.findIndex(t => t.id === this.selectedTask.id)
+          if (idx !== -1) this.tasks[idx] = data.task
+        }
+        this.notesSaved = true
+        setTimeout(() => { this.notesSaved = false }, 2000)
+      } catch {}
+      this.notesSaving = false
     },
 
     // ─── Init ───

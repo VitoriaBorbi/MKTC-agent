@@ -85,6 +85,9 @@ alter table ops_attachments  enable row level security;
 alter table ops_time_entries enable row level security;
 alter table ops_users        enable row level security;
 
+-- Notas internas da squad (visíveis apenas no painel interno)
+alter table ops_tasks add column if not exists internal_notes text;
+
 -- --------------------------------------------------------
 -- APÓS rodar o SQL, criar o bucket no Supabase Dashboard:
 -- Storage → New bucket → nome: "ops-attachments" → Private
