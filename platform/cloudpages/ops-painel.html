@@ -62,8 +62,27 @@
 </head>
 <body x-data="opsPanel()" x-cloak @keydown.escape.window="selectedTask=null">
 
+<!-- SETUP (URL da API) -->
+<div x-show="!apiUrl" class="h-screen flex items-center justify-content p-4" style="display:flex;align-items:center;justify-content:center">
+  <div class="card p-8 w-full max-w-sm">
+    <div class="flex items-center gap-2 mb-6">
+      <div class="w-7 h-7 bg-zinc-800 rounded-lg flex items-center justify-center">
+        <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <span class="font-semibold text-sm">CRM Ops Desk</span>
+    </div>
+    <h1 class="text-lg font-semibold mb-1">Configuração inicial</h1>
+    <p class="text-zinc-500 text-sm mb-6">Informe a URL do backend (Vercel) para continuar.</p>
+    <div class="field mb-4">
+      <label>URL da API</label>
+      <input class="input" type="url" x-model="setupUrl" placeholder="https://seu-projeto.vercel.app" @keydown.enter="saveSetup()">
+    </div>
+    <button class="btn btn-primary w-full" @click="saveSetup()">Salvar e continuar</button>
+  </div>
+</div>
+
 <!-- LOGIN -->
-<div x-show="!session.token" class="h-screen flex items-center justify-center p-4">
+<div x-show="apiUrl && !session.token" class="h-screen flex items-center justify-center p-4">
   <div class="card p-8 w-full max-w-sm">
     <div class="flex items-center gap-2 mb-6">
       <div class="w-7 h-7 bg-zinc-800 rounded-lg flex items-center justify-center">
@@ -88,7 +107,7 @@
 </div>
 
 <!-- PAINEL PRINCIPAL -->
-<div x-show="session.token" class="flex flex-col h-screen">
+<div x-show="apiUrl && session.token" class="flex flex-col h-screen">
 
   <!-- Timer bar (quando ativo) -->
   <div x-show="timer.entryId" class="timer-bar">
@@ -651,7 +670,7 @@
 </div>
 
 <script>
-const API = localStorage.getItem('ops_api_url') || ''
+let API = localStorage.getItem('ops_api_url') || ''
 
 // ─── Perfis da squad ───
 // Para trocar a foto: substitua null por uma URL de imagem (ex: SFMC ou link público)
@@ -668,6 +687,10 @@ function squadMember(name) {
 
 function opsPanel() {
   return {
+    // Setup
+    apiUrl: localStorage.getItem('ops_api_url') || '',
+    setupUrl: '',
+
     // Auth
     session: JSON.parse(localStorage.getItem('ops_session') || 'null') || { token: '', name: '' },
     loginName: '', loginToken: '', loginError: '', loginLoading: false,
@@ -720,6 +743,15 @@ function opsPanel() {
       { key: 'concluida',   label: 'Concluída' },
       { key: 'cancelada',   label: 'Cancelada' },
     ],
+
+    // ─── Setup ───
+    saveSetup() {
+      if (!this.setupUrl.trim()) return
+      const url = this.setupUrl.trim().replace(/\/$/, '')
+      localStorage.setItem('ops_api_url', url)
+      API = url
+      this.apiUrl = url
+    },
 
     // ─── Auth ───
     async doLogin() {
