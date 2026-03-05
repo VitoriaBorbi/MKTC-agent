@@ -179,6 +179,7 @@
           <span x-text="showArchived ? 'Ocultar concluídas' : 'Mostrar concluídas'"></span>
         </button>
         <span class="text-xs text-zinc-600" x-text="loading ? 'Carregando...' : filteredTasks().length + ' tasks'"></span>
+        <span x-show="loadError" class="text-xs text-red-400" x-text="loadError"></span>
       </div>
 
       <!-- LISTA VIEW -->
@@ -498,9 +499,17 @@
           <p class="text-sm" :class="deadlineColor(selectedTask.requested_deadline)" x-text="selectedTask.requested_deadline + (selectedTask.is_deadline_flexible ? ' (flexível)' : ' (fixo)')"></p>
         </div>
 
-        <div x-show="selectedTask.consequences_of_delay">
-          <p class="text-xs text-zinc-600 mb-1">Se atrasar...</p>
-          <p class="text-zinc-400 text-sm" x-text="selectedTask.consequences_of_delay"></p>
+        <div x-show="selectedTask.urgency_level">
+          <p class="text-xs text-zinc-600 mb-1">Urgência declarada</p>
+          <p class="text-sm font-medium"
+            :class="{
+              'text-zinc-400': selectedTask.urgency_level <= 2,
+              'text-yellow-400': selectedTask.urgency_level === 3,
+              'text-orange-400': selectedTask.urgency_level === 4,
+              'text-red-400': selectedTask.urgency_level === 5,
+            }"
+            x-text="selectedTask.urgency_level + ' / 5'"></p>
+          <p x-show="selectedTask.urgency_details" class="text-xs text-zinc-500 mt-1" x-text="selectedTask.urgency_details"></p>
         </div>
 
         <div x-show="selectedTask.is_campaign_linked">
@@ -668,6 +677,7 @@ function opsPanel() {
     panelView: 'lista',
     tasks: [],
     loading: false,
+    loadError: '',
     selectedTask: null,
     drawerStatus: '',
     drawerAssignee: '',
@@ -750,14 +760,22 @@ function opsPanel() {
     // ─── Tasks ───
     async loadTasks() {
       this.loading = true
+      this.loadError = ''
       try {
         const res = await fetch(`${API}/api/ops/tasks?limit=200`, {
           headers: { 'Authorization': `Bearer ${this.session.token}` },
         })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.error || `HTTP ${res.status}`)
+        }
         const data = await res.json()
         if (data.tasks) this.tasks = data.tasks
-      } catch {}
-      finally { this.loading = false }
+      } catch (e) {
+        this.loadError = e.message || 'Erro ao carregar tasks'
+      } finally {
+        this.loading = false
+      }
     },
 
     filteredTasks() {
@@ -896,7 +914,7 @@ function opsPanel() {
     },
 
     typeLabel(t) {
-      return { email:'Email', 'mensagem-wpp':'WPP', sms:'SMS', outros:'Outros' }[t] || t
+      return { email:'Email', 'mensagem-wpp':'WPP', sms:'SMS', jornada:'Jornada', outros:'Outros' }[t] || t
     },
 
     deadlineText(d) {

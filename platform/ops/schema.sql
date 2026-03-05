@@ -88,6 +88,11 @@ alter table ops_users        enable row level security;
 -- Notas internas da squad (visíveis apenas no painel interno)
 alter table ops_tasks add column if not exists internal_notes text;
 
+-- Campos adicionados na v2 do formulário de stakeholders
+alter table ops_tasks add column if not exists bu_subdivision text;
+alter table ops_tasks add column if not exists urgency_level int check (urgency_level between 1 and 5);
+alter table ops_tasks add column if not exists urgency_details text;
+
 -- --------------------------------------------------------
 -- APÓS rodar o SQL, criar o bucket no Supabase Dashboard:
 -- Storage → New bucket → nome: "ops-attachments" → Private

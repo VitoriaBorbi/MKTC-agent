@@ -216,7 +216,7 @@
         </div>
 
         <div class="field">
-          <label>Email *</label>
+          <label>Seu Email Primo *</label>
           <input class="input" :class="errs.requester_email ? 'input-err' : ''" type="email" x-model="form.requester_email" placeholder="seu@email.com">
           <span class="err-msg" x-show="errs.requester_email" x-text="errs.requester_email"></span>
         </div>
@@ -234,11 +234,29 @@
           </select>
           <span class="err-msg" x-show="errs.bu" x-text="errs.bu"></span>
         </div>
+
+        <div class="field" x-show="form.bu">
+          <label>Área / subdivisão <span class="text-zinc-600 font-normal">(opcional)</span></label>
+          <select class="input" x-model="form.bu_subdivision">
+            <option value="">Selecione se aplicável</option>
+            <option value="Lançamentos">Lançamentos</option>
+            <option value="TopInvest">TopInvest</option>
+            <option value="RH">RH</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
       </div>
 
       <!-- STEP 2: A demanda -->
       <div x-show="step === 2" class="card p-6 space-y-4">
-        <h2 class="font-medium text-sm text-zinc-300 mb-2">A demanda</h2>
+        <h2 class="font-medium text-sm text-zinc-300 mb-1">Descreva brevemente sua solicitação</h2>
+        <div class="flex flex-wrap gap-2 -mt-1 mb-1">
+          <span class="text-xs text-zinc-600 italic">Ex: Disparo de Email de Newsletter</span>
+          <span class="text-zinc-800">·</span>
+          <span class="text-xs text-zinc-600 italic">Criação de Jornada de Relacionamento</span>
+          <span class="text-zinc-800">·</span>
+          <span class="text-xs text-zinc-600 italic">Disparo de Whatsapp para alunos</span>
+        </div>
 
         <div class="field">
           <label>Título *</label>
@@ -278,37 +296,57 @@
           <button class="btn btn-outline text-xs w-full mt-1" @click="form.links.push('')">+ Adicionar link</button>
         </div>
 
+        <!-- Anexar Docs com sua Copy -->
         <div class="field">
-          <label>Anexos <span class="text-zinc-600">(máx. 4MB por arquivo)</span></label>
-          <div class="border border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-zinc-500 transition-colors" @click="$refs.fileInput.click()">
-            <p class="text-sm text-zinc-500">Clique para selecionar arquivos</p>
-            <p class="text-xs text-zinc-700 mt-1">PDF, DOCX, XLSX, CSV, PNG, JPG</p>
+          <label>Anexar Docs com sua Copy <span class="text-zinc-600 font-normal">(máx. 4MB)</span></label>
+          <div class="border border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-zinc-500 transition-colors" @click="$refs.fileInputDocs.click()">
+            <p class="text-sm text-zinc-500">Clique para selecionar</p>
+            <p class="text-xs text-zinc-700 mt-1">PDF, DOCX, XLSX, PNG, JPG</p>
           </div>
-          <input type="file" x-ref="fileInput" class="hidden" multiple accept=".pdf,.docx,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.webp" @change="handleFiles($event)">
+          <input type="file" x-ref="fileInputDocs" class="hidden" multiple accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg,.gif,.webp" @change="handleFiles($event, 'docs')">
           <div class="flex flex-wrap gap-2 mt-2">
-            <template x-for="(f, i) in form.files" :key="i">
+            <template x-for="(f, i) in form.docs_files" :key="i">
               <div class="chip">
                 <span x-text="f.name.length > 24 ? f.name.slice(0,21)+'...' : f.name"></span>
-                <button class="hover:text-red-400" @click="form.files.splice(i,1)">×</button>
+                <button class="hover:text-red-400" @click="form.docs_files.splice(i,1)">×</button>
               </div>
             </template>
           </div>
-          <div class="flex flex-wrap gap-2 mt-1">
-            <template x-for="e in fileErrors" :key="e">
-              <span class="err-msg" x-text="e"></span>
+        </div>
+
+        <!-- Anexar CSV com Lista de Contatos -->
+        <div class="field">
+          <label>Anexar CSV com a Lista de Contatos <span class="text-zinc-600 font-normal">(Email, Telefone)</span></label>
+          <div class="border border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-zinc-500 transition-colors" @click="$refs.fileInputCsv.click()">
+            <p class="text-sm text-zinc-500">Clique para selecionar</p>
+            <p class="text-xs text-zinc-700 mt-1">CSV, XLSX</p>
+          </div>
+          <input type="file" x-ref="fileInputCsv" class="hidden" multiple accept=".csv,.xlsx" @change="handleFiles($event, 'csv')">
+          <div class="flex flex-wrap gap-2 mt-2">
+            <template x-for="(f, i) in form.csv_files" :key="i">
+              <div class="chip">
+                <span x-text="f.name.length > 24 ? f.name.slice(0,21)+'...' : f.name"></span>
+                <button class="hover:text-red-400" @click="form.csv_files.splice(i,1)">×</button>
+              </div>
             </template>
           </div>
         </div>
+
+        <div x-show="fileErrors.length" class="flex flex-wrap gap-2">
+          <template x-for="e in fileErrors" :key="e">
+            <span class="err-msg" x-text="e"></span>
+          </template>
+        </div>
       </div>
 
-      <!-- STEP 3: Contexto de priorização -->
+      <!-- STEP 3: Prazo e Urgência -->
       <div x-show="step === 3" class="card p-6 space-y-5">
-        <h2 class="font-medium text-sm text-zinc-300 mb-2">Contexto de priorização</h2>
-        <p class="text-xs text-zinc-600 -mt-1">Essas informações determinam a prioridade da sua demanda.</p>
+        <h2 class="font-medium text-sm text-zinc-300 mb-1">Prazo e urgência</h2>
+        <p class="text-xs text-zinc-600 -mt-1">Nos informe o prazo máximo para execução de sua solicitação.</p>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="field">
-            <label>Para quando precisa?</label>
+            <label>Prazo máximo</label>
             <input class="input" type="date" x-model="form.requested_deadline">
             <input class="input mt-2" type="time" x-model="form.requested_time" placeholder="Horário (opcional)">
           </div>
@@ -320,33 +358,24 @@
         </div>
 
         <div class="field">
-          <label>O que acontece se atrasar?</label>
-          <textarea class="input" rows="2" x-model="form.consequences_of_delay" placeholder="Ex: Campanha vai no ar sem o email, perdemos a janela de vendas..."></textarea>
-        </div>
-
-        <div class="field">
-          <div class="flex items-center justify-between mb-2">
-            <label class="mb-0">Vinculada a campanha ativa?</label>
-            <button class="toggle" :class="form.is_campaign_linked ? 'on' : ''" @click="form.is_campaign_linked = !form.is_campaign_linked"></button>
-          </div>
-          <input x-show="form.is_campaign_linked" class="input" type="text" x-model="form.campaign_linked" placeholder="Nome da campanha">
-        </div>
-
-        <div class="field">
-          <div class="flex items-center justify-between">
-            <label class="mb-0">É uma demanda recorrente?</label>
-            <button class="toggle" :class="form.is_recurrent ? 'on' : ''" @click="form.is_recurrent = !form.is_recurrent"></button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Impacto esperado</label>
-          <div class="grid grid-cols-2 gap-2">
-            <template x-for="imp in impactTypes" :key="imp.value">
-              <div class="radio-card" :class="form.impact_type === imp.value ? 'selected' : ''" @click="form.impact_type = imp.value">
-                <p class="text-sm font-medium" x-text="imp.label"></p>
+          <label>Numa escala de 1 a 5, o quanto você considera urgente essa solicitação?</label>
+          <div class="space-y-2 mt-1">
+            <template x-for="u in urgencyLevels" :key="u.value">
+              <div class="radio-card flex items-start gap-3 py-2.5"
+                :class="form.urgency_level === u.value ? 'selected' : ''"
+                @click="form.urgency_level = u.value">
+                <span class="font-bold text-sm flex-shrink-0 w-4" x-text="u.value"></span>
+                <div>
+                  <span class="font-medium text-sm" x-text="u.label"></span>
+                  <span class="text-xs text-zinc-500">: </span>
+                  <span class="text-xs text-zinc-500" x-text="u.desc"></span>
+                </div>
               </div>
             </template>
+          </div>
+          <div x-show="form.urgency_level === 5" class="mt-2">
+            <label>Descreva a situação emergencial</label>
+            <textarea class="input" rows="2" x-model="form.urgency_details" placeholder="Ex: Campanha no ar com erro, falha em disparo crítico..."></textarea>
           </div>
         </div>
       </div>
@@ -362,7 +391,7 @@
           </div>
           <div class="flex gap-3 py-3 border-b border-zinc-800">
             <span class="text-zinc-500 w-28 flex-shrink-0">BU</span>
-            <span x-text="form.bu"></span>
+            <span x-text="form.bu + (form.bu_subdivision ? ' — ' + form.bu_subdivision : '')"></span>
           </div>
           <div class="flex gap-3 py-3 border-b border-zinc-800">
             <span class="text-zinc-500 w-28 flex-shrink-0">Tipo</span>
@@ -376,17 +405,17 @@
             <span class="text-zinc-500 w-28 flex-shrink-0">Prazo</span>
             <span x-text="form.requested_deadline + (form.requested_time ? ' às ' + form.requested_time : '') + (form.is_deadline_flexible ? ' (flexível)' : ' (fixo)')"></span>
           </div>
-          <div class="flex gap-3 py-3 border-b border-zinc-800" x-show="form.is_campaign_linked">
-            <span class="text-zinc-500 w-28 flex-shrink-0">Campanha</span>
-            <span x-text="form.campaign_linked"></span>
+          <div class="flex gap-3 py-3 border-b border-zinc-800" x-show="form.urgency_level">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Urgência</span>
+            <span x-text="form.urgency_level + ' — ' + (urgencyLevels.find(u => u.value === form.urgency_level)?.label || '')"></span>
           </div>
-          <div class="flex gap-3 py-3 border-b border-zinc-800" x-show="form.impact_type">
-            <span class="text-zinc-500 w-28 flex-shrink-0">Impacto</span>
-            <span x-text="impactTypes.find(i => i.value === form.impact_type)?.label"></span>
+          <div class="flex gap-3 py-3 border-b border-zinc-800" x-show="form.docs_files.length > 0">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Docs / Copy</span>
+            <span x-text="form.docs_files.length + ' arquivo(s)'"></span>
           </div>
-          <div class="flex gap-3 py-3" x-show="form.files.length > 0">
-            <span class="text-zinc-500 w-28 flex-shrink-0">Anexos</span>
-            <span x-text="form.files.length + ' arquivo(s)'"></span>
+          <div class="flex gap-3 py-3" x-show="form.csv_files.length > 0">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Lista CSV</span>
+            <span x-text="form.csv_files.length + ' arquivo(s)'"></span>
           </div>
         </div>
       </div>
@@ -436,25 +465,26 @@ function opsDesk() {
     },
 
     taskTypes: [
-      { value: 'email',          label: 'Email',           desc: 'Disparo de email' },
-      { value: 'mensagem-wpp',   label: 'WPP',             desc: 'WhatsApp / disparo' },
-      { value: 'sms',            label: 'SMS',             desc: 'Disparo de SMS' },
-      { value: 'outros',         label: 'Outros',          desc: 'Especifique abaixo' },
+      { value: 'email',          label: 'Email',    desc: 'Disparo de email' },
+      { value: 'mensagem-wpp',   label: 'WPP',      desc: 'WhatsApp / disparo' },
+      { value: 'sms',            label: 'SMS',       desc: 'Disparo de SMS' },
+      { value: 'jornada',        label: 'Jornada',  desc: 'Jornada de relacionamento' },
+      { value: 'outros',         label: 'Outros',   desc: 'Especifique abaixo' },
     ],
-    impactTypes: [
-      { value: 'vendas',     label: 'Vendas' },
-      { value: 'captacao',   label: 'Captação' },
-      { value: 'fup',        label: 'FUP' },
-      { value: 'operacional', label: 'Operacional' },
+    urgencyLevels: [
+      { value: 1, label: 'Baixa',               desc: 'pode ser feito quando houver janela; impacto mínimo.' },
+      { value: 2, label: 'Normal',              desc: 'prazo padrão; planejável.' },
+      { value: 3, label: 'Alta',                desc: 'ideal executar em breve; pode afetar resultados/agenda.' },
+      { value: 4, label: 'Crítica',             desc: 'tem prazo curto ou risco relevante; priorizar acima do normal.' },
+      { value: 5, label: 'Emergencial (máxima)', desc: 'incidente/risco imediato (ex.: falha, campanha no ar com erro); interromper fila para tratar.' },
     ],
 
     form: {
-      requester_name: '', requester_email: '', bu: '',
+      requester_name: '', requester_email: '', bu: '', bu_subdivision: '',
       title: '', type: '', outros_description: '', description: '',
-      links: [''], files: [],
+      links: [''], docs_files: [], csv_files: [],
       requested_deadline: '', requested_time: '', is_deadline_flexible: false,
-      consequences_of_delay: '', is_campaign_linked: false,
-      campaign_linked: '', is_recurrent: false, impact_type: '',
+      urgency_level: null, urgency_details: '',
     },
 
     saveSetup() {
@@ -469,7 +499,7 @@ function opsDesk() {
     },
 
     stepLabel() {
-      return ['Identificação', 'A demanda', 'Priorização', 'Confirmação'][this.step - 1]
+      return ['Identificação', 'Solicitação', 'Prazo e urgência', 'Confirmação'][this.step - 1]
     },
 
     validateStep() {
@@ -492,17 +522,24 @@ function opsDesk() {
       this.step++
     },
 
-    handleFiles(e) {
+    handleFiles(e, type) {
       this.fileErrors = []
       const files = Array.from(e.target.files)
       const MAX = 4 * 1024 * 1024
-      const ALLOWED = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      const DOCS_ALLOWED = ['application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'image/png', 'image/jpeg', 'image/gif', 'image/webp']
+      const CSV_ALLOWED = ['text/csv', 'application/csv', 'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+      const allowed = type === 'csv' ? CSV_ALLOWED : DOCS_ALLOWED
+      const target = type === 'csv' ? 'csv_files' : 'docs_files'
       for (const f of files) {
         if (f.size > MAX) { this.fileErrors.push(`${f.name}: excede 4MB`); continue }
-        if (!ALLOWED.includes(f.type)) { this.fileErrors.push(`${f.name}: tipo não permitido`); continue }
-        this.form.files.push(f)
+        if (!allowed.includes(f.type) && !(type === 'csv' && f.name.endsWith('.csv'))) {
+          this.fileErrors.push(`${f.name}: tipo não permitido`); continue
+        }
+        this.form[target].push(f)
       }
       e.target.value = ''
     },
@@ -518,6 +555,7 @@ function opsDesk() {
           requester_name: this.form.requester_name,
           requester_email: this.form.requester_email,
           bu: this.form.bu,
+          bu_subdivision: this.form.bu_subdivision || null,
           title: this.form.title,
           type: this.form.type,
           description: this.form.description,
@@ -526,11 +564,8 @@ function opsDesk() {
           requested_time: this.form.requested_time || null,
           outros_description: this.form.type === 'outros' ? this.form.outros_description : null,
           is_deadline_flexible: this.form.is_deadline_flexible,
-          consequences_of_delay: this.form.consequences_of_delay,
-          is_campaign_linked: this.form.is_campaign_linked,
-          campaign_linked: this.form.campaign_linked,
-          is_recurrent: this.form.is_recurrent,
-          impact_type: this.form.impact_type,
+          urgency_level: this.form.urgency_level,
+          urgency_details: this.form.urgency_level === 5 ? this.form.urgency_details : null,
         }
 
         const res = await fetch(`${this.apiUrl}/api/ops/tasks`, {
@@ -543,8 +578,8 @@ function opsDesk() {
 
         const taskId = data.id
 
-        // 2. Upload de anexos (um por vez)
-        for (const file of this.form.files) {
+        // 2. Upload de anexos (docs + csv, um por vez)
+        for (const file of [...this.form.docs_files, ...this.form.csv_files]) {
           const fd = new FormData()
           fd.append('task_id', taskId)
           fd.append('file', file)
@@ -595,12 +630,11 @@ function opsDesk() {
 
     resetForm() {
       this.form = {
-        requester_name: '', requester_email: '', bu: '',
-        title: '', type: '', description: '',
-        links: [''], files: [],
-        requested_deadline: '', is_deadline_flexible: false,
-        consequences_of_delay: '', is_campaign_linked: false,
-        campaign_linked: '', is_recurrent: false, impact_type: '',
+        requester_name: '', requester_email: '', bu: '', bu_subdivision: '',
+        title: '', type: '', outros_description: '', description: '',
+        links: [''], docs_files: [], csv_files: [],
+        requested_deadline: '', requested_time: '', is_deadline_flexible: false,
+        urgency_level: null, urgency_details: '',
       }
       this.errs = {}
       this.fileErrors = []

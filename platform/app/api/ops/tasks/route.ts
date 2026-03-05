@@ -34,9 +34,11 @@ function calcPriority(task: Record<string, unknown>) {
     else if (days <= 7) { score += 20; factors.push('prazo em 7 dias') }
     if (!task.is_deadline_flexible) { score += 10; factors.push('prazo fixo') }
   }
-  if (task.is_campaign_linked) { score += 15; factors.push('vinculada a campanha') }
-  if (task.is_recurrent)       { score += 5;  factors.push('recorrente') }
-  if (task.impact_type === 'alta-receita') { score += 10; factors.push('alto impacto em receita') }
+  // Urgência declarada (1-5) influencia diretamente o score
+  if (task.urgency_level) {
+    const bonus = [0, 0, 5, 15, 25, 40][task.urgency_level as number] ?? 0
+    if (bonus > 0) { score += bonus; factors.push(`urgência ${task.urgency_level}`) }
+  }
 
   score = Math.min(score, 100)
   const label = score >= 70 ? 'Alta' : score >= 45 ? 'Media' : 'Baixa'
@@ -52,11 +54,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
     const {
-      requester_name, requester_email, bu,
+      requester_name, requester_email, bu, bu_subdivision,
       title, type, description, links = [],
       requested_deadline, is_deadline_flexible = false,
-      consequences_of_delay, is_campaign_linked = false, campaign_linked,
-      is_recurrent = false, impact_type,
+      urgency_level, urgency_details,
     } = body
 
     if (!requester_name || !requester_email || !bu || !title || !type) {
@@ -75,13 +76,14 @@ export async function POST(req: Request) {
     const protocol = `MKTC-${year}-${seq}`
 
     const { score, label, justification } = calcPriority({
-      requested_deadline, is_deadline_flexible, is_campaign_linked, is_recurrent, impact_type,
+      requested_deadline, is_deadline_flexible, urgency_level,
     })
 
     const { data, error } = await supabase
       .from('ops_tasks')
       .insert({
         protocol, title, type, description, bu,
+        bu_subdivision: bu_subdivision || null,
         links: links.filter(Boolean),
         status: 'recebida',
         priority_score: score,
@@ -89,11 +91,8 @@ export async function POST(req: Request) {
         priority_justification: justification,
         requested_deadline: requested_deadline || null,
         is_deadline_flexible,
-        consequences_of_delay,
-        is_campaign_linked,
-        campaign_linked: is_campaign_linked ? campaign_linked : null,
-        is_recurrent,
-        impact_type,
+        urgency_level: urgency_level || null,
+        urgency_details: urgency_level === 5 ? urgency_details : null,
         requester_name,
         requester_email,
       })
