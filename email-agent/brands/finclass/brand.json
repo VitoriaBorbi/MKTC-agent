@@ -67,8 +67,13 @@
     "view_email_url": "%%view_email_url%%",
     "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
     "user_match": "<custom name=\"usermatch\" type=\"tracking\"/>",
-    "category_id": 320763,
-    "category_path": "Content Builder/Email/Claude Code"
+    "category_id": 275234,
+    "category_path": "Content Builder/Email/Outros",
+    "img_category_id": 275201,
+    "img_category_path": "Content Builder/Email/Imagens",
+    "campaign_category_id": 275626,
+    "campaign_category_path": "Content Builder/Email/Campanha",
+    "send_classification": "84"
   },
   "tone": "Premium, educativo, aspiracional. Linguagem sofisticada e acessivel sobre investimentos e educacao financeira. Voltado para quem busca aprender com os melhores do mercado."
 }

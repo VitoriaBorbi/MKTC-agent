@@ -1,0 +1,70 @@
+{
+  "name": "Grupo Primo",
+  "platform": "Salesforce Marketing Cloud (SFMC)",
+  "colors": {
+    "primary": "#003087",
+    "secondary": "#001F5A",
+    "background": "#FFFFFF",
+    "card_bg": "#F0F4FB",
+    "text": "#1A1A1A",
+    "text_light": "#555555",
+    "text_on_dark": "#FFFFFF",
+    "text_on_light": "#1A1A1A",
+    "cta_bg": "#003087",
+    "cta_text": "#FFFFFF",
+    "footer_bg": "#001F5A",
+    "footer_text": "#FFFFFF",
+    "footer_links": "#AABFEA",
+    "footer_accent": "#FFFFFF",
+    "footer_border": "#0A3580",
+    "divider": "#D0DBF0",
+    "hr_header": "#003087"
+  },
+  "fonts": {
+    "heading": "Arial, Helvetica, sans-serif",
+    "body": "Arial, Helvetica, sans-serif"
+  },
+  "sizes": {
+    "h1": "28px",
+    "h2": "22px",
+    "h3": "18px",
+    "body": "16px",
+    "small": "13px",
+    "footer": "12px"
+  },
+  "logo": {
+    "url": "https://image.mail.portfel.com.br/lib/fe2f11717d64047b771777/m/1/9c22d171-2ea0-4f6d-81a6-acced45aff9f.png",
+    "alt": "Portfel",
+    "width": 120,
+    "requires_dark_bg": true,
+    "header_bg": "#003087"
+  },
+  "footer": {
+    "company": "Portfel Consultoria",
+    "tagline": "Investir é coisa séria, mas não precisa ser complicado",
+    "address": "Portfel Consultoria | Av. Pres. Juscelino Kubitschek, 1600, Itaim Bibi, São Paulo, Brasil.",
+    "address_sfmc": "%%Member_Busname%% %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%",
+    "unsubscribe_url_sfmc": "%%unsub_center_url%%",
+    "profile_center_url_sfmc": "%%profile_center_url%%",
+    "terms_url": "",
+    "privacy_url": "",
+    "social": {
+      "instagram": "#",
+      "linkedin": "#",
+      "youtube": "#"
+    }
+  },
+  "sfmc": {
+    "preheader_ampscript": "%%=AttributeValue(\"_Preheader\")=%%",
+    "view_email_url": "%%view_email_url%%",
+    "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
+    "user_match": "<custom name=\"usermatch\" type=\"tracking\"/>",
+    "category_id": 273339,
+    "category_path": "Content Builder > News",
+    "img_category_id": 273369,
+    "img_category_path": "Content Builder > Imagens",
+    "campaign_category_id": 273338,
+    "campaign_category_path": "Content Builder > Campanhas"
+  },
+  "tone": "Institucional, inspirador, com orgulho dos resultados. Voz de marca corporativa que celebra conquistas e mantém colaboradores informados sobre o Grupo Primo."
+}

@@ -65,7 +65,10 @@
     "view_email_url": "%%view_email_url%%",
     "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
     "category_id": 320766,
-    "category_path": "Content Builder/Claude Code"
+    "category_path": "Content Builder/Claude Code",
+    "img_category_id": 320779,
+    "img_category_path": "Content Builder/Claude Code/img",
+    "send_classification": "83"
   },
   "tone": "Profissional, confiavel, academico. Linguagem clara e objetiva sobre educacao superior, MBA e desenvolvimento de carreira."
 }

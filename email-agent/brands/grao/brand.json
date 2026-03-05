@@ -1,0 +1,61 @@
+{
+  "name": "TODO",
+  "platform": "Salesforce Marketing Cloud (SFMC)",
+  "colors": {
+    "primary": "TODO",
+    "secondary": "TODO",
+    "background": "TODO",
+    "card_bg": "TODO",
+    "text": "TODO",
+    "text_light": "TODO",
+    "text_on_dark": "TODO",
+    "cta_bg": "TODO",
+    "cta_text": "TODO",
+    "footer_bg": "TODO",
+    "footer_text": "TODO",
+    "footer_links": "TODO",
+    "footer_accent": "TODO",
+    "footer_border": "TODO",
+    "divider": "TODO",
+    "hr_header": "TODO"
+  },
+  "fonts": {
+    "heading": "Arial, Helvetica, sans-serif",
+    "body": "Arial, Helvetica, sans-serif"
+  },
+  "sizes": {
+    "h1": "28px",
+    "h2": "22px",
+    "h3": "18px",
+    "body": "16px",
+    "small": "13px",
+    "footer": "12px"
+  },
+  "logo": {
+    "url": "TODO",
+    "alt": "TODO",
+    "width": 180
+  },
+  "footer": {
+    "company": "TODO",
+    "address_sfmc": "%%Member_Busname%% %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%",
+    "unsubscribe_url_sfmc": "TODO",
+    "profile_center_url_sfmc": "%%profile_center_url%%",
+    "terms_url": "TODO",
+    "privacy_url": "TODO",
+    "social": {}
+  },
+  "sfmc": {
+    "preheader_ampscript": "%%=AttributeValue(\"_Preheader\")=%%",
+    "view_email_url": "%%view_email_url%%",
+    "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
+    "user_match": "<custom name=\"usermatch\" type=\"tracking\"/>",
+    "category_id": 0,
+    "category_path": "TODO",
+    "img_category_id": 0,
+    "img_category_path": "TODO",
+    "campaign_category_id": 0,
+    "campaign_category_path": "TODO"
+  },
+  "tone": "TODO"
+}

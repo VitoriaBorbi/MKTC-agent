@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MKTC Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  [x-cloak] { display: none !important; }
+  .alpine-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #71717a; font-size: 0.875rem; font-family: 'Inter', sans-serif; }
+  body { font-family: 'Inter', sans-serif; background: #09090b; color: #fafafa; }
+  .sidebar-link { display:flex; align-items:center; gap:0.625rem; padding:0.5rem 0.75rem; border-radius:0.5rem; font-size:0.875rem; color:#a1a1aa; transition:color 0.15s,background 0.15s; cursor:pointer; width:100%; background:transparent; border:none; text-align:left; }
+  .sidebar-link:hover { color:#fafafa; background:#27272a; }
+  .sidebar-link.active { background:#27272a; color:#fafafa; }
+  .card { background: #18181b; border: 1px solid #27272a; border-radius: 0.75rem; }
+  .input { background: #18181b; border: 1px solid #27272a; color: #fafafa; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; width: 100%; outline: none; }
+  .input:focus { border-color: #3f3f46; box-shadow: 0 0 0 2px rgba(255,255,255,0.05); }
+  .btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; }
+  .btn-primary { background: #fafafa; color: #09090b; }
+  .btn-primary:hover { background: #e4e4e7; }
+  .btn-outline { background: transparent; color: #fafafa; border: 1px solid #27272a; }
+  .btn-outline:hover { background: #18181b; }
+  .btn-ghost { background: transparent; color: #a1a1aa; }
+  .btn-ghost:hover { background: #18181b; color: #fafafa; }
+  .btn-success { background: #059669; color: #fff; }
+  .btn-success:hover { background: #047857; }
+  .btn-danger { background: #dc2626; color: #fff; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pill { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+  textarea.code { font-family: 'Fira Code', 'Cascadia Code', monospace; font-size: 0.75rem; background: #0d0d0e; border: 1px solid #27272a; color: #a1a1aa; resize: vertical; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+  .step-dot { width: 2rem; height: 2rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; }
+  .step-dot.done { background: #18181b; border: 2px solid #10b981; color: #10b981; }
+  .step-dot.active { background: #fafafa; color: #09090b; }
+  .step-dot.pending { background: #18181b; border: 2px solid #3f3f46; color: #71717a; }
+</style>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: { extend: { colors: { brand: { DEFAULT: 'var(--brand-color)' } } } }
+  }
+</script>
+</head>
+
+<body x-data="mktcApp()" x-init="init()" class="min-h-screen">
+
+<!-- Loading placeholder (visible before Alpine.js initializes) -->
+<div id="alpine-placeholder" class="alpine-loading">
+  <div style="text-align:center;">
+    <div style="width:2rem;height:2rem;border:2px solid #3f3f46;border-top-color:#fff;border-radius:50%;margin:0 auto 1rem;animation:spin 0.8s linear infinite;"></div>
+    <p>Carregando MKTC Platform…</p>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<script>
+  document.addEventListener('alpine:init', function() {
+    var el = document.getElementById('alpine-placeholder');
+    if (el) el.style.display = 'none';
+  });
+</script>
+
+<!-- ============================================================ -->
+<!-- TOAST -->
+<!-- ============================================================ -->
+<div
+  x-show="toast.show"
+  x-transition:enter="transition ease-out duration-200"
+  x-transition:enter-start="opacity-0 translate-y-2"
+  x-transition:enter-end="opacity-100 translate-y-0"
+  x-transition:leave="transition ease-in duration-150"
+  x-transition:leave-end="opacity-0"
+  class="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium"
+  :class="toast.type === 'success' ? 'bg-emerald-900 text-emerald-200 border border-emerald-700' : 'bg-red-900 text-red-200 border border-red-700'"
+>
+  <span x-text="toast.message"></span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SETUP OVERLAY — show when API_URL not set -->
+<!-- ============================================================ -->
+<div x-show="!API_URL" x-cloak class="fixed inset-0 z-40 bg-zinc-950 flex items-center justify-center p-6">
+  <div class="card p-8 w-full max-w-md">
+    <div class="flex items-center gap-2 mb-6">
+      <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span class="font-bold text-lg">MKTC Platform</span>
+    </div>
+    <p class="text-zinc-400 text-sm mb-6">Cole a URL do SSJS Code Resource para começar.</p>
+    <div class="space-y-3">
+      <label class="text-xs text-zinc-500 block">URL do Code Resource (mktc-api)</label>
+      <input x-model="setupApiUrl" class="input" placeholder="https://pub.s7.exacttarget.com/…" @keydown.enter="saveApiUrl()">
+      <button @click="saveApiUrl()" class="btn btn-primary w-full justify-center" :disabled="!setupApiUrl.trim()">
+        Conectar
+      </button>
+    </div>
+    <p class="text-xs text-zinc-600 mt-4">A URL será salva no localStorage do navegador.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MAIN LAYOUT -->
+<!-- ============================================================ -->
+<div x-show="!!API_URL" x-cloak class="flex flex-col h-screen">
+
+  <!-- TOPBAR -->
+  <header class="h-14 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur sticky top-0 z-30 flex items-center px-4 gap-3 shrink-0">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 mr-2 cursor-pointer" @click="navigateTo('dashboard')">
+      <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span class="font-bold text-sm tracking-tight">MKTC Platform</span>
+    </div>
+
+    <div class="w-px h-5 bg-zinc-800"></div>
+
+    <!-- BU Selector -->
+    <div class="relative" x-data="{open: false}">
+      <button @click="open = !open" @click.outside="open = false"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 hover:border-zinc-700 text-sm transition-colors">
+        <span class="w-2 h-2 rounded-full" :style="'background:' + currentBU.color"></span>
+        <span x-text="currentBU.name" class="font-medium"></span>
+        <svg class="w-3.5 h-3.5 text-zinc-500 ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div x-show="open" class="absolute top-full mt-1 left-0 w-48 card py-1 z-50 shadow-xl">
+        <template x-for="b in buList" :key="b.id">
+          <button @click="changeBU(b.id); open = false"
+            class="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-zinc-800 transition-colors text-left"
+            :class="bu === b.id ? 'text-white' : 'text-zinc-400'">
+            <span class="w-2 h-2 rounded-full shrink-0" :style="'background:' + b.color"></span>
+            <span x-text="b.name"></span>
+            <svg x-show="bu === b.id" class="w-3.5 h-3.5 ml-auto text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <div class="flex-1"></div>
+
+    <!-- Actions (desktop) -->
+    <nav class="hidden md:flex items-center gap-2">
+      <button @click="disconnectApi()" class="btn btn-ghost text-xs">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Desconectar
+      </button>
+      <button @click="navigateTo('catalogo')" class="btn btn-ghost">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Catálogo
+      </button>
+      <button @click="navigateTo('nova-solicitacao')" class="btn btn-primary">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Email
+      </button>
+    </nav>
+  </header>
+
+  <!-- BODY -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- SIDEBAR (desktop) -->
+    <aside class="hidden md:flex flex-col w-56 border-r border-zinc-800 p-3 gap-1 shrink-0">
+      <button @click="navigateTo('dashboard')"
+        class="sidebar-link" :class="view === 'dashboard' ? 'active' : ''">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button @click="navigateTo('fila')"
+        class="sidebar-link" :class="view === 'fila' || view === 'email-detail' ? 'active' : ''">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Fila de Envios
+        <span x-show="stats.agendado > 0" x-text="stats.agendado"
+          class="ml-auto text-xs bg-emerald-900 text-emerald-300 px-1.5 py-0.5 rounded-full"></span>
+      </button>
+      <button @click="navigateTo('catalogo')"
+        class="sidebar-link" :class="view === 'catalogo' ? 'active' : ''">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Catálogo
+      </button>
+      <div class="mt-auto pt-3 border-t border-zinc-800">
+        <button @click="navigateTo('nova-solicitacao')" class="w-full btn btn-primary justify-center text-xs">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Email
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto p-4 pb-24 md:pb-6">
+
+      <!-- Loading overlay -->
+      <div x-show="loading" class="flex items-center justify-center py-20">
+        <div class="flex items-center gap-3 text-zinc-400 text-sm">
+          <div class="w-5 h-5 border-2 border-zinc-700 border-t-white rounded-full animate-spin"></div>
+          Carregando...
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div x-show="!loading && loadError" class="rounded-lg border border-red-900 bg-red-950/30 p-4 text-sm text-red-400">
+        <span x-text="'Erro: ' + loadError"></span>
+        <button @click="retryLoad()" class="ml-3 underline text-red-300">Tentar novamente</button>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- DASHBOARD VIEW -->
+      <!-- ======================================================= -->
+      <div x-show="!loading && !loadError && view === 'dashboard'">
+        <div class="mb-6">
+          <h1 class="text-lg font-semibold" x-text="currentBU.name"></h1>
+          <p class="text-xs text-zinc-500 mt-0.5">Visão geral dos envios</p>
+        </div>
+
+        <!-- KPI cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+          <template x-for="kpi in kpiCards" :key="kpi.label">
+            <div class="card p-4">
+              <p class="text-xs text-zinc-500 mb-1" x-text="kpi.label"></p>
+              <p class="text-2xl font-bold" x-text="kpi.value"></p>
+              <p x-show="kpi.sub" class="text-xs text-zinc-500 mt-1" x-text="kpi.sub"></p>
+            </div>
+          </template>
+        </div>
+
+        <!-- Recent emails -->
+        <div class="card">
+          <div class="flex items-center justify-between p-4 border-b border-zinc-800">
+            <span class="text-sm font-medium">Emails recentes</span>
+            <button @click="navigateTo('fila')" class="text-xs text-zinc-400 hover:text-white transition-colors">Ver todos →</button>
+          </div>
+          <div x-show="emails.length === 0" class="p-8 text-center text-zinc-500 text-sm">
+            Nenhum email criado ainda.
+            <button @click="navigateTo('nova-solicitacao')" class="block mx-auto mt-3 text-white underline text-xs">Criar primeiro email</button>
+          </div>
+          <div class="divide-y divide-zinc-800">
+            <template x-for="email in emails.slice(0,5)" :key="email.ID">
+              <div @click="openEmail(email)" class="flex items-center gap-3 p-4 hover:bg-zinc-800/50 cursor-pointer transition-colors">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate" x-text="email.Nome"></p>
+                  <p class="text-xs text-zinc-500 truncate" x-text="email.Assunto || '—'"></p>
+                </div>
+                <span class="pill shrink-0" :class="statusClass(email.Status)" x-text="statusLabel(email.Status)"></span>
+                <p class="text-xs text-zinc-600 shrink-0 hidden sm:block" x-text="formatDate(email.Updated_Date)"></p>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- FILA VIEW -->
+      <!-- ======================================================= -->
+      <div x-show="!loading && !loadError && view === 'fila'">
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-lg font-semibold">Fila de Envios</h1>
+          <button @click="navigateTo('nova-solicitacao')" class="btn btn-primary">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Email
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <input x-model="filaSearch" class="input max-w-xs" placeholder="Buscar por nome…">
+          <template x-for="f in filaFilters" :key="f.value">
+            <button @click="filaFilter = f.value"
+              class="pill cursor-pointer transition-colors"
+              :class="filaFilter === f.value ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-800 text-zinc-400 hover:text-white'"
+              x-text="f.label">
+            </button>
+          </template>
+        </div>
+
+        <div class="card">
+          <div x-show="filteredEmails.length === 0" class="p-8 text-center text-zinc-500 text-sm">
+            Nenhum email encontrado.
+          </div>
+          <div class="divide-y divide-zinc-800">
+            <template x-for="email in filteredEmails" :key="email.ID">
+              <div class="flex items-center hover:bg-zinc-800/50 transition-colors group">
+                <!-- Main clickable area -->
+                <div @click="openEmail(email)" class="flex items-center gap-3 p-4 flex-1 min-w-0 cursor-pointer">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium truncate" x-text="email.Nome"></p>
+                    <p class="text-xs text-zinc-500 mt-0.5 truncate" x-text="email.Assunto || '—'"></p>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <span class="pill" :class="statusClass(email.Status)" x-text="statusLabel(email.Status)"></span>
+                    <p x-show="email.Send_Date" class="text-xs text-zinc-500 mt-1" x-text="formatDate(email.Send_Date) + (email.Send_Time ? ' · ' + email.Send_Time : '')"></p>
+                  </div>
+                </div>
+                <!-- Delete area -->
+                <div class="pr-3 shrink-0">
+                  <div x-show="deleteConfirmId === email.ID" class="flex items-center gap-1">
+                    <button @click="deleteEmail(email.ID)"
+                      class="h-7 w-7 flex items-center justify-center rounded text-red-400 hover:bg-red-900/30 transition-colors"
+                      title="Confirmar exclusão">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
+                    <button @click="deleteConfirmId = null"
+                      class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-700/40 transition-colors"
+                      title="Cancelar">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <button x-show="deleteConfirmId !== email.ID"
+                    @click.stop="deleteConfirmId = email.ID"
+                    class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all"
+                    title="Excluir email">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- EMAIL DETAIL VIEW -->
+      <!-- ======================================================= -->
+      <div x-show="!loading && !loadError && view === 'email-detail'" class="flex flex-col gap-4 h-full">
+        <!-- Header -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <button @click="navigateTo('fila')" class="btn btn-ghost p-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="text-sm font-semibold truncate" x-text="selectedEmail && selectedEmail.Nome"></h1>
+              <span x-show="selectedEmail" class="pill" :class="statusClass(selectedEmail && selectedEmail.Status)" x-text="statusLabel(selectedEmail && selectedEmail.Status)"></span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button @click="saveDetail()" class="btn btn-outline text-xs" :disabled="detail.saving">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span x-text="detail.saving ? 'Salvando…' : 'Salvar'"></span>
+            </button>
+            <button @click="copyHTML()" class="btn btn-outline text-xs hidden sm:flex">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              HTML
+            </button>
+            <button
+              x-show="selectedEmail && selectedEmail.Status !== 'em_aprovacao' && selectedEmail.Status !== 'aprovado' && selectedEmail.Status !== 'agendado'"
+              @click="approveEmail()" class="btn btn-success text-xs">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Aprovar
+            </button>
+            <button
+              x-show="selectedEmail && (selectedEmail.Status === 'em_aprovacao' || selectedEmail.Status === 'aprovado' || selectedEmail.Status === 'agendado')"
+              @click="openScheduleModal()" class="btn btn-success text-xs">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Agendar
+            </button>
+          </div>
+        </div>
+
+        <!-- Assunto / Preheader -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-zinc-500 mb-1 block">Assunto</label>
+            <input x-model="detail.assunto" class="input" placeholder="Assunto do email…">
+          </div>
+          <div>
+            <label class="text-xs text-zinc-500 mb-1 block">Pré-cabeçalho</label>
+            <input x-model="detail.preheader" class="input" placeholder="Texto de pré-visualização…">
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-1 border-b border-zinc-800 pb-0">
+          <button @click="detail.tab = 'preview'"
+            class="px-3 py-2 text-xs font-medium transition-colors border-b-2 -mb-px"
+            :class="detail.tab === 'preview' ? 'text-white border-white' : 'text-zinc-500 border-transparent hover:text-white'">
+            Preview
+          </button>
+          <button @click="detail.tab = 'html'"
+            class="px-3 py-2 text-xs font-medium transition-colors border-b-2 -mb-px"
+            :class="detail.tab === 'html' ? 'text-white border-white' : 'text-zinc-500 border-transparent hover:text-white'">
+            HTML
+          </button>
+          <button @click="detail.tab = 'config'"
+            class="px-3 py-2 text-xs font-medium transition-colors border-b-2 -mb-px"
+            :class="detail.tab === 'config' ? 'text-white border-white' : 'text-zinc-500 border-transparent hover:text-white'">
+            Configuração
+          </button>
+        </div>
+
+        <!-- Preview tab -->
+        <div x-show="detail.tab === 'preview'" class="flex flex-col gap-2 flex-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-zinc-500">Preview do email</span>
+            <div class="flex gap-1">
+              <button @click="detail.viewport = 'desktop'"
+                class="btn btn-ghost p-1.5 text-xs" :class="detail.viewport === 'desktop' ? 'bg-zinc-800 text-white' : ''">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </button>
+              <button @click="detail.viewport = 'mobile'"
+                class="btn btn-ghost p-1.5 text-xs" :class="detail.viewport === 'mobile' ? 'bg-zinc-800 text-white' : ''">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 border border-zinc-800 rounded-lg bg-zinc-100 flex justify-center p-3 overflow-auto" style="min-height:400px">
+            <iframe
+              x-ref="previewFrame"
+              :srcdoc="detail.html"
+              sandbox="allow-same-origin allow-popups"
+              :style="'width:' + (detail.viewport === 'desktop' ? '600px' : '375px') + '; min-height:500px; border:none; background:white; border-radius:4px; flex-shrink:0; display:block'"
+              title="Email preview"
+            ></iframe>
+          </div>
+        </div>
+
+        <!-- HTML tab -->
+        <div x-show="detail.tab === 'html'" class="flex flex-col gap-2 flex-1">
+          <div class="flex justify-end">
+            <button @click="copyHTML()" class="btn btn-outline text-xs">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar HTML
+            </button>
+          </div>
+          <textarea x-model="detail.html" class="input code flex-1 rounded-lg" rows="24"
+            placeholder="HTML do email…"></textarea>
+        </div>
+
+        <!-- CONFIG tab -->
+        <div x-show="detail.tab === 'config'" class="flex flex-col gap-4">
+          <p class="text-xs text-zinc-500">Configure o disparo antes de agendar. As informações são salvas com o email e pré-preenchidas no modal de agendamento.</p>
+
+          <!-- Data e Horário -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Data de envio</label>
+              <input x-model="detail.sendDate" type="date" class="input">
+            </div>
+            <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Horário (BRT)</label>
+              <input x-model="detail.sendTime" type="time" class="input">
+            </div>
+          </div>
+
+          <!-- Send Classification -->
+          <div>
+            <label class="text-xs text-zinc-500 mb-1 block">Sender Profile</label>
+            <template x-if="buScheduleConfig.sendClassifications.length > 0">
+              <select x-model="detail.sendClassKey" class="input">
+                <option value="">Selecione…</option>
+                <template x-for="sc in buScheduleConfig.sendClassifications" :key="sc.key">
+                  <option :value="sc.key" x-text="sc.name"></option>
+                </template>
+              </select>
+            </template>
+            <template x-if="buScheduleConfig.sendClassifications.length === 0">
+              <input x-model="detail.sendClassKey" class="input" placeholder="CustomerKey da Send Classification">
+            </template>
+          </div>
+
+          <!-- DEs de Envio -->
+          <div>
+            <label class="text-xs text-zinc-500 mb-1 block">DEs de Envio</label>
+            <div class="flex flex-wrap gap-1.5 mb-2" x-show="detail.desEnvio.length > 0">
+              <template x-for="(de, idx) in detail.desEnvio" :key="de">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
+                  <span x-text="de"></span>
+                  <button @click="detail.desEnvio.splice(idx, 1)" class="text-zinc-500 hover:text-red-400 ml-0.5">×</button>
+                </span>
+              </template>
+            </div>
+            <div class="flex gap-2">
+              <input x-model="detail.deEnvioInput" class="input flex-1"
+                placeholder="CustomerKey da DE…"
+                @keydown.enter.prevent="addDetailDeEnvio()">
+              <button @click="addDetailDeEnvio()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
+            </div>
+          </div>
+
+          <!-- DEs de Exclusão -->
+          <div>
+            <label class="text-xs text-zinc-500 mb-1 block">DEs de Exclusão <span class="text-zinc-600">(opcional)</span></label>
+            <div class="flex flex-wrap gap-1.5 mb-2" x-show="detail.desExclusao.length > 0">
+              <template x-for="(de, idx) in detail.desExclusao" :key="de">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
+                  <span x-text="de"></span>
+                  <button @click="detail.desExclusao.splice(idx, 1)" class="text-zinc-500 hover:text-red-400 ml-0.5">×</button>
+                </span>
+              </template>
+            </div>
+            <div class="flex gap-2">
+              <input x-model="detail.deExclusaoInput" class="input flex-1"
+                placeholder="CustomerKey da DE…"
+                @keydown.enter.prevent="addDetailDeExclusao()">
+              <button @click="addDetailDeExclusao()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button @click="saveConfig()" class="btn btn-primary text-xs">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salvar Configuração
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- NOVA SOLICITAÇÃO VIEW -->
+      <!-- ======================================================= -->
+      <div x-show="!loading && !loadError && view === 'nova-solicitacao'" class="max-w-2xl mx-auto">
+        <div class="flex items-center gap-2 mb-6">
+          <button @click="navigateTo('fila')" class="btn btn-ghost p-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h1 class="text-lg font-semibold">Nova Solicitação</h1>
+        </div>
+
+        <!-- Step indicators -->
+        <div class="flex items-center gap-2 mb-8">
+          <template x-for="(s, i) in wizardSteps" :key="i">
+            <div class="flex items-center gap-2">
+              <div class="step-dot"
+                :class="wizard.step > i+1 ? 'done' : (wizard.step === i+1 ? 'active' : 'pending')">
+                <template x-if="wizard.step > i+1">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </template>
+                <span x-show="wizard.step <= i+1" x-text="i+1"></span>
+              </div>
+              <span class="text-xs hidden sm:block" :class="wizard.step === i+1 ? 'text-white' : 'text-zinc-500'" x-text="s"></span>
+              <div x-show="i < wizardSteps.length - 1" class="w-6 h-px bg-zinc-800"></div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Step 1: Tipo -->
+        <div x-show="wizard.step === 1" class="space-y-4">
+          <h2 class="text-sm font-semibold text-zinc-300">Tipo de envio</h2>
+          <div class="grid grid-cols-2 gap-3">
+            <template x-for="t in [{id:'avulso',label:'Avulso',desc:'Email pontual, enviado uma vez'},{id:'campanha',label:'Campanha',desc:'Parte de uma sequência de emails'}]" :key="t.id">
+              <button @click="wizard.tipo = t.id"
+                class="card p-4 text-left transition-all hover:border-zinc-600"
+                :class="wizard.tipo === t.id ? 'border-white' : ''">
+                <p class="text-sm font-medium" x-text="t.label"></p>
+                <p class="text-xs text-zinc-500 mt-1" x-text="t.desc"></p>
+              </button>
+            </template>
+          </div>
+          <div class="flex justify-end pt-2">
+            <button @click="wizardNext()" class="btn btn-primary" :disabled="!wizard.tipo">Próximo →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Copy -->
+        <div x-show="wizard.step === 2" class="space-y-4">
+          <h2 class="text-sm font-semibold text-zinc-300">Copy do email</h2>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Nome do email</label>
+              <input x-model="wizard.emailNome" class="input" placeholder="ex: VIT0002 — Email Abertura Vendas">
+            </div>
+            <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Assunto</label>
+              <input x-model="wizard.assunto" class="input" placeholder="ex: Você está perdendo dinheiro sem saber">
+            </div>
+            <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Pré-cabeçalho <span class="text-zinc-600">(opcional)</span></label>
+              <input x-model="wizard.preheader" class="input" placeholder="Aparece após o assunto na caixa de entrada…">
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs text-zinc-500">Copy completa <span class="text-zinc-400">*</span></label>
+                <button type="button" @click="$refs.docxInput.click()"
+                  class="btn btn-ghost text-xs py-1 px-2 border border-zinc-700 rounded">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Importar .docx
+                </button>
+                <input x-ref="docxInput" type="file" accept=".docx" class="hidden" @change="importDocx($event)">
+              </div>
+              <div x-show="wizard.docxLoading" class="text-xs text-zinc-400 mb-1">Extraindo texto e imagens do arquivo…</div>
+              <textarea x-model="wizard.copyText" class="input" rows="10"
+                placeholder="Cole aqui a copy do email. Inclua: título, parágrafos, CTA e quaisquer instruções adicionais."></textarea>
+              <!-- Imagens extraídas do docx -->
+              <div x-show="wizard.docxImages.length > 0" class="rounded-lg border border-zinc-700 bg-zinc-900/50 p-3 mt-2">
+                <p class="text-xs text-zinc-400 mb-2">
+                  <span x-text="wizard.docxImages.length"></span> imagem(ns) extraída(s) — serão enviadas ao SFMC e inseridas no email:
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <template x-for="(img, idx) in wizard.docxImages" :key="idx">
+                    <div class="relative group">
+                      <img :src="'data:' + img.mediaType + ';base64,' + img.b64"
+                           class="h-16 w-16 object-cover rounded border border-zinc-600">
+                      <button @click="wizard.docxImages.splice(idx, 1)"
+                        class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 justify-between pt-2">
+            <button @click="wizardBack()" class="btn btn-ghost">← Voltar</button>
+            <button @click="wizardNext()" class="btn btn-primary" :disabled="!wizard.copyText.trim()">Próximo →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Referência visual -->
+        <div x-show="wizard.step === 3" class="space-y-4">
+          <h2 class="text-sm font-semibold text-zinc-300">Referência visual <span class="text-zinc-500 font-normal">(opcional)</span></h2>
+          <p class="text-xs text-zinc-500">A imagem não será inserida no email. Claude irá extrair o DNA visual dela (paleta, sensação, contraste) e aplicar ao email.</p>
+
+          <div x-show="!wizard.refImagePreview"
+            class="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center cursor-pointer hover:border-zinc-500 transition-colors"
+            @click="$refs.refInput.click()">
+            <svg class="w-8 h-8 mx-auto text-zinc-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p class="text-sm text-zinc-400">Clique para adicionar imagem de referência</p>
+            <p class="text-xs text-zinc-600 mt-1">PNG, JPG, WEBP — será redimensionada</p>
+          </div>
+
+          <div x-show="wizard.refImagePreview" class="relative">
+            <img :src="wizard.refImagePreview" class="w-full max-h-48 object-cover rounded-lg border border-zinc-700">
+            <button @click="wizard.refImagePreview = null; wizard.refImageB64 = null"
+              class="absolute top-2 right-2 w-7 h-7 rounded-full bg-zinc-900/80 text-white flex items-center justify-center hover:bg-red-900 transition-colors text-xs">
+              ✕
+            </button>
+          </div>
+
+          <input x-ref="refInput" type="file" accept="image/*" class="hidden" @change="handleRefImageUpload($event)">
+
+          <div class="flex gap-2 justify-between pt-2">
+            <button @click="wizardBack()" class="btn btn-ghost">← Voltar</button>
+            <button @click="wizardNext()" class="btn btn-primary">Próximo →</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Template -->
+        <div x-show="wizard.step === 4" class="space-y-4">
+          <h2 class="text-sm font-semibold text-zinc-300">Escolha o template</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <template x-for="t in templateList" :key="t.id">
+              <div class="card overflow-hidden cursor-pointer transition-all hover:border-zinc-600"
+                :class="wizard.templateId === t.id ? 'border-white' : ''"
+                @click="wizard.templateId = t.id">
+                <div class="h-32 bg-zinc-900 p-3 flex flex-col gap-2">
+                  <template x-if="t.id === 'full-hero'">
+                    <div class="flex flex-col gap-2 h-full">
+                      <div class="flex-1 rounded bg-zinc-700 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      </div>
+                      <div class="h-2 bg-zinc-600 rounded w-3/4 mx-auto"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-1/2 mx-auto"></div>
+                      <div class="h-5 rounded mx-auto w-1/3" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </template>
+                  <template x-if="t.id === 'text-first'">
+                    <div class="flex flex-col gap-1.5 h-full pt-1">
+                      <div class="h-2.5 bg-zinc-600 rounded w-2/3"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-5/6"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
+                      <div class="flex-1"></div>
+                      <div class="h-5 rounded w-1/3" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </template>
+                  <template x-if="t.id === 'side-image'">
+                    <div class="flex gap-2 h-full">
+                      <div class="w-2/5 bg-zinc-700 rounded flex items-center justify-center">
+                        <svg class="w-4 h-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      </div>
+                      <div class="flex-1 flex flex-col gap-1.5 py-1">
+                        <div class="h-2 bg-zinc-600 rounded w-full"></div>
+                        <div class="h-1.5 bg-zinc-700 rounded w-5/6"></div>
+                        <div class="flex-1"></div>
+                        <div class="h-5 rounded w-2/3" :style="'background:' + currentBU.color"></div>
+                      </div>
+                    </div>
+                  </template>
+                  <template x-if="t.id === 'multi-block'">
+                    <div class="flex flex-col gap-1.5 h-full">
+                      <template x-for="b in [1,2,3]" :key="b">
+                        <div class="flex-1 rounded border border-zinc-700 p-1 flex items-center gap-1.5">
+                          <div class="w-5 h-5 rounded bg-zinc-700 shrink-0"></div>
+                          <div class="flex-1 flex flex-col gap-1">
+                            <div class="h-1.5 bg-zinc-600 rounded w-3/4"></div>
+                            <div class="h-1 bg-zinc-700 rounded w-full"></div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                  <template x-if="t.id === 'minimal'">
+                    <div class="flex flex-col items-center justify-center h-full gap-2">
+                      <div class="h-2.5 bg-zinc-600 rounded w-2/3"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-4/5"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-3/4"></div>
+                      <div class="h-6 rounded w-2/5" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </template>
+                  <template x-if="t.id === 'announcement'">
+                    <div class="flex flex-col h-full">
+                      <div class="h-1 rounded-t w-full mb-2" :style="'background:' + currentBU.color"></div>
+                      <div class="flex flex-col items-center gap-1.5 flex-1 justify-center">
+                        <div class="h-2.5 bg-zinc-600 rounded w-2/3"></div>
+                        <div class="h-1.5 bg-zinc-700 rounded w-3/4"></div>
+                        <div class="h-5 rounded w-2/5 mt-1" :style="'background:' + currentBU.color"></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+                <div class="p-3 flex items-center gap-2">
+                  <div class="flex-1">
+                    <p class="text-xs font-medium" x-text="t.name"></p>
+                    <p class="text-xs text-zinc-500" x-text="t.desc"></p>
+                  </div>
+                  <div x-show="wizard.templateId === t.id" class="w-4 h-4 rounded-full border-2 border-white flex items-center justify-center shrink-0">
+                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div class="flex gap-2 justify-between pt-2">
+            <button @click="wizardBack()" class="btn btn-ghost">← Voltar</button>
+            <button @click="wizard.step = 5" class="btn btn-primary" :disabled="!wizard.templateId">
+              Próximo →
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 5: Configuração -->
+        <div x-show="wizard.step === 5" class="space-y-4">
+          <div>
+            <h2 class="text-sm font-semibold text-zinc-300" x-text="wizard.tipo === 'campanha' ? 'Configuração do disparo na campanha' : 'Configuração do disparo'"></h2>
+            <p class="text-xs text-zinc-500 mt-1">Configure as DEs específicas deste email. Serão salvas e pré-preenchidas ao agendar.</p>
+          </div>
+
+          <!-- Nome da campanha (só para tipo=campanha) -->
+          <div x-show="wizard.tipo === 'campanha'">
+            <label class="text-xs text-zinc-500 mb-1 block">Nome da campanha</label>
+            <input x-model="wizard.campanhaNome" class="input" placeholder="ex: Campanha Abertura Vendas 2025">
+          </div>
+
+          <!-- Data e hora (opcional) -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Data de envio <span class="text-zinc-600">(opcional)</span></label>
+              <input x-model="wizard.sendDate" type="date" class="input">
+            </div>
+            <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Horário (BRT) <span class="text-zinc-600">(opcional)</span></label>
+              <input x-model="wizard.sendTime" type="time" class="input">
+            </div>
+          </div>
+
+          <!-- DEs de Envio -->
+          <div>
+            <label class="text-xs text-zinc-500 mb-1 block">DEs de Envio <span class="text-red-500">*</span></label>
+            <div class="flex flex-wrap gap-1.5 mb-2" x-show="wizard.desEnvio.length > 0">
+              <template x-for="(de, idx) in wizard.desEnvio" :key="de">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
+                  <span x-text="de"></span>
+                  <button @click="wizard.desEnvio.splice(idx, 1)" class="text-zinc-500 hover:text-red-400 ml-0.5">×</button>
+                </span>
+              </template>
+            </div>
+            <div class="flex gap-2">
+              <input x-model="wizard.deEnvioInput" class="input flex-1"
+                placeholder="CustomerKey da DE de envio…"
+                @keydown.enter.prevent="addWizardDeEnvio()">
+              <button @click="addWizardDeEnvio()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
+            </div>
+            <p class="text-xs text-zinc-600 mt-1">Para campanhas: cada email pode ter DEs diferentes</p>
+          </div>
+
+          <!-- DEs de Exclusão -->
+          <div>
+            <label class="text-xs text-zinc-500 mb-1 block">DEs de Exclusão <span class="text-zinc-600">(opcional)</span></label>
+            <div class="flex flex-wrap gap-1.5 mb-2" x-show="wizard.desExclusao.length > 0">
+              <template x-for="(de, idx) in wizard.desExclusao" :key="de">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
+                  <span x-text="de"></span>
+                  <button @click="wizard.desExclusao.splice(idx, 1)" class="text-zinc-500 hover:text-red-400 ml-0.5">×</button>
+                </span>
+              </template>
+            </div>
+            <div class="flex gap-2">
+              <input x-model="wizard.deExclusaoInput" class="input flex-1"
+                placeholder="CustomerKey da DE de exclusão…"
+                @keydown.enter.prevent="addWizardDeExclusao()">
+              <button @click="addWizardDeExclusao()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 justify-between pt-2">
+            <button @click="wizard.step = 4" class="btn btn-ghost">← Voltar</button>
+            <div class="flex gap-2">
+              <button @click="wizard.step = 6; wizard.manualMode = true" class="btn btn-outline text-sm">
+                Colar HTML
+              </button>
+              <button @click="generateEmail()" class="btn btn-primary">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Gerar com IA
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6: Gerando / Resultado / Manual -->
+        <div x-show="wizard.step === 6" class="space-y-4">
+          <!-- Generating state -->
+          <div x-show="wizard.generating" class="card p-8 flex flex-col items-center gap-4">
+            <div class="w-10 h-10 border-2 border-zinc-700 border-t-white rounded-full animate-spin"></div>
+            <p class="text-sm font-medium" x-text="wizard.imagesUploading ? 'Enviando imagens ao SFMC…' : 'Gerando HTML com Claude…'"></p>
+            <p class="text-xs text-zinc-500 text-center">Isso pode levar até 60 segundos.</p>
+            <div x-show="wizard.docxImages.length > 0" class="w-full mt-2">
+              <p class="text-xs text-zinc-500 mb-2 text-center" x-text="wizard.imagesUploading ? 'Fazendo upload de ' + wizard.docxImages.length + ' imagem(ns)…' : 'Imagens do documento incluídas no email'"></p>
+              <div class="flex flex-wrap gap-1 justify-center">
+                <template x-for="(img, i) in wizard.docxImages.slice(0,4)" :key="i">
+                  <img :src="'data:' + img.mediaType + ';base64,' + img.b64" class="h-12 w-12 object-cover rounded border border-zinc-700 opacity-70">
+                </template>
+              </div>
+            </div>
+            <div x-show="wizard.refImagePreview && !wizard.docxImages.length" class="w-full mt-2">
+              <p class="text-xs text-zinc-500 mb-2 text-center">Usando como referência visual:</p>
+              <img :src="wizard.refImagePreview" class="w-full max-h-36 object-cover rounded-lg border border-zinc-700 opacity-60">
+            </div>
+          </div>
+
+          <!-- Manual paste mode -->
+          <div x-show="!wizard.generating && wizard.manualMode" class="space-y-3">
+            <h2 class="text-sm font-semibold text-zinc-300">Colar HTML do email</h2>
+            <p class="text-xs text-zinc-500">Gere o HTML usando o agente de email (Claude Code) e cole abaixo.</p>
+            <textarea x-model="wizard.manualHtml" class="input font-mono text-xs" rows="12"
+              placeholder="&lt;!DOCTYPE html&gt;..."></textarea>
+            <div class="flex gap-2 justify-between">
+              <button @click="wizard.step = 5; wizard.manualMode = false" class="btn btn-ghost">← Voltar</button>
+              <button @click="saveManualEmail()" class="btn btn-primary" :disabled="!wizard.manualHtml.trim()">
+                Salvar Email
+              </button>
+            </div>
+          </div>
+
+          <!-- Error state -->
+          <div x-show="!wizard.generating && !wizard.manualMode && wizard.genError" class="card p-6 border-red-900">
+            <p class="text-sm text-red-400 mb-1" x-text="wizard.genError"></p>
+            <div class="flex gap-2 mt-4">
+              <button @click="wizard.step = 5" class="btn btn-ghost text-xs">← Voltar</button>
+              <button @click="wizard.manualMode = true; wizard.genError = null" class="btn btn-primary text-xs">
+                Colar HTML manualmente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- CATÁLOGO VIEW -->
+      <!-- ======================================================= -->
+      <div x-show="!loading && !loadError && view === 'catalogo'">
+        <div class="mb-6">
+          <h1 class="text-lg font-semibold">Catálogo de Templates</h1>
+          <p class="text-xs text-zinc-500 mt-0.5">Escolha o layout base para seus emails</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <template x-for="t in templateList" :key="t.id">
+            <div class="card overflow-hidden hover:border-zinc-600 transition-colors cursor-pointer"
+              @click="wizard.templateId = t.id; navigateTo('nova-solicitacao'); wizard.step = 4">
+              <!-- Template mockup -->
+              <div class="h-40 bg-zinc-900 p-3 flex flex-col gap-2" :class="'template-' + t.id">
+                <template x-if="t.id === 'full-hero'">
+                  <div class="flex flex-col gap-2 h-full">
+                    <div class="flex-1 rounded bg-zinc-700 flex items-center justify-center">
+                      <svg class="w-6 h-6 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <div class="h-2 bg-zinc-600 rounded w-3/4 mx-auto"></div>
+                    <div class="h-1.5 bg-zinc-700 rounded w-1/2 mx-auto"></div>
+                    <div class="h-6 rounded mx-auto w-1/3" :style="'background:' + currentBU.color"></div>
+                  </div>
+                </template>
+                <template x-if="t.id === 'text-first'">
+                  <div class="flex flex-col gap-1.5 h-full pt-2">
+                    <div class="h-3 bg-zinc-600 rounded w-2/3"></div>
+                    <div class="h-2 bg-zinc-700 rounded w-full"></div>
+                    <div class="h-2 bg-zinc-700 rounded w-5/6"></div>
+                    <div class="h-2 bg-zinc-700 rounded w-full"></div>
+                    <div class="h-2 bg-zinc-700 rounded w-4/5"></div>
+                    <div class="flex-1"></div>
+                    <div class="h-6 rounded w-1/3" :style="'background:' + currentBU.color"></div>
+                  </div>
+                </template>
+                <template x-if="t.id === 'side-image'">
+                  <div class="flex gap-2 h-full">
+                    <div class="w-2/5 bg-zinc-700 rounded flex items-center justify-center">
+                      <svg class="w-5 h-5 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1.5 py-1">
+                      <div class="h-2.5 bg-zinc-600 rounded w-full"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-5/6"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
+                      <div class="flex-1"></div>
+                      <div class="h-5 rounded w-2/3" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+                <template x-if="t.id === 'multi-block'">
+                  <div class="flex flex-col gap-2 h-full">
+                    <template x-for="b in [1,2,3]" :key="b">
+                      <div class="flex-1 rounded border border-zinc-700 p-1.5 flex items-center gap-1.5">
+                        <div class="w-6 h-6 rounded bg-zinc-700 shrink-0"></div>
+                        <div class="flex-1 flex flex-col gap-1">
+                          <div class="h-1.5 bg-zinc-600 rounded w-3/4"></div>
+                          <div class="h-1 bg-zinc-700 rounded w-full"></div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="t.id === 'minimal'">
+                  <div class="flex flex-col items-center justify-center h-full gap-3">
+                    <div class="h-3 bg-zinc-600 rounded w-2/3"></div>
+                    <div class="h-2 bg-zinc-700 rounded w-4/5"></div>
+                    <div class="h-2 bg-zinc-700 rounded w-3/4"></div>
+                    <div class="h-7 rounded w-2/5" :style="'background:' + currentBU.color"></div>
+                  </div>
+                </template>
+                <template x-if="t.id === 'announcement'">
+                  <div class="flex flex-col h-full">
+                    <div class="h-1 rounded-t w-full mb-3" :style="'background:' + currentBU.color"></div>
+                    <div class="flex flex-col items-center gap-2 flex-1 justify-center">
+                      <div class="h-3 bg-zinc-600 rounded w-2/3"></div>
+                      <div class="h-2 bg-zinc-700 rounded w-3/4"></div>
+                      <div class="h-2 bg-zinc-700 rounded w-4/5"></div>
+                      <div class="h-6 rounded w-2/5 mt-1" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+              <div class="p-4">
+                <p class="text-sm font-medium" x-text="t.name"></p>
+                <p class="text-xs text-zinc-500 mt-0.5" x-text="t.desc"></p>
+                <button class="btn btn-outline text-xs mt-3">
+                  Usar este template →
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MOBILE NAV -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-zinc-950/95 backdrop-blur border-t border-zinc-800 flex items-center justify-around py-2 px-4 z-20">
+    <button @click="navigateTo('dashboard')" class="flex flex-col items-center gap-0.5 px-3 py-1"
+      :class="view === 'dashboard' ? 'text-white' : 'text-zinc-500'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span class="text-[10px]">Dashboard</span>
+    </button>
+    <button @click="navigateTo('fila')" class="flex flex-col items-center gap-0.5 px-3 py-1"
+      :class="view === 'fila' || view === 'email-detail' ? 'text-white' : 'text-zinc-500'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="text-[10px]">Fila</span>
+    </button>
+    <button @click="navigateTo('nova-solicitacao')"
+      class="w-12 h-12 rounded-full bg-white text-zinc-900 flex items-center justify-center shadow-lg -mt-4">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button @click="navigateTo('catalogo')" class="flex flex-col items-center gap-0.5 px-3 py-1"
+      :class="view === 'catalogo' ? 'text-white' : 'text-zinc-500'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span class="text-[10px]">Catálogo</span>
+    </button>
+    <button @click="navigateTo('nova-solicitacao')" class="flex flex-col items-center gap-0.5 px-3 py-1 text-zinc-500">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span class="text-[10px]">Mais</span>
+    </button>
+  </nav>
+
+</div><!-- end x-show API_URL -->
+
+<!-- ============================================================ -->
+<!-- SCHEDULE MODAL -->
+<!-- ============================================================ -->
+<div x-show="detail.showAgendar" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="card w-full max-w-lg max-h-[92dvh] overflow-y-auto">
+    <div class="flex items-center justify-between p-5 border-b border-zinc-800">
+      <h2 class="font-semibold text-sm">Agendar Envio no SFMC</h2>
+      <button @click="detail.showAgendar = false" class="text-zinc-500 hover:text-white">✕</button>
+    </div>
+    <div class="p-5 space-y-4">
+      <p class="text-xs text-zinc-400 font-medium" x-text="selectedEmail && selectedEmail.Nome"></p>
+
+      <!-- Data e Horário -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-zinc-500 mb-1 block">Data de envio</label>
+          <input x-model="schedule.sendDate" type="date" class="input">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-500 mb-1 block">Horário (BRT)</label>
+          <input x-model="schedule.sendTime" type="time" class="input">
+        </div>
+      </div>
+
+      <!-- Send Classification -->
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">Sender Profile <span class="text-red-500">*</span></label>
+        <template x-if="buScheduleConfig.sendClassifications.length > 0">
+          <select x-model="schedule.sendClassKey" class="input">
+            <option value="">Selecione…</option>
+            <template x-for="sc in buScheduleConfig.sendClassifications" :key="sc.key">
+              <option :value="sc.key" x-text="sc.name"></option>
+            </template>
+          </select>
+        </template>
+        <template x-if="buScheduleConfig.sendClassifications.length === 0">
+          <input x-model="schedule.sendClassKey" class="input" placeholder="CustomerKey da Send Classification">
+        </template>
+      </div>
+
+      <!-- Pasta de Tracking -->
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">Pasta de Tracking <span class="text-zinc-600">(opcional)</span></label>
+        <template x-if="buScheduleConfig.trackingFolders.length > 0">
+          <select x-model="schedule.categoryId" class="input">
+            <option value="">Sem pasta específica</option>
+            <template x-for="tf in buScheduleConfig.trackingFolders" :key="tf.id">
+              <option :value="tf.id" x-text="tf.name"></option>
+            </template>
+          </select>
+        </template>
+        <template x-if="buScheduleConfig.trackingFolders.length === 0">
+          <input x-model="schedule.categoryId" class="input" placeholder="CategoryID da pasta">
+        </template>
+      </div>
+
+      <!-- DEs de Envio -->
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">DEs de Envio</label>
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-1.5 mb-2" x-show="schedule.desEnvio.length > 0">
+          <template x-for="(de, idx) in schedule.desEnvio" :key="de">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
+              <span x-text="de"></span>
+              <button @click="schedule.desEnvio.splice(idx, 1)" class="text-zinc-500 hover:text-red-400 ml-0.5">×</button>
+            </span>
+          </template>
+        </div>
+        <div class="flex gap-2">
+          <input x-model="schedule.deEnvioInput" class="input flex-1"
+            placeholder="ex: tb_assinantes_recentes"
+            @keydown.enter.prevent="addDeEnvio()">
+          <button @click="addDeEnvio()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
+        </div>
+      </div>
+
+      <!-- DEs de Exclusão -->
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">DEs de Exclusão <span class="text-zinc-600">(opcional)</span></label>
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-1.5 mb-2" x-show="schedule.desExclusao.length > 0">
+          <template x-for="(de, idx) in schedule.desExclusao" :key="de">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
+              <span x-text="de"></span>
+              <button @click="schedule.desExclusao.splice(idx, 1)" class="text-zinc-500 hover:text-red-400 ml-0.5">×</button>
+            </span>
+          </template>
+        </div>
+        <div class="flex gap-2">
+          <input x-model="schedule.deExclusaoInput" class="input flex-1"
+            placeholder="ex: Tb_CP_Email"
+            @keydown.enter.prevent="addDeExclusao()">
+          <button @click="addDeExclusao()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Observações -->
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">Observações</label>
+        <textarea x-model="schedule.obs" class="input" rows="2" placeholder="Notas adicionais…"></textarea>
+      </div>
+
+      <!-- Log de progresso -->
+      <div x-show="schedule.log" class="rounded-lg bg-zinc-900 border border-zinc-800 px-3 py-2">
+        <p class="text-xs font-mono text-zinc-400" x-text="schedule.log"></p>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button @click="detail.showAgendar = false" class="btn btn-outline flex-1 justify-center" :disabled="schedule.submitting">Cancelar</button>
+        <button @click="confirmSchedule()" class="btn btn-success flex-1 justify-center"
+          :disabled="!schedule.sendDate || !schedule.sendClassKey || schedule.desEnvio.length === 0 || schedule.submitting">
+          <span x-show="!schedule.submitting">Confirmar Agendamento</span>
+          <span x-show="schedule.submitting" class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            Agendando no SFMC…
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APP SCRIPT -->
+<!-- ============================================================ -->
+<script>
+function mktcApp() {
+  return {
+    // ========== CONFIG ==========
+    API_URL: '',
+    setupApiUrl: '',
+
+    // ========== STATE ==========
+    view:          'dashboard',
+    bu:            'finclass',
+    emails:        [],
+    stats:         {total: 0, rascunho: 0, em_aprovacao: 0, aprovado: 0, agendado: 0, enviado: 0},
+    selectedEmail:   null,
+    loading:         false,
+    loadError:       null,
+    filaSearch:      '',
+    filaFilter:      'all',
+    deleteConfirmId: null,
+    toast:           {show: false, message: '', type: 'success'},
+
+    detail: {
+      html: '', assunto: '', preheader: '',
+      viewport: 'desktop', saving: false,
+      showAgendar: false, tab: 'preview',
+      desEnvio: [], desExclusao: [],
+      deEnvioInput: '', deExclusaoInput: '',
+      sendDate: '', sendTime: '', sendClassKey: '',
+    },
+
+    schedule: {
+      sendDate: '', sendTime: '',
+      sendClassKey: '',
+      desEnvio: [], desExclusao: [],
+      deEnvioInput: '', deExclusaoInput: '',
+      categoryId: '',
+      obs: '',
+      submitting: false, log: ''
+    },
+
+    wizard: {
+      step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '',
+      emailNome: '', templateId: 'full-hero', campanhaNome: '',
+      refImageFile: null, refImagePreview: null, refImageB64: null,
+      docxLoading: false, manualMode: false, manualHtml: '',
+      generating: false, genError: null, generatedHtml: '',
+      docxImages: [], docxImageUrls: [], imagesUploading: false,
+      desEnvio: [], desExclusao: [], deEnvioInput: '', deExclusaoInput: '',
+      sendDate: '', sendTime: '',
+    },
+
+    // ========== INIT ==========
+    init() {
+      const savedUrl = localStorage.getItem('mktc_api_url');
+      if (savedUrl) this.API_URL = savedUrl;
+      const savedBU = localStorage.getItem('mktc_bu');
+      if (savedBU) this.bu = savedBU;
+      if (this.API_URL) this.loadDashboard();
+    },
+
+    saveApiUrl() {
+      const url = this.setupApiUrl.trim();
+      if (!url) return;
+      this.API_URL = url;
+      localStorage.setItem('mktc_api_url', url);
+      this.loadDashboard();
+    },
+
+    disconnectApi() {
+      if (!confirm('Desconectar da API? O localStorage será limpo.')) return;
+      localStorage.removeItem('mktc_api_url');
+      localStorage.removeItem('mktc_bu');
+      this.API_URL = '';
+      this.setupApiUrl = '';
+    },
+
+    // ========== NAVIGATION ==========
+    async navigateTo(newView) {
+      this.view = newView;
+      if (newView === 'dashboard') await this.loadDashboard();
+      else if (newView === 'fila') await this.loadEmails();
+      else if (newView === 'nova-solicitacao') this.resetWizard();
+    },
+
+    async changeBU(newBU) {
+      this.bu = newBU;
+      localStorage.setItem('mktc_bu', newBU);
+      this.emails = [];
+      this.stats = {total: 0, rascunho: 0, em_aprovacao: 0, aprovado: 0, agendado: 0, enviado: 0};
+      if (this.view === 'dashboard' || this.view === 'fila') await this.loadDashboard();
+    },
+
+    retryLoad() {
+      this.loadError = null;
+      if (this.view === 'dashboard') this.loadDashboard();
+      else this.loadEmails();
+    },
+
+    // ========== API ==========
+    async apiCall(action, data = {}) {
+      if (!this.API_URL) throw new Error('API URL não configurada');
+
+      // Flatten nested {email: {...}} into flat params
+      const flat = {action, bu: this.bu};
+      for (const [k, v] of Object.entries(data)) {
+        if (k === 'email' && v && typeof v === 'object') Object.assign(flat, v);
+        else flat[k] = v ?? '';
+      }
+
+      // save_email: roteia pelo Vercel (proxy seguro, sem limite de URL do browser)
+      // demais ações: GET direto ao SFMC
+      let response;
+      if (action === 'save_email') {
+        delete flat.HTML_Content;
+        response = await fetch('https://platform-indol-five.vercel.app/api/save', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({sfmcUrl: this.API_URL, ...flat}),
+        });
+      } else {
+        response = await fetch(`${this.API_URL}?${new URLSearchParams(flat)}`);
+      }
+
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const text = await response.text();
+      let json;
+      try {
+        json = JSON.parse(text.trim());
+      } catch(e1) {
+        const match = text.match(/\{[\s\S]*?\}/);
+        if (!match) throw new Error('Sem JSON na resposta: ' + text.substring(0, 120));
+        try { json = JSON.parse(match[0]); }
+        catch(e2) { throw new Error('JSON inválido: ' + text.substring(0, 120)); }
+      }
+      if (json.error || json.success === false) throw new Error(json.error || 'Erro na API');
+      return json;
+    },
+
+    // ========== DATA ==========
+    async loadDashboard() {
+      this.loading = true; this.loadError = null;
+      try {
+        const [statsRes, emailsRes] = await Promise.all([
+          this.apiCall('get_stats'),
+          this.apiCall('list_emails')
+        ]);
+        this.stats  = statsRes.data  || this.stats;
+        this.emails = (emailsRes.data || []).filter(e => e.Status !== 'deletado');
+      } catch(e) { this.loadError = e.message; }
+      finally    { this.loading = false; }
+    },
+
+    async loadEmails() {
+      this.loading = true; this.loadError = null;
+      try {
+        const res = await this.apiCall('list_emails');
+        this.emails = (res.data || []).filter(e => e.Status !== 'deletado');
+      } catch(e) { this.loadError = e.message; }
+      finally    { this.loading = false; }
+    },
+
+    // ========== EMAIL DETAIL ==========
+    async openEmail(email) {
+      this.selectedEmail    = email;
+      this.detail.html        = '';
+      this.detail.assunto     = email.Assunto   || '';
+      this.detail.preheader   = email.Preheader || '';
+      this.detail.tab         = 'preview';
+      this.detail.showAgendar = false;
+      this.detail.desEnvio    = email.DE_Envio    ? email.DE_Envio.split(',').map(s => s.trim()).filter(Boolean) : [];
+      this.detail.desExclusao = email.DE_Exclusao ? email.DE_Exclusao.split(',').map(s => s.trim()).filter(Boolean) : [];
+      this.detail.sendDate    = email.Send_Date || '';
+      this.detail.sendTime    = email.Send_Time || '';
+      this.detail.sendClassKey = '';
+      this.view = 'email-detail';
+      // Busca metadados; HTML_Content vive no localStorage (SFMC não aceita grandes payloads)
+      try {
+        const res = await this.apiCall('get_email', {id: email.ID});
+        if (res.data) {
+          this.selectedEmail = {...this.selectedEmail, ...res.data};
+          // Usa localStorage como fonte primária para HTML (SFMC armazena só metadados)
+          const localHtml = localStorage.getItem('mktc_html_' + email.ID);
+          this.detail.html = localHtml || res.data.HTML_Content || '';
+        }
+      } catch(e) {
+        const localHtml = localStorage.getItem('mktc_html_' + email.ID);
+        if (localHtml) this.detail.html = localHtml;
+      }
+    },
+
+    async saveDetail() {
+      this.detail.saving = true;
+      try {
+        await this.apiCall('save_email', {
+          email: {
+            ...this.selectedEmail,
+            Assunto:      this.detail.assunto,
+            Preheader:    this.detail.preheader,
+            HTML_Content: this.detail.html,
+          }
+        });
+        this.selectedEmail.Assunto      = this.detail.assunto;
+        this.selectedEmail.Preheader    = this.detail.preheader;
+        this.selectedEmail.HTML_Content = this.detail.html;
+        this.showToast('Salvo com sucesso!', 'success');
+      } catch(e) { this.showToast('Erro: ' + e.message, 'error'); }
+      finally    { this.detail.saving = false; }
+    },
+
+    async approveEmail() {
+      try {
+        await this.saveDetail();
+        await this.apiCall('save_email', {
+          email: {...this.selectedEmail, Status: 'em_aprovacao'}
+        });
+        this.selectedEmail.Status = 'em_aprovacao';
+        this.openScheduleModal();
+      } catch(e) { this.showToast('Erro: ' + e.message, 'error'); }
+    },
+
+    openScheduleModal() {
+      this.schedule = {
+        sendDate:    this.detail.sendDate    || '',
+        sendTime:    this.detail.sendTime    || '',
+        sendClassKey: this.detail.sendClassKey || '',
+        desEnvio:    [...this.detail.desEnvio],
+        desExclusao: [...this.detail.desExclusao],
+        deEnvioInput: '', deExclusaoInput: '',
+        categoryId: '', obs: '', submitting: false, log: ''
+      };
+      this.detail.showAgendar = true;
+    },
+
+    async confirmSchedule() {
+      this.schedule.submitting = true;
+      this.schedule.log = 'Enviando para SFMC…';
+      const html = this.detail.html || localStorage.getItem('mktc_html_' + (this.selectedEmail && this.selectedEmail.ID)) || '';
+      if (!html) {
+        this.showToast('HTML não encontrado. Salve o email antes de agendar.', 'error');
+        this.schedule.submitting = false;
+        this.schedule.log = '';
+        return;
+      }
+      try {
+        const resp = await fetch('https://platform-indol-five.vercel.app/api/schedule', {
+          method:  'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            bu:                 this.bu,
+            nome:               this.selectedEmail.Nome || '',
+            assunto:            this.detail.assunto || this.selectedEmail.Assunto || '',
+            html:               html,
+            sendClassificationId: this.schedule.sendClassKey,
+            desEnvio:           this.schedule.desEnvio,
+            desExclusao:        this.schedule.desExclusao,
+            sendDate:           this.schedule.sendDate,
+            sendTime:           this.schedule.sendTime,
+            trackingFolderId:   this.schedule.categoryId || undefined,
+          })
+        });
+        const result = await resp.json();
+        if (!resp.ok || result.error) throw new Error(result.error || 'HTTP ' + resp.status);
+
+        // Update status in SFMC
+        await this.apiCall('save_email', {
+          email: {
+            ...this.selectedEmail,
+            Status:      'agendado',
+            Send_Date:   this.schedule.sendDate,
+            Send_Time:   this.schedule.sendTime,
+            DE_Envio:    this.schedule.desEnvio.join(','),
+            DE_Exclusao: this.schedule.desExclusao.join(','),
+            Obs:         (this.schedule.obs ? this.schedule.obs + '\n' : '') +
+                         '[SFMC] Email:' + (result.emailId||'') + ' ESD:' + (result.esdId||''),
+          }
+        });
+
+        this.selectedEmail.Status = 'agendado';
+        this.detail.showAgendar   = false;
+        this.schedule = {
+          sendDate: '', sendTime: '', sendClassKey: '',
+          desEnvio: [], desExclusao: [],
+          deEnvioInput: '', deExclusaoInput: '',
+          categoryId: '', obs: '', submitting: false, log: ''
+        };
+        this.showToast('Agendado! Email Studio ID: ' + (result.emailId || '?'), 'success');
+        await this.navigateTo('fila');
+      } catch(e) {
+        this.schedule.log = '';
+        this.showToast('Erro: ' + e.message, 'error');
+      } finally {
+        this.schedule.submitting = false;
+      }
+    },
+
+    copyHTML() {
+      navigator.clipboard.writeText(this.detail.html)
+        .then(() => this.showToast('HTML copiado!', 'success'))
+        .catch(() => this.showToast('Erro ao copiar', 'error'));
+    },
+
+    async deleteEmail(id) {
+      try {
+        await this.apiCall('delete_email', { ID: id });
+        localStorage.removeItem('mktc_html_' + id);
+        this.emails = this.emails.filter(e => e.ID !== id);
+        this.deleteConfirmId = null;
+        this.showToast('Email removido.', 'success');
+      } catch(e) {
+        this.deleteConfirmId = null;
+        this.showToast('Erro ao excluir: ' + e.message, 'error');
+      }
+    },
+
+    addDeEnvio() {
+      const v = this.schedule.deEnvioInput.trim();
+      if (v && !this.schedule.desEnvio.includes(v)) this.schedule.desEnvio.push(v);
+      this.schedule.deEnvioInput = '';
+    },
+
+    addDeExclusao() {
+      const v = this.schedule.deExclusaoInput.trim();
+      if (v && !this.schedule.desExclusao.includes(v)) this.schedule.desExclusao.push(v);
+      this.schedule.deExclusaoInput = '';
+    },
+
+    addWizardDeEnvio() {
+      const v = this.wizard.deEnvioInput.trim();
+      if (v && !this.wizard.desEnvio.includes(v)) this.wizard.desEnvio.push(v);
+      this.wizard.deEnvioInput = '';
+    },
+
+    addWizardDeExclusao() {
+      const v = this.wizard.deExclusaoInput.trim();
+      if (v && !this.wizard.desExclusao.includes(v)) this.wizard.desExclusao.push(v);
+      this.wizard.deExclusaoInput = '';
+    },
+
+    addDetailDeEnvio() {
+      const v = this.detail.deEnvioInput.trim();
+      if (v && !this.detail.desEnvio.includes(v)) this.detail.desEnvio.push(v);
+      this.detail.deEnvioInput = '';
+    },
+
+    addDetailDeExclusao() {
+      const v = this.detail.deExclusaoInput.trim();
+      if (v && !this.detail.desExclusao.includes(v)) this.detail.desExclusao.push(v);
+      this.detail.deExclusaoInput = '';
+    },
+
+    async saveConfig() {
+      try {
+        await this.apiCall('save_email', {
+          email: {
+            ...this.selectedEmail,
+            Send_Date:   this.detail.sendDate,
+            Send_Time:   this.detail.sendTime,
+            DE_Envio:    this.detail.desEnvio.join(','),
+            DE_Exclusao: this.detail.desExclusao.join(','),
+          }
+        });
+        this.selectedEmail.Send_Date   = this.detail.sendDate;
+        this.selectedEmail.Send_Time   = this.detail.sendTime;
+        this.selectedEmail.DE_Envio    = this.detail.desEnvio.join(',');
+        this.selectedEmail.DE_Exclusao = this.detail.desExclusao.join(',');
+        this.showToast('Configuração salva!', 'success');
+      } catch(e) { this.showToast('Erro: ' + e.message, 'error'); }
+    },
+
+    // ========== WIZARD ==========
+    resetWizard() {
+      this.wizard = {
+        step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '',
+        emailNome: '', templateId: 'full-hero', campanhaNome: '',
+        refImageFile: null, refImagePreview: null, refImageB64: null,
+        docxLoading: false, manualMode: false, manualHtml: '',
+        generating: false, genError: null, generatedHtml: '',
+        docxImages: [], docxImageUrls: [], imagesUploading: false,
+        desEnvio: [], desExclusao: [], deEnvioInput: '', deExclusaoInput: '',
+        sendDate: '', sendTime: '',
+      };
+    },
+
+    wizardNext() { if (this.wizard.step < 5) this.wizard.step++; },
+    wizardBack() { if (this.wizard.step > 1) this.wizard.step--; },
+
+    async importDocx(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      this.wizard.docxLoading = true;
+      this.wizard.docxImages  = [];
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const extractedImages = [];
+        // Extract HTML with images (base64 data URIs)
+        const result = await mammoth.convertToHtml({arrayBuffer}, {
+          convertImage: mammoth.images.imgElement(function(image) {
+            return image.read('base64').then(function(b64) {
+              extractedImages.push({ b64, mediaType: image.contentType, filename: 'img_' + extractedImages.length });
+              return { src: 'data:' + image.contentType + ';base64,' + b64 };
+            });
+          })
+        });
+        this.wizard.docxImages = extractedImages;
+        // Extract plain text from resulting HTML
+        const tmp = document.createElement('div');
+        tmp.innerHTML = result.value;
+        this.wizard.copyText = (tmp.innerText || tmp.textContent || '').trim();
+        const nImgs = extractedImages.length;
+        this.showToast('Extraído' + (nImgs ? ' · ' + nImgs + ' imagem(ns) encontrada(s)' : ''), 'success');
+      } catch(e) {
+        this.showToast('Erro ao ler .docx: ' + e.message, 'error');
+      } finally {
+        this.wizard.docxLoading = false;
+        event.target.value = '';
+      }
+    },
+
+    async uploadDocxImages() {
+      const urls = [];
+      for (const img of this.wizard.docxImages) {
+        try {
+          const resp = await fetch('https://platform-indol-five.vercel.app/api/upload-image', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ imageB64: img.b64, mediaType: img.mediaType, filename: img.filename }),
+          });
+          const data = await resp.json();
+          if (data.url) urls.push(data.url);
+        } catch(_) { /* não-fatal: segue sem imagem */ }
+      }
+      return urls;
+    },
+
+    async saveManualEmail() {
+      const emailName = this.wizard.emailNome || this.wizard.assunto || 'Email ' + new Date().toLocaleDateString('pt-BR');
+      try {
+        const saveResult = await this.apiCall('save_email', {
+          email: {
+            Nome:         emailName,
+            Status:       'rascunho',
+            Assunto:      this.wizard.assunto,
+            Preheader:    this.wizard.preheader,
+            HTML_Content: this.wizard.manualHtml,
+            Template_ID:  this.wizard.templateId,
+            Send_Date:    this.wizard.sendDate  || '',
+            Send_Time:    this.wizard.sendTime  || '',
+            DE_Envio:     this.wizard.desEnvio.join(','),
+            DE_Exclusao:  this.wizard.desExclusao.join(','),
+            Obs:          this.wizard.campanhaNome ? 'Campanha: ' + this.wizard.campanhaNome : '',
+          }
+        });
+        await this.loadEmails();
+        const saved = this.emails.find(e => e.ID === saveResult.id);
+        if (saved) this.openEmail(saved);
+        else this.navigateTo('fila');
+      } catch(e) {
+        this.showToast('Erro ao salvar: ' + e.message, 'error');
+      }
+    },
+
+    async handleRefImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const resized = await this.resizeImage(file, 800, 800);
+        this.wizard.refImagePreview = resized;
+        this.wizard.refImageB64    = resized;
+      } catch(e) {
+        this.showToast('Erro ao processar imagem', 'error');
+      }
+    },
+
+    resizeImage(file, maxW, maxH) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+            if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    },
+
+    async generateEmail() {
+      this.wizard.step       = 6;
+      this.wizard.generating = true;
+      this.wizard.genError   = null;
+
+      try {
+        const emailName = this.wizard.emailNome
+          || this.wizard.assunto
+          || 'Email ' + new Date().toLocaleDateString('pt-BR');
+
+        // Upload docx images to SFMC first (if any)
+        let imageUrls = [];
+        if (this.wizard.docxImages.length > 0) {
+          this.wizard.imagesUploading = true;
+          imageUrls = await this.uploadDocxImages();
+          this.wizard.docxImageUrls   = imageUrls;
+          this.wizard.imagesUploading = false;
+        }
+
+        const genResp = await fetch('https://platform-indol-five.vercel.app/api/generate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            bu:          this.bu,
+            copyText:    this.wizard.copyText,
+            assunto:     this.wizard.assunto,
+            preheader:   this.wizard.preheader,
+            templateId:  this.wizard.templateId,
+            sfmcUrl:     this.API_URL,
+            emailNome:   emailName,
+            refImageB64: this.wizard.refImageB64 || null,
+            imageUrls,
+          })
+        });
+        if (!genResp.ok) throw new Error('HTTP ' + genResp.status);
+        const result = await genResp.json();
+        if (!result.success) throw new Error(result.error || 'Erro na geração');
+
+        if (result.id && result.html) {
+          try { localStorage.setItem('mktc_html_' + result.id, result.html); } catch(_) {}
+          // Save DEs and schedule config alongside the generated email
+          if (this.wizard.desEnvio.length > 0 || this.wizard.sendDate) {
+            await this.apiCall('save_email', {
+              email: {
+                ID:          result.id,
+                DE_Envio:    this.wizard.desEnvio.join(','),
+                DE_Exclusao: this.wizard.desExclusao.join(','),
+                Send_Date:   this.wizard.sendDate  || '',
+                Send_Time:   this.wizard.sendTime  || '',
+                Obs:         this.wizard.campanhaNome ? 'Campanha: ' + this.wizard.campanhaNome : '',
+              }
+            }).catch(() => { /* non-fatal */ });
+          }
+        }
+
+        await this.loadEmails();
+        this.wizard.generating = false;
+
+        const emailObj = this.emails.find(e => e.ID === result.id)
+          || {ID: result.id, Nome: emailName, Status: 'rascunho',
+              Assunto: this.wizard.assunto, Preheader: this.wizard.preheader,
+              Template_ID: this.wizard.templateId,
+              DE_Envio: this.wizard.desEnvio.join(','),
+              DE_Exclusao: this.wizard.desExclusao.join(','),
+              Send_Date: this.wizard.sendDate, Send_Time: this.wizard.sendTime};
+
+        await this.openEmail(emailObj);
+        this.detail.html = result.html;
+      } catch(e) {
+        this.wizard.imagesUploading = false;
+        this.wizard.generating      = false;
+        this.wizard.genError        = e.message;
+      }
+    },
+
+    // ========== COMPUTED ==========
+    get filteredEmails() {
+      return this.emails.filter(e => {
+        const matchesStatus = this.filaFilter === 'all' || e.Status === this.filaFilter;
+        const search = this.filaSearch.toLowerCase();
+        const matchesSearch = !search ||
+          (e.Nome    || '').toLowerCase().includes(search) ||
+          (e.Assunto || '').toLowerCase().includes(search);
+        return matchesStatus && matchesSearch;
+      });
+    },
+
+    get kpiCards() {
+      return [
+        {label: 'Total',        value: this.stats.total,        sub: ''},
+        {label: 'Rascunhos',    value: this.stats.rascunho,     sub: ''},
+        {label: 'Em aprovação', value: this.stats.em_aprovacao, sub: ''},
+        {label: 'Agendados',    value: this.stats.agendado,     sub: ''},
+        {label: 'Enviados',     value: this.stats.enviado,      sub: ''},
+      ];
+    },
+
+    get templateList() {
+      return [
+        {id: 'full-hero',    name: 'Hero Completo',  desc: 'Imagem hero full-width, headline grande, CTA único'},
+        {id: 'text-first',   name: 'Copy Longa',     desc: 'Tipografia forte, mínimo de imagens, CTA no final'},
+        {id: 'side-image',   name: 'Imagem Lateral', desc: 'Grid 2 colunas com imagem à esquerda'},
+        {id: 'multi-block',  name: 'Multi-bloco',    desc: 'Múltiplos blocos com separadores visuais'},
+        {id: 'minimal',      name: 'Minimal',        desc: 'Espaço em branco, tipografia limpa, mensagem única'},
+        {id: 'announcement', name: 'Anúncio',        desc: 'Borda colorida no topo, conteúdo centralizado'},
+      ];
+    },
+
+    get wizardSteps() { return ['Tipo', 'Copy', 'Referência', 'Template', 'Config']; },
+
+    get buList() {
+      return [
+        {id: 'finclass',      name: 'Finclass',      color: '#00e7f9'},
+        {id: 'bruno-perini',  name: 'Bruno Perini',  color: '#b2ec05'},
+        {id: 'faculdade-hub', name: 'Faculdade Hub', color: '#6366f1'},
+        {id: 'thiago-nigro',  name: 'Thiago Nigro',  color: '#ff4900'},
+        {id: 'portfel',       name: 'Portfel',        color: '#F05A28'},
+        {id: 'grao',          name: 'Grão',           color: '#f59e0b'},
+      ];
+    },
+
+    get currentBU() {
+      return this.buList.find(b => b.id === this.bu) || this.buList[0];
+    },
+
+    get buScheduleConfig() {
+      const cfg = {
+        'finclass': {
+          sendClassifications: [
+            { name: 'Equipe Finclass', key: '84' },
+          ],
+          trackingFolders: [
+            { name: 'Email Avulso',  id: '275176' },
+            { name: 'Campanha',      id: '275626' },
+            { name: 'Outros',        id: '275234' },
+          ],
+        },
+        'bruno-perini':  { sendClassifications: [], trackingFolders: [] },
+        'faculdade-hub': { sendClassifications: [], trackingFolders: [] },
+        'thiago-nigro':  { sendClassifications: [], trackingFolders: [] },
+        'portfel':       { sendClassifications: [], trackingFolders: [] },
+        'grao':          { sendClassifications: [], trackingFolders: [] },
+      };
+      return cfg[this.bu] || { sendClassifications: [], trackingFolders: [] };
+    },
+
+    get filaFilters() {
+      return [
+        {value: 'all',          label: 'Todos'},
+        {value: 'rascunho',     label: 'Rascunho'},
+        {value: 'em_aprovacao', label: 'Em Aprovação'},
+        {value: 'aprovado',     label: 'Aprovado'},
+        {value: 'agendado',     label: 'Agendado'},
+        {value: 'enviado',      label: 'Enviado'},
+      ];
+    },
+
+    // ========== HELPERS ==========
+    statusLabel(status) {
+      const m = {rascunho: 'Rascunho', em_aprovacao: 'Em Aprovação',
+                 aprovado: 'Aprovado', agendado: 'Agendado', enviado: 'Enviado'};
+      return m[status] || status || '—';
+    },
+
+    statusClass(status) {
+      const m = {
+        rascunho:     'bg-zinc-800 text-zinc-400',
+        em_aprovacao: 'bg-yellow-950 text-yellow-400 border border-yellow-800',
+        aprovado:     'bg-blue-950 text-blue-400 border border-blue-800',
+        agendado:     'bg-emerald-950 text-emerald-400 border border-emerald-800',
+        enviado:      'bg-zinc-800 text-zinc-500',
+      };
+      return m[status] || 'bg-zinc-800 text-zinc-400';
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '—';
+      try {
+        return new Date(dateStr).toLocaleDateString('pt-BR');
+      } catch(e) { return dateStr; }
+    },
+
+    showToast(message, type = 'success') {
+      this.toast = {show: true, message, type};
+      setTimeout(() => { this.toast.show = false; }, 3000);
+    },
+  };
+}
+</script>
+
+</body>
+</html>

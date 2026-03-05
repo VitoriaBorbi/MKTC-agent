@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tutorial — Do Layout ao Agendamento</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f5f7; color: #1a1a2e; }
+
+  /* ── COVER ── */
+  .cover {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0a0e27 60%, #00e7f9 160%);
+    color: #fff; padding: 80px 60px; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .cover-badge { background: rgba(0,231,249,.15); border: 1px solid rgba(0,231,249,.4);
+    color: #00e7f9; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 32px; }
+  .cover h1 { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; }
+  .cover h1 span { color: #00e7f9; }
+  .cover p { font-size: 20px; color: rgba(255,255,255,.7); max-width: 640px; line-height: 1.6; }
+  .cover-meta { margin-top: 48px; font-size: 14px; color: rgba(255,255,255,.4); }
+
+  /* ── SECTIONS ── */
+  section { padding: 70px 60px; }
+  section:nth-child(even) { background: #fff; }
+  section:nth-child(odd) { background: #f4f5f7; }
+  h2 { font-size: 32px; font-weight: 800; margin-bottom: 8px; color: #0a0e27; }
+  .section-label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: #00e7f9; font-weight: 700; margin-bottom: 12px; }
+  .lead { font-size: 18px; color: #555; line-height: 1.7; max-width: 720px; margin-bottom: 40px; }
+
+  /* ── OVERVIEW ── */
+  .overview { display: flex; align-items: flex-start; gap: 0; margin-top: 40px; flex-wrap: wrap; }
+  .ov-step { flex: 1; min-width: 120px; text-align: center; position: relative; }
+  .ov-step + .ov-step::before {
+    content: '→'; position: absolute; left: -14px; top: 26px;
+    font-size: 20px; color: #ccc; font-weight: 300;
+  }
+  .ov-icon { width: 56px; height: 56px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 22px;
+    margin: 0 auto 10px; }
+  .ov-step:nth-child(1) .ov-icon { background: #fff0f8; }
+  .ov-step:nth-child(2) .ov-icon { background: #e8f9ff; }
+  .ov-step:nth-child(3) .ov-icon { background: #f0ffe8; }
+  .ov-step:nth-child(4) .ov-icon { background: #fffbe8; }
+  .ov-step:nth-child(5) .ov-icon { background: #fff3ee; }
+  .ov-step:nth-child(6) .ov-icon { background: #f0f0ff; }
+  .ov-step h4 { font-size: 12px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
+  .ov-step p { font-size: 11px; color: #888; line-height: 1.4; }
+  .ov-num { font-size: 10px; font-weight: 800; color: #00e7f9; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 6px; }
+
+  /* ── STEP HEADERS ── */
+  .step-header { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; }
+  .step-badge { width: 52px; height: 52px; border-radius: 50%; background: #00e7f9;
+    color: #0a0e27; font-weight: 800; font-size: 22px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-badge.pink  { background: #e91e8c; color: #fff; }
+  .step-badge.blue  { background: #00e7f9; color: #0a0e27; }
+  .step-badge.green { background: #b2ec05; color: #0a0e27; }
+  .step-badge.amber { background: #ff9800; color: #fff; }
+  .step-badge.red   { background: #ff4900; color: #fff; }
+  .step-badge.purple{ background: #9b59b6; color: #fff; }
+  .step-title h2 { margin-bottom: 0; }
+  .step-title .sub { font-size: 15px; color: #888; margin-top: 4px; }
+
+  /* ── INSTRUCTIONS ── */
+  .instructions { list-style: none; margin-top: 28px; max-width: 700px; }
+  .instructions li { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid #f0f0f0; }
+  .instructions li:last-child { border: none; }
+  .inst-num { width: 28px; height: 28px; border-radius: 50%; background: #0a0e27;
+    color: #00e7f9; font-weight: 800; font-size: 13px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .inst-body h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .inst-body p { font-size: 14px; color: #555; line-height: 1.6; }
+  .inst-body code { background: #f0f0f0; padding: 2px 7px; border-radius: 4px;
+    font-family: 'Courier New', monospace; font-size: 12px; color: #333; }
+
+  /* ── CALLOUT ── */
+  .callout { border-radius: 10px; padding: 20px 24px; margin-top: 28px;
+    display: flex; gap: 16px; align-items: flex-start; max-width: 700px; }
+  .callout.tip  { background: #fffbe8; border: 1px solid #f0d060; }
+  .callout.warn { background: #fff5f5; border: 1px solid #ffcdd2; }
+  .callout.info { background: #e8f9ff; border: 1px solid #b2e4f0; }
+  .callout.pink { background: #fff0f8; border: 1px solid #f48fb1; }
+  .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .callout-body h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .callout-body p { font-size: 13px; line-height: 1.6; color: #555; }
+  .callout-body code { background: rgba(0,0,0,.06); padding: 1px 6px; border-radius: 3px;
+    font-family: 'Courier New', monospace; font-size: 12px; }
+
+  /* ── DRIVE MOCKUP ── */
+  .drive-mockup { background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.12); max-width: 680px; margin-top: 24px; }
+  .drive-header { background: #fff; padding: 12px 20px; display: flex;
+    align-items: center; gap: 12px; border-bottom: 1px solid #e8e8e8; }
+  .drive-logo { font-size: 16px; font-weight: 800; color: #1a73e8; }
+  .drive-breadcrumb { font-size: 13px; color: #666; }
+  .drive-breadcrumb span { color: #1a73e8; }
+  .drive-body { padding: 14px 20px; }
+  .drive-row { display: flex; align-items: center; gap: 12px; padding: 7px 8px;
+    border-radius: 6px; font-size: 14px; color: #444; }
+  .drive-row:hover { background: #f8f9fa; }
+  .drive-row.hl-img { background: #fff3e8; }
+  .drive-row.hl-new { background: #e8f0fe; color: #1a73e8; font-weight: 600; }
+  .drive-icon { font-size: 18px; }
+  .drive-date { margin-left: auto; font-size: 12px; color: #999; white-space: nowrap; }
+  .drive-badge-new { background: #e91e8c; color: #fff; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; }
+
+  /* ── LAYOUT PROPOSALS MOCKUP ── */
+  .notion-mockup { background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.12); max-width: 920px; margin-top: 24px; }
+  .notion-topbar { background: #f7f6f3; padding: 10px 16px; display: flex;
+    align-items: center; gap: 8px; border-bottom: 1px solid #e8e8e8; }
+  .notion-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .notion-dot.red    { background: #ff5f57; }
+  .notion-dot.yellow { background: #febc2e; }
+  .notion-dot.green  { background: #28c840; }
+  .notion-url { flex: 1; background: #ebebeb; border-radius: 6px; padding: 4px 12px;
+    font-size: 12px; color: #666; text-align: center; margin: 0 12px; }
+  .notion-body { padding: 28px 32px; }
+  .notion-page-title { font-size: 26px; font-weight: 800; color: #1a1a2e; margin-bottom: 6px; }
+  .notion-subtitle { font-size: 14px; color: #888; margin-bottom: 24px; }
+
+  .proposals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .prop-card { border-radius: 10px; overflow: hidden; border: 1px solid #e8e8e8;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .prop-cover { height: 160px; position: relative; overflow: hidden; }
+
+  /* Opção 1 — Full Hero: fundo escuro, hero de destaque */
+  .prop-cover.opt1 {
+    background: linear-gradient(180deg, #0a0e27 0%, #001025 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 12px; gap: 6px;
+  }
+  .opt1 .logo-mock { width: 50px; height: 8px; background: #00e7f9; border-radius: 2px; }
+  .opt1 .hero-img-mock { width: 100%; height: 60px; background: linear-gradient(135deg, #003344, #005566);
+    border-radius: 4px; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: rgba(255,255,255,.4); }
+  .opt1 .hero-text { font-size: 9px; font-weight: 800; color: #fff; text-align: center; line-height: 1.3; }
+  .opt1 .cta-mock { background: #00e7f9; color: #0a0e27; font-size: 8px; font-weight: 800;
+    padding: 4px 14px; border-radius: 20px; }
+
+  /* Opção 2 — Side Image: 2 colunas */
+  .prop-cover.opt2 {
+    background: #fff;
+    display: grid; grid-template-columns: 1fr 1fr;
+  }
+  .opt2-left { background: linear-gradient(135deg, #0a0e27, #1a2a4a);
+    display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 6px; }
+  .opt2-left .logo-mock { width: 36px; height: 6px; background: #00e7f9; border-radius: 2px; }
+  .opt2-left .text-mock { display: flex; flex-direction: column; gap: 3px; }
+  .opt2-left .text-mock span { display: block; height: 5px; background: rgba(255,255,255,.5); border-radius: 2px; }
+  .opt2-left .text-mock span:first-child { width: 90%; background: rgba(255,255,255,.9); height: 7px; }
+  .opt2-left .cta-mock { background: #00e7f9; color: #0a0e27; font-size: 7px; font-weight: 800;
+    padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 2px; }
+  .opt2-right { background: linear-gradient(180deg, #e8f9ff 0%, #c0f0ff 100%);
+    display: flex; align-items: center; justify-content: center; font-size: 32px; }
+
+  /* Opção 3 — Text-First: tipografia limpa */
+  .prop-cover.opt3 {
+    background: #ffffff;
+    display: flex; flex-direction: column; padding: 14px 16px; gap: 5px;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  .opt3 .logo-mock { width: 40px; height: 6px; background: #0a0e27; border-radius: 2px; margin-bottom: 4px; }
+  .opt3 .headline { font-size: 10px; font-weight: 800; color: #0a0e27; line-height: 1.3;
+    max-width: 90%; }
+  .opt3 .text-lines { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; }
+  .opt3 .text-lines span { display: block; height: 4px; background: #e0e0e0; border-radius: 2px; }
+  .opt3 .text-lines span:nth-child(3) { width: 70%; }
+  .opt3 .img-mock { width: 100%; height: 42px; background: linear-gradient(135deg, #f0f4ff, #e0e8ff);
+    border-radius: 4px; margin-top: 4px; }
+  .opt3 .cta-mock { background: #0a0e27; color: #fff; font-size: 7px; font-weight: 800;
+    padding: 3px 10px; border-radius: 3px; display: inline-block; margin-top: 4px; }
+
+  /* Opção 4 — Announcement: badge + data em evidência */
+  .prop-cover.opt4 {
+    background: linear-gradient(135deg, #0a0e27, #1a0a2e);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 12px; gap: 7px;
+  }
+  .opt4 .badge-mock { background: #e91e8c; color: #fff; font-size: 8px; font-weight: 800;
+    padding: 3px 12px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; }
+  .opt4 .date-mock { font-size: 22px; font-weight: 800; color: #fff; line-height: 1; }
+  .opt4 .title-mock { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.8);
+    text-align: center; max-width: 90%; line-height: 1.3; }
+  .opt4 .cta-mock { background: transparent; border: 1px solid #e91e8c; color: #e91e8c;
+    font-size: 7px; font-weight: 800; padding: 3px 12px; border-radius: 20px; }
+
+  .prop-info { padding: 10px 12px 12px; }
+  .prop-info h5 { font-size: 12px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+  .prop-info .prop-tag { font-size: 11px; color: #888; }
+  .prop-info .prop-tip { font-size: 11px; color: #b5166e; margin-top: 4px; font-style: italic; }
+
+  .prop-card.selected-card { border: 2px solid #e91e8c; box-shadow: 0 0 0 3px rgba(233,30,140,.15); }
+  .prop-card.selected-card .prop-info h5::after { content: ' ✓'; color: #e91e8c; }
+
+  /* ── CATALOG MOCKUP (para Passo 2) ── */
+  .notion-filter-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .notion-filter { background: #f0f0f0; border-radius: 6px; padding: 5px 12px;
+    font-size: 12px; color: #555; cursor: pointer; }
+  .notion-filter.active { background: #0a0e27; color: #00e7f9; }
+  .catalog-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .cat-card { border-radius: 8px; overflow: hidden; border: 1px solid #e8e8e8; }
+  .cat-cover { height: 90px; display: flex; align-items: center; justify-content: center; }
+  .cat-cover.c1 { background: linear-gradient(135deg, #0a0e27, #001820); color: #00e7f9;
+    font-size: 16px; font-weight: 800; letter-spacing: 2px; }
+  .cat-cover.c2 { background: #fff; display: flex; flex-direction: column; padding: 10px;
+    gap: 4px; justify-content: center; border-bottom: 1px solid #f0f0f0; }
+  .cat-cover.c2 .ml { height: 4px; background: #e0e0e0; border-radius: 2px; }
+  .cat-cover.c2 .ml.big { height: 7px; background: #0a0e27; width: 70%; }
+  .cat-cover.c3 { background: #0f1014; color: #fff; font-size: 13px; font-weight: 700;
+    flex-direction: column; gap: 4px; }
+  .cat-cover.c3 small { font-size: 9px; color: #666; letter-spacing: 1px; }
+  .cat-info { padding: 8px 10px; }
+  .cat-info h5 { font-size: 12px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+  .cat-tag { font-size: 10px; color: #888; }
+  .cat-card.sel { border: 2px solid #00e7f9; }
+  .cat-card.sel .cat-info h5::after { content: ' ✓'; color: #00e7f9; }
+
+  /* ── SHEETS MOCKUP ── */
+  .sheets-mockup { background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.12); margin-top: 24px; }
+  .sheets-topbar { background: #fff; padding: 10px 16px; display: flex;
+    align-items: center; gap: 12px; border-bottom: 1px solid #e8e8e8; }
+  .sheets-logo { font-size: 15px; font-weight: 800; color: #0f9d58; }
+  .sheets-tabs { display: flex; border-top: 1px solid #e8e8e8; }
+  .sheets-tab { padding: 8px 20px; font-size: 12px; font-weight: 600; color: #555;
+    border-right: 1px solid #e8e8e8; cursor: pointer; }
+  .sheets-tab.active { background: #fff; color: #0f9d58; border-bottom: 2px solid #0f9d58; }
+  .sheets-grid { overflow-x: auto; }
+  table.sg { border-collapse: collapse; width: 100%; font-size: 12px; min-width: 900px; }
+  table.sg th { background: #0a0e27; color: #fff; padding: 8px 10px; text-align: left;
+    white-space: nowrap; font-weight: 600; border-right: 1px solid #1a2a4a; }
+  table.sg td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0;
+    border-right: 1px solid #f5f5f5; white-space: nowrap; }
+  table.sg tr:hover td { background: #f8fffe; }
+  .sg-header-col { background: #f0f0f0 !important; color: #666; font-weight: 700;
+    text-align: center; min-width: 24px; }
+  .sg-status-pend { background: #fff3e0; color: #e65100; font-size: 11px;
+    padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+  .sg-status-ag { background: #e8f5e9; color: #2e7d32; font-size: 11px;
+    padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+  .sg-agent { background: #e8f9ff !important; color: #007a8c; font-style: italic; font-size: 11px; }
+  .sg-empty { color: #ddd; }
+  .sg-de { background: #f5f0ff !important; }
+  .sg-dropdown { background: #f5f0ff; border: 1px solid #ccc; border-radius: 4px;
+    padding: 1px 6px; font-size: 11px; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 4px; }
+  .sg-dropdown::after { content: '▾'; color: #888; font-size: 10px; }
+  .sheets-legend { padding: 12px 20px; background: #fafafa; border-top: 1px solid #eee;
+    display: flex; gap: 20px; flex-wrap: wrap; }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #555; }
+  .leg-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .leg-dot.team  { background: #f5f5f5; border: 1px solid #ddd; }
+  .leg-dot.agent { background: #e8f9ff; border: 1px solid #00e7f9; }
+  .leg-dot.de    { background: #f5f0ff; border: 1px solid #b39ddb; }
+  .sg-tip { display: inline-block; background: #fffbe8; border: 1px solid #f0d060;
+    border-radius: 6px; font-size: 12px; color: #7a6000; padding: 4px 10px; margin-top: 6px; }
+
+  /* ── QUEUE FLOW ── */
+  .queue-flow { display: flex; flex-direction: column; gap: 0; max-width: 760px; margin-top: 28px; }
+  .qf-step { display: flex; gap: 20px; align-items: flex-start; }
+  .qf-num-col { display: flex; flex-direction: column; align-items: center; }
+  .qf-num { width: 40px; height: 40px; border-radius: 50%; background: #ff4900;
+    color: #fff; font-weight: 800; font-size: 16px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; }
+  .qf-line { width: 2px; flex: 1; background: #e0e0e0; min-height: 36px; }
+  .qf-body { padding-bottom: 32px; }
+  .qf-body h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .qf-body p { font-size: 14px; color: #555; line-height: 1.6; }
+  .qf-body code { background: #0a0e27; color: #00e7f9; padding: 2px 8px;
+    border-radius: 5px; font-size: 13px; }
+
+  /* ── STATUS TIMELINE ── */
+  .status-line { display: flex; align-items: center; gap: 0; margin-top: 28px; max-width: 700px; }
+  .sl-step { flex: 1; text-align: center; }
+  .sl-bubble { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .sl-bubble.done   { background: #e8f5e9; border: 2px solid #2e7d32; }
+  .sl-bubble.done::after   { content: '✓'; font-size: 16px; font-weight: 800; color: #2e7d32; }
+  .sl-bubble.active { background: #0a0e27; border: 2px solid #00e7f9; }
+  .sl-bubble.active::after { content: '●'; font-size: 14px; color: #00e7f9; }
+  .sl-bubble.future { background: #f5f5f5; border: 2px solid #ddd; }
+  .sl-bubble.future::after { content: '○'; font-size: 14px; color: #bbb; }
+  .sl-label { font-size: 12px; font-weight: 700; color: #444; }
+  .sl-sub   { font-size: 11px; color: #999; margin-top: 2px; }
+  .sl-line  { flex: 0 0 36px; height: 2px; background: #e0e0e0; margin-bottom: 28px; }
+  .sl-line.done-line { background: #2e7d32; }
+
+  /* ── FAQ ── */
+  .faq { list-style: none; max-width: 720px; margin-top: 28px; }
+  .faq li { padding: 18px 0; border-bottom: 1px solid #eee; }
+  .faq li:last-child { border: none; }
+  .faq q { display: block; font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+  .faq q::before { content: 'P: '; color: #00e7f9; }
+  .faq p { font-size: 14px; color: #555; line-height: 1.6; }
+
+  /* ── LINKS ── */
+  .links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+    max-width: 720px; margin-top: 28px; }
+  .link-card { background: #fff; border-radius: 10px; padding: 20px 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06); border-left: 4px solid; }
+  .link-card.blue   { border-color: #00e7f9; }
+  .link-card.green  { border-color: #0f9d58; }
+  .link-card.notion { border-color: #1a1a2e; }
+  .link-card.sfmc   { border-color: #ff4900; }
+  .link-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .link-card p  { font-size: 13px; color: #777; margin-bottom: 10px; }
+  .link-card a  { font-size: 12px; color: #00e7f9; word-break: break-all; }
+
+  /* ── FOOTER ── */
+  .footer-slide { background: linear-gradient(135deg, #0a0e27, #1a1a2e);
+    color: #fff; padding: 70px 60px; text-align: center; }
+  .footer-slide h2 { font-size: 36px; margin-bottom: 16px; color: #00e7f9; }
+  .footer-slide p { color: rgba(255,255,255,.6); font-size: 17px; max-width: 600px; margin: 0 auto; }
+
+  @media print { section, .cover, .footer-slide { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="cover-badge">Guia para Stakeholders</div>
+  <h1>Do Layout ao<br><span>Agendamento</span></h1>
+  <p>Tutorial passo a passo: como solicitar, configurar e agendar um email marketing — da proposta de layout no Notion até o disparo no SFMC.</p>
+  <div class="cover-meta">Grupo Primo · Email Marketing Agent · 2026</div>
+</div>
+
+<!-- VISÃO GERAL -->
+<section>
+  <div class="section-label">Visão Geral</div>
+  <h2>O fluxo completo em 6 passos</h2>
+  <p class="lead">Você não precisa entender o que acontece por baixo dos panos. Basta seguir esses 6 passos e o email estará agendado no SFMC.</p>
+
+  <div class="overview">
+    <div class="ov-step">
+      <div class="ov-num">Passo 1</div>
+      <div class="ov-icon">🎨</div>
+      <h4>Subir Referência</h4>
+      <p>Drive · pasta Refs</p>
+    </div>
+    <div class="ov-step">
+      <div class="ov-num">Passo 2</div>
+      <div class="ov-icon">📋</div>
+      <h4>Aprovar Layout</h4>
+      <p>Notion · proposals</p>
+    </div>
+    <div class="ov-step">
+      <div class="ov-num">Passo 3</div>
+      <div class="ov-icon">📝</div>
+      <h4>Preparar .docx</h4>
+      <p>Drive · pasta BU</p>
+    </div>
+    <div class="ov-step">
+      <div class="ov-num">Passo 4</div>
+      <div class="ov-icon">📊</div>
+      <h4>Adicionar à Fila</h4>
+      <p>Google Sheets</p>
+    </div>
+    <div class="ov-step">
+      <div class="ov-num">Passo 5</div>
+      <div class="ov-icon">⚙️</div>
+      <h4>Agente Processa</h4>
+      <p>Claude Code · /queue</p>
+    </div>
+    <div class="ov-step">
+      <div class="ov-num">Passo 6</div>
+      <div class="ov-icon">✅</div>
+      <h4>Agendado</h4>
+      <p>SFMC · disparo</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PASSO 1: REFERÊNCIA + LAYOUT ═══ -->
+<section>
+  <div class="step-header">
+    <div class="step-badge pink">1</div>
+    <div class="step-title">
+      <h2>Subir a referência visual</h2>
+      <div class="sub">Google Drive — pasta Refs da sua BU</div>
+    </div>
+  </div>
+
+  <p class="lead">Antes de escrever qualquer copy, o time define como o email vai <em>parecer</em>. Você sobe uma referência visual no Drive (print de email, moodboard, PDF de campanha anterior) e o agente gera 4 propostas de layout customizadas para a sua BU.</p>
+
+  <div class="drive-mockup">
+    <div class="drive-header">
+      <div class="drive-logo">Drive</div>
+      <div class="drive-breadcrumb">
+        Email Agent › <span>Finclass</span> › <span>Refs</span>
+      </div>
+    </div>
+    <div class="drive-body">
+      <div class="drive-row">
+        <div class="drive-icon">📁</div>
+        <span>Campanhas anteriores</span>
+        <div class="drive-date">pasta</div>
+      </div>
+      <div class="drive-row hl-new">
+        <div class="drive-icon">🖼️</div>
+        <span>ref-campanha-SSL0002.png</span>
+        <div class="drive-badge-new">NOVO</div>
+        <div class="drive-date">hoje</div>
+      </div>
+      <div class="drive-row hl-img">
+        <div class="drive-icon">📄</div>
+        <span>ref-ssl0001-moodboard.pdf</span>
+        <div class="drive-date">fev 2026</div>
+      </div>
+      <div class="drive-row">
+        <div class="drive-icon">🖼️</div>
+        <span>inspiracao-newsletter.png</span>
+        <div class="drive-date">jan 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="instructions">
+    <li>
+      <div class="inst-num">1</div>
+      <div class="inst-body">
+        <h4>Escolha uma referência visual</h4>
+        <p>Qualquer coisa serve: screenshot de email que você gostou, print de campanha anterior, moodboard, PDF com inspiração visual. Quanto mais próximo do que você quer, melhor.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">2</div>
+      <div class="inst-body">
+        <h4>Suba na pasta Refs da BU no Drive</h4>
+        <p>Caminho: <code>Email Agent / [BU] / Refs/</code><br>
+        Pode ser PNG, JPG, PDF ou até um .docx com prints colados.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">3</div>
+      <div class="inst-body">
+        <h4>Avise a Vitória com o ID da campanha</h4>
+        <p>Mande uma mensagem à Vitória: <em>"Subi a ref para a campanha SSL0002 na pasta Finclass/Refs"</em>. A Vitória roda o comando <code>/layout SSL0002</code> e em minutos as propostas aparecem no Notion.</p>
+      </div>
+    </li>
+  </ul>
+
+  <div class="callout pink">
+    <div class="callout-icon">✨</div>
+    <div class="callout-body">
+      <h4>O que o agente faz com a referência?</h4>
+      <p>Ele analisa a estrutura visual da ref — proporção imagem/texto, peso tipográfico, paleta, elementos de destaque, tom — e propõe 4 arquétipos estruturalmente distintos: hero de imagem, tipográfico, duas colunas, announcement. Cada um usa a identidade da BU (cores, logo, fontes) mas com DNA visual da sua referência.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PASSO 2: APROVAR LAYOUT NO NOTION ═══ -->
+<section>
+  <div class="step-header">
+    <div class="step-badge blue">2</div>
+    <div class="step-title">
+      <h2>Aprovar o layout no Notion</h2>
+      <div class="sub">4 propostas geradas automaticamente — escolha uma</div>
+    </div>
+  </div>
+
+  <p class="lead">O agente publica 4 cards no Notion com screenshots reais de cada proposta. Você vê exatamente como o email vai parecer com a identidade da sua BU e escolhe o que mais faz sentido para a campanha.</p>
+
+  <div class="notion-mockup">
+    <div class="notion-topbar">
+      <div class="notion-dot red"></div>
+      <div class="notion-dot yellow"></div>
+      <div class="notion-dot green"></div>
+      <div class="notion-url">notion.so / SSL0002 — Propostas de Layout · Finclass</div>
+    </div>
+    <div class="notion-body">
+      <div class="notion-page-title">🎨 SSL0002 — Propostas de Layout</div>
+      <div class="notion-subtitle">4 opções geradas · Finclass · baseadas em ref-campanha-SSL0002.png</div>
+      <div class="proposals-grid">
+
+        <!-- OPÇÃO 1: Full Hero -->
+        <div class="prop-card selected-card">
+          <div class="prop-cover opt1">
+            <div class="logo-mock"></div>
+            <div class="hero-img-mock">[ hero image ]</div>
+            <div class="hero-text">Título de impacto<br>em duas linhas</div>
+            <div class="cta-mock">QUERO SABER MAIS</div>
+          </div>
+          <div class="prop-info">
+            <h5>SSL0002 — Opção 1</h5>
+            <div class="prop-tag">full-hero · imagem grande</div>
+            <div class="prop-tip">Aprovado pelo time ✓</div>
+          </div>
+        </div>
+
+        <!-- OPÇÃO 2: Side Image -->
+        <div class="prop-card">
+          <div class="prop-cover opt2">
+            <div class="opt2-left">
+              <div class="logo-mock"></div>
+              <div class="text-mock">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="cta-mock">ACESSAR</div>
+            </div>
+            <div class="opt2-right">📊</div>
+          </div>
+          <div class="prop-info">
+            <h5>SSL0002 — Opção 2</h5>
+            <div class="prop-tag">side-image · 2 colunas</div>
+          </div>
+        </div>
+
+        <!-- OPÇÃO 3: Text-First -->
+        <div class="prop-card">
+          <div class="prop-cover opt3">
+            <div class="logo-mock"></div>
+            <div class="headline">Headline tipográfica<br>em destaque total</div>
+            <div class="text-lines">
+              <span style="width:100%"></span>
+              <span style="width:95%"></span>
+              <span></span>
+            </div>
+            <div class="img-mock"></div>
+            <div class="cta-mock">VER MAIS</div>
+          </div>
+          <div class="prop-info">
+            <h5>SSL0002 — Opção 3</h5>
+            <div class="prop-tag">text-first · tipográfico</div>
+          </div>
+        </div>
+
+        <!-- OPÇÃO 4: Announcement -->
+        <div class="prop-card">
+          <div class="prop-cover opt4">
+            <div class="badge-mock">NOVIDADE</div>
+            <div class="date-mock">04 MAR</div>
+            <div class="title-mock">Título do evento<br>ou lançamento aqui</div>
+            <div class="cta-mock">SAIBA MAIS</div>
+          </div>
+          <div class="prop-info">
+            <h5>SSL0002 — Opção 4</h5>
+            <div class="prop-tag">announcement · badge + data</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <ul class="instructions">
+    <li>
+      <div class="inst-num">1</div>
+      <div class="inst-body">
+        <h4>Acesse o Notion quando receber o link</h4>
+        <p>A Vitória vai te mandar o link direto para a página com as 4 opções assim que o agente terminar (geralmente em menos de 5 minutos).</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">2</div>
+      <div class="inst-body">
+        <h4>Compare as 4 propostas</h4>
+        <p>Cada card mostra um screenshot real do email com a identidade da sua BU. Passe o mouse ou clique para ver em maior detalhe. Veja qual estrutura funciona melhor para o tipo de conteúdo que você vai criar.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">3</div>
+      <div class="inst-body">
+        <h4>Escolha e avise a Vitória</h4>
+        <p>Basta responder: <em>"Vou com a Opção 1"</em>. A Vitória salva o HTML aprovado e você recebe a estrutura de .docx correspondente para preencher no próximo passo.</p>
+      </div>
+    </li>
+  </ul>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <h4>Não gostou de nenhuma das 4 opções?</h4>
+      <p>Sem problema. Você pode pedir à Vitória para ajustar uma das propostas (ex: "quero a Opção 1 mas sem a imagem hero") ou enviar uma referência diferente para rodar novamente.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PASSO 3: DRIVE / DOCX ═══ -->
+<section>
+  <div class="step-header">
+    <div class="step-badge green">3</div>
+    <div class="step-title">
+      <h2>Preparar e subir o .docx</h2>
+      <div class="sub">Google Drive — pasta da sua BU</div>
+    </div>
+  </div>
+
+  <p class="lead">Com o layout aprovado, você já sabe exatamente a estrutura do email. Agora é só escrever o conteúdo em um .docx seguindo essa estrutura e subir na pasta correta do Drive.</p>
+
+  <div class="drive-mockup">
+    <div class="drive-header">
+      <div class="drive-logo">Drive</div>
+      <div class="drive-breadcrumb">
+        Email Agent › <span>Finclass</span> › Avulsos
+      </div>
+    </div>
+    <div class="drive-body">
+      <div class="drive-row">
+        <div class="drive-icon">📁</div>
+        <span>Campanhas</span>
+        <div class="drive-date">pasta</div>
+      </div>
+      <div class="drive-row hl-new">
+        <div class="drive-icon">📄</div>
+        <span>newsletter-finclass-2026-03-04.docx</span>
+        <div class="drive-badge-new">NOVO</div>
+        <div class="drive-date">hoje</div>
+      </div>
+      <div class="drive-row">
+        <div class="drive-icon">📄</div>
+        <span>newsletter-finclass-2026-02-25.docx</span>
+        <div class="drive-date">25 fev 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="instructions">
+    <li>
+      <div class="inst-num">1</div>
+      <div class="inst-body">
+        <h4>Escreva o conteúdo no formato do layout aprovado</h4>
+        <p>Use a estrutura do layout escolhido. A Vitória pode te enviar um modelo .docx vazio com as seções marcadas para facilitar.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">2</div>
+      <div class="inst-body">
+        <h4>Inclua Subject e Preheader no início</h4>
+        <p><code>Subject: Seu assunto aqui</code><br>
+        <code>Linha Fina: Seu preheader aqui</code></p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">3</div>
+      <div class="inst-body">
+        <h4>Incorpore as imagens no .docx</h4>
+        <p>Insira as imagens dentro do arquivo Word (não como link externo). O agente as extrai automaticamente e faz o upload no SFMC.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">4</div>
+      <div class="inst-body">
+        <h4>Suba na pasta da BU e copie o link</h4>
+        <p>Avulsos: <code>Email Agent / [BU] / Avulsos/</code><br>
+        Campanhas: <code>Email Agent / [BU] / Campanhas / [Nome]/</code><br>
+        Clique com botão direito → <strong>Copiar link</strong>.</p>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<!-- ═══ PASSO 4: GOOGLE SHEETS ═══ -->
+<section>
+  <div class="step-header">
+    <div class="step-badge amber">4</div>
+    <div class="step-title">
+      <h2>Adicionar à Fila no Google Sheets</h2>
+      <div class="sub">Planilha da sua BU — aba Fila</div>
+    </div>
+  </div>
+
+  <p class="lead">Cada BU tem sua própria planilha. Abra a da sua marca, vá até a aba <strong>Fila</strong> e adicione uma linha com as informações do envio. A maioria dos campos tem dropdown — sem precisar digitar.</p>
+
+  <div class="sheets-mockup">
+    <div class="sheets-topbar">
+      <div class="sheets-logo">Sheets</div>
+      <span style="font-size:14px;font-weight:600;color:#333;">Email Agent — Finclass</span>
+    </div>
+    <div style="display:flex; border-top: 1px solid #e8e8e8;">
+      <div class="sheets-tab active">Fila</div>
+      <div class="sheets-tab" style="color:#888;">Recorrentes</div>
+      <div class="sheets-tab" style="color:#888;">Historico</div>
+      <div class="sheets-tab" style="color:#888;font-style:italic;">Config</div>
+    </div>
+    <div class="sheets-grid">
+      <table class="sg">
+        <thead>
+          <tr>
+            <th style="width:24px;">#</th>
+            <th>A — status</th>
+            <th>B — tipo</th>
+            <th>C — nome</th>
+            <th>D — docx_link</th>
+            <th>E — data_envio</th>
+            <th>F — horario</th>
+            <th>G — de_envio_1</th>
+            <th>H — de_envio_2…</th>
+            <th>Q — de_exclusao_1</th>
+            <th>R — de_exclusao_2…</th>
+            <th>AA — sfmc_asset_id</th>
+            <th>AB — sfmc_send_id</th>
+            <th>AC — obs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="sg-header-col">1</td>
+            <td><span class="sg-status-ag">agendado</span></td>
+            <td>individual</td>
+            <td>Newsletter 25/02</td>
+            <td style="color:#1a73e8;font-size:11px;">drive.google.com/…</td>
+            <td>2026-02-25</td>
+            <td>10:00</td>
+            <td class="sg-de"><span class="sg-dropdown">db_finclass_prod</span></td>
+            <td class="sg-de sg-empty">—</td>
+            <td class="sg-de"><span class="sg-dropdown">Tb_CP_Email</span></td>
+            <td class="sg-de"><span class="sg-dropdown">Tb_CP_Todas…</span></td>
+            <td class="sg-agent">36025</td>
+            <td class="sg-agent">NL-FC-250226</td>
+            <td></td>
+          </tr>
+          <tr style="background:#fffde7;">
+            <td class="sg-header-col">2</td>
+            <td><span class="sg-status-pend">pendente</span></td>
+            <td>individual</td>
+            <td>Newsletter 04/03</td>
+            <td style="color:#1a73e8;font-size:11px;">drive.google.com/…</td>
+            <td>2026-03-04</td>
+            <td>10:00</td>
+            <td class="sg-de"><span class="sg-dropdown">db_finclass_prod</span></td>
+            <td class="sg-de sg-empty">—</td>
+            <td class="sg-de"><span class="sg-dropdown">Tb_CP_Email</span></td>
+            <td class="sg-de"><span class="sg-dropdown">Tb_CP_Todas…</span></td>
+            <td class="sg-agent sg-empty">—</td>
+            <td class="sg-agent sg-empty">—</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="sheets-legend">
+      <div class="leg-item"><div class="leg-dot team"></div> Preenchido pelo time</div>
+      <div class="leg-item"><div class="leg-dot agent"></div> Preenchido pelo agente</div>
+      <div class="leg-item"><div class="leg-dot de"></div> Dropdown de DEs (aba Config)</div>
+    </div>
+  </div>
+  <span class="sg-tip">Dica: clique nas células de DE para ver o dropdown com todas as DEs disponíveis no SFMC.</span>
+
+  <ul class="instructions" style="margin-top: 32px;">
+    <li>
+      <div class="inst-num">1</div>
+      <div class="inst-body">
+        <h4>Abra a planilha da sua BU</h4>
+        <p>Cada marca tem uma planilha separada. Use o link correto para Finclass, Faculdade Hub, Portfel ou Grão.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">2</div>
+      <div class="inst-body">
+        <h4>Adicione uma linha na aba Fila</h4>
+        <p>Preencha: <code>tipo</code> (individual ou campanha), <code>nome</code>, <code>docx_link</code>, <code>data_envio</code> (AAAA-MM-DD) e <code>horario</code> (HH:MM).</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">3</div>
+      <div class="inst-body">
+        <h4>Selecione as DEs via dropdown</h4>
+        <p>Clique nas colunas <code>de_envio_1</code> e <code>de_exclusao_1</code> para escolher pelo dropdown. Há 10 slots para cada — use mais colunas se precisar de múltiplas DEs.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">4</div>
+      <div class="inst-body">
+        <h4>Deixe o status como "pendente"</h4>
+        <p>Não preencha os campos <code>sfmc_asset_id</code> e <code>sfmc_send_id</code> — o agente preenche automaticamente após processar.</p>
+      </div>
+    </li>
+  </ul>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body">
+      <h4>Série recorrente? Use a aba Recorrentes</h4>
+      <p>Para newsletters semanais ou envios repetitivos, configure uma vez na aba <code>Recorrentes</code>. O agente detecta automaticamente quando um novo arquivo aparece na pasta do Drive e cria a entrada na Fila.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PASSO 5: PROCESSAMENTO ═══ -->
+<section>
+  <div class="step-header">
+    <div class="step-badge red">5</div>
+    <div class="step-title">
+      <h2>O Agente Processa</h2>
+      <div class="sub">Depois que a linha está na Fila, a Vitória roda /queue</div>
+    </div>
+  </div>
+
+  <p class="lead">Você não precisa fazer mais nada neste passo. A Vitória roda o agente, que cuida de tudo — da geração do HTML ao agendamento no SFMC.</p>
+
+  <div class="queue-flow">
+    <div class="qf-step">
+      <div class="qf-num-col"><div class="qf-num">1</div><div class="qf-line"></div></div>
+      <div class="qf-body">
+        <h3>Operador roda <code>/queue</code></h3>
+        <p>O agente lê todas as planilhas, mostra um dashboard com os envios pendentes de cada BU e pede confirmação antes de processar.</p>
+      </div>
+    </div>
+    <div class="qf-step">
+      <div class="qf-num-col"><div class="qf-num">2</div><div class="qf-line"></div></div>
+      <div class="qf-body">
+        <h3>Baixa o .docx do Drive</h3>
+        <p>Usando o link que você colocou na planilha, o agente baixa o arquivo automaticamente.</p>
+      </div>
+    </div>
+    <div class="qf-step">
+      <div class="qf-num-col"><div class="qf-num">3</div><div class="qf-line"></div></div>
+      <div class="qf-body">
+        <h3>Gera o HTML com a identidade da BU</h3>
+        <p>Aplica o layout aprovado: extrai textos, imagens e links do .docx, aplica cores, fontes, logo e footer da marca.</p>
+      </div>
+    </div>
+    <div class="qf-step">
+      <div class="qf-num-col"><div class="qf-num">4</div><div class="qf-line"></div></div>
+      <div class="qf-body">
+        <h3>Faz upload no SFMC Content Builder</h3>
+        <p>Sobe as imagens e o email HTML para a BU correta. O asset fica disponível para visualização no SFMC.</p>
+      </div>
+    </div>
+    <div class="qf-step">
+      <div class="qf-num-col"><div class="qf-num">5</div></div>
+      <div class="qf-body">
+        <h3>Cria o agendamento com as DEs configuradas</h3>
+        <p>Cria o EmailSendDefinition com as DEs que você selecionou na planilha e agenda para a data e horário informados.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PASSO 6: ACOMPANHAMENTO ═══ -->
+<section>
+  <div class="step-header">
+    <div class="step-badge purple">6</div>
+    <div class="step-title">
+      <h2>Acompanhar e Confirmar</h2>
+      <div class="sub">Status na planilha + SFMC</div>
+    </div>
+  </div>
+
+  <p class="lead">Após o processamento, acompanhe o status na planilha e confirme o agendamento diretamente no SFMC.</p>
+
+  <div class="status-line">
+    <div class="sl-step">
+      <div class="sl-bubble done"></div>
+      <div class="sl-label">pendente</div>
+      <div class="sl-sub">Linha adicionada</div>
+    </div>
+    <div class="sl-line done-line"></div>
+    <div class="sl-step">
+      <div class="sl-bubble done"></div>
+      <div class="sl-label">processando</div>
+      <div class="sl-sub">Agente rodando</div>
+    </div>
+    <div class="sl-line done-line"></div>
+    <div class="sl-step">
+      <div class="sl-bubble active"></div>
+      <div class="sl-label">agendado</div>
+      <div class="sl-sub">SFMC confirmado</div>
+    </div>
+    <div class="sl-line"></div>
+    <div class="sl-step">
+      <div class="sl-bubble future"></div>
+      <div class="sl-label">enviado</div>
+      <div class="sl-sub">No Histórico</div>
+    </div>
+  </div>
+
+  <ul class="instructions" style="margin-top:40px;">
+    <li>
+      <div class="inst-num">1</div>
+      <div class="inst-body">
+        <h4>Verifique o status na planilha</h4>
+        <p>Quando o status mudar de <code>pendente</code> para <code>agendado</code>, os campos <code>sfmc_asset_id</code> e <code>sfmc_send_id</code> estarão preenchidos.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">2</div>
+      <div class="inst-body">
+        <h4>Confirme no SFMC (opcional)</h4>
+        <p>Com o <code>sfmc_send_id</code>, você pode procurar a definição no SFMC para ver o email, as DEs e o horário de disparo.</p>
+      </div>
+    </li>
+    <li>
+      <div class="inst-num">3</div>
+      <div class="inst-body">
+        <h4>Após o envio: aba Histórico</h4>
+        <p>A linha migra automaticamente para a aba <code>Historico</code> após a data de disparo — registro completo de tudo enviado.</p>
+      </div>
+    </li>
+  </ul>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <h4>Precisa cancelar ou alterar?</h4>
+      <p>Status <code>pendente</code>: edite ou delete a linha na planilha.<br>
+      Status <code>agendado</code>: avise a Vitória — é necessário cancelar no SFMC manualmente.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section>
+  <div class="section-label">FAQ</div>
+  <h2>Perguntas Frequentes</h2>
+
+  <ul class="faq">
+    <li>
+      <q>Preciso sempre subir uma referência para gerar o layout?</q>
+      <p>Não. Para emails recorrentes (newsletters, comunicados padrão), você pode usar os templates do catálogo permanente — acesse no Notion e escolha o que já existe para a sua BU. A proposta de layout customizada é para campanhas novas que precisam de uma identidade visual específica.</p>
+    </li>
+    <li>
+      <q>Quanto tempo leva para as 4 propostas aparecerem no Notion?</q>
+      <p>Em geral menos de 5 minutos após a Vitória rodar o <code>/layout</code>. Depende do tamanho da referência e da complexidade da campanha.</p>
+    </li>
+    <li>
+      <q>Posso adicionar várias linhas de uma vez na Fila?</q>
+      <p>Sim. O agente processa todas em ordem de data de envio quando a Vitória rodar o <code>/queue</code>.</p>
+    </li>
+    <li>
+      <q>Posso usar mais de uma DE de envio ou exclusão?</q>
+      <p>Sim. A planilha tem 10 colunas para DEs de envio (<code>de_envio_1</code> a <code>de_envio_10</code>) e 10 para exclusão. Preencha quantas precisar.</p>
+    </li>
+    <li>
+      <q>Para campanhas com vários emails (série de 5), como faço?</q>
+      <p>Use <code>tipo = campanha</code> e prepare um único .docx com todos os emails separados por marcadores no formato <code>=== EMAIL 1 - Nome ===</code>. O agente detecta as seções e gera cada email separadamente.</p>
+    </li>
+    <li>
+      <q>E se o .docx tiver um erro?</q>
+      <p>O agente registra o erro na coluna <code>obs</code> da linha, mantém o status como <code>pendente</code> e continua com os demais itens. A Vitória reporta no resumo final.</p>
+    </li>
+    <li>
+      <q>A aba Config serve para quê?</q>
+      <p>Uso interno. Contém a lista de todas as DEs disponíveis no SFMC — alimenta os dropdowns das colunas de DE. Não precisa editar.</p>
+    </li>
+  </ul>
+</section>
+
+<!-- LINKS -->
+<section>
+  <div class="section-label">Referência</div>
+  <h2>Links e Acessos</h2>
+  <p class="lead">Todos os recursos que você precisa no dia a dia.</p>
+
+  <div class="links-grid">
+    <div class="link-card notion">
+      <h4>📋 Catálogo de Templates</h4>
+      <p>Galeria com todos os layouts permanentes por BU. Use para envios recorrentes sem precisar de nova proposta.</p>
+      <a>notion.so / Email Marketing — Catálogo de Templates</a>
+    </div>
+    <div class="link-card green">
+      <h4>📊 Planilhas de Fila por BU</h4>
+      <p>Cada BU tem sua planilha separada com Fila, Recorrentes e Histórico.</p>
+      <a>Ver links em email-agent/credentials/sheets-config.json</a>
+    </div>
+    <div class="link-card blue">
+      <h4>📁 Pastas no Google Drive</h4>
+      <p>Avulsos, Campanhas e Refs — uma por BU dentro da pasta Email Agent.</p>
+      <a>drive.google.com / Email Agent / [BU]</a>
+    </div>
+    <div class="link-card sfmc">
+      <h4>⚙️ SFMC Content Builder</h4>
+      <p>Para visualizar assets gerados e confirmar agendamentos após o processamento.</p>
+      <a>mc.exacttarget.com / [BU]</a>
+    </div>
+  </div>
+</section>
+
+<!-- FECHAMENTO -->
+<div class="footer-slide">
+  <h2>Pronto para solicitar.</h2>
+  <p>Suba a ref no Drive, aprove o layout no Notion, preencha a Fila no Sheets — e o agente cuida do resto.</p>
+</div>
+
+</body>
+</html>

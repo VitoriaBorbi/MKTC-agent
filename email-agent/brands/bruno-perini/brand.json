@@ -65,7 +65,10 @@
     "view_email_url": "%%view_email_url%%",
     "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
     "category_id": 320764,
-    "category_path": "Content Builder/Claude Code"
+    "category_path": "Content Builder/Claude Code",
+    "img_category_id": 320778,
+    "img_category_path": "Content Builder/Claude Code/img",
+    "send_classification": "90"
   },
   "tone": "Neutro, objetivo, educativo. Linguagem clara e direta sobre investimentos e educacao financeira."
 }

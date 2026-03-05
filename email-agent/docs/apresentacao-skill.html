@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Email Marketing Agent — Apresentação</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f5f7; color: #1a1a2e; }
+
+  /* COVER */
+  .cover {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0a0e27 60%, #00e7f9 150%);
+    color: #fff; padding: 80px 60px; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .cover-badge { background: rgba(0,231,249,.15); border: 1px solid rgba(0,231,249,.4);
+    color: #00e7f9; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 32px; }
+  .cover h1 { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; }
+  .cover h1 span { color: #00e7f9; }
+  .cover p { font-size: 20px; color: rgba(255,255,255,.7); max-width: 640px; line-height: 1.6; }
+  .cover-meta { margin-top: 48px; font-size: 14px; color: rgba(255,255,255,.4); }
+
+  /* SECTIONS */
+  section { padding: 70px 60px; }
+  section:nth-child(even) { background: #fff; }
+  section:nth-child(odd) { background: #f4f5f7; }
+
+  h2 { font-size: 32px; font-weight: 800; margin-bottom: 8px; color: #0a0e27; }
+  .section-label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: #00e7f9; font-weight: 700; margin-bottom: 12px; }
+  .lead { font-size: 18px; color: #555; line-height: 1.7; max-width: 720px; margin-bottom: 40px; }
+
+  /* PROBLEM */
+  .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 24px; }
+  .problem-card { background: #fff; border-left: 4px solid #e74c3c; border-radius: 8px;
+    padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .problem-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #c0392b; }
+  .problem-card p { font-size: 14px; color: #666; line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .flow { display: flex; flex-direction: column; gap: 0; max-width: 800px; }
+  .flow-step { display: flex; gap: 24px; align-items: flex-start; }
+  .flow-step + .flow-step { margin-top: 0; }
+  .flow-step + .flow-step .flow-line { margin-top: 0; }
+  .flow-num-col { display: flex; flex-direction: column; align-items: center; }
+  .flow-num { width: 44px; height: 44px; border-radius: 50%; background: #00e7f9;
+    color: #0a0e27; font-weight: 800; font-size: 18px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; }
+  .flow-line { width: 2px; flex: 1; background: #e0e0e0; min-height: 40px; }
+  .flow-content { padding-bottom: 40px; }
+  .flow-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .flow-content p { font-size: 15px; color: #555; line-height: 1.6; }
+  .flow-content code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px;
+    font-family: 'Courier New', monospace; font-size: 13px; }
+
+  /* SKILLS TABLE */
+  .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 24px; }
+  .skill-card { background: #fff; border-radius: 12px; padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07); border-top: 4px solid; }
+  .skill-card.email { border-color: #00e7f9; }
+  .skill-card.campaign { border-color: #b2ec05; }
+  .skill-card.queue { border-color: #ff4900; }
+  .skill-card.catalog { border-color: #9b59b6; }
+  .skill-card.send { border-color: #f39c12; }
+  .skill-card.layout { border-color: #e91e8c; }
+  .skill-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .skill-tag { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 12px; background: #f0f0f0; color: #555; display: inline-block; margin-bottom: 12px; }
+  .skill-card p { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 14px; }
+  .skill-card ul { list-style: none; }
+  .skill-card ul li { font-size: 14px; color: #333; padding: 4px 0; }
+  .skill-card ul li::before { content: "→ "; color: #999; }
+
+  /* CATALOG SECTION */
+  .catalog-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 32px; }
+  .catalog-step { background: #fff; border-radius: 10px; padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06); text-align: center; }
+  .catalog-icon { font-size: 32px; margin-bottom: 12px; }
+  .catalog-step h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .catalog-step p { font-size: 13px; color: #666; line-height: 1.5; }
+  .arrow-right { display: flex; align-items: center; justify-content: center; font-size: 24px; color: #ccc; }
+
+  /* SHEETS SECTION */
+  .sheets-table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 14px; }
+  .sheets-table th { background: #0a0e27; color: #fff; padding: 12px 16px; text-align: left; }
+  .sheets-table td { padding: 10px 16px; border-bottom: 1px solid #eee; }
+  .sheets-table tr:nth-child(even) td { background: #f9f9f9; }
+  .col-highlight { background: #e8f9ff !important; font-weight: 700; color: #007a8c; }
+  .badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+  .badge-blue { background: #e8f9ff; color: #007a8c; }
+  .badge-green { background: #e8f7e0; color: #2e7d32; }
+  .badge-gray { background: #f0f0f0; color: #555; }
+
+  /* STAKEHOLDER SECTION */
+  .role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 24px; }
+  .role-card { background: #fff; border-radius: 12px; padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+  .role-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .role-subtitle { font-size: 13px; color: #999; margin-bottom: 16px; }
+  .role-card ol { padding-left: 20px; }
+  .role-card ol li { font-size: 14px; color: #444; padding: 5px 0; line-height: 1.5; }
+
+  /* NOTION SECTION */
+  .notion-box { background: #fff; border-radius: 12px; padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07); max-width: 720px; }
+  .notion-commands { list-style: none; margin-top: 16px; }
+  .notion-commands li { padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 15px; }
+  .notion-commands li:last-child { border: none; }
+  .notion-commands code { background: #0a0e27; color: #00e7f9; padding: 3px 10px;
+    border-radius: 6px; font-size: 13px; margin-right: 12px; }
+
+  /* HIGHLIGHT BOX */
+  .highlight { background: linear-gradient(135deg, #e8f9ff, #f0ffe8); border-radius: 12px;
+    padding: 32px; margin-top: 32px; border: 1px solid #b2ec05; }
+  .highlight h3 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+  .highlight ul { list-style: none; }
+  .highlight ul li { font-size: 15px; padding: 6px 0; }
+  .highlight ul li::before { content: "✓ "; color: #2e7d32; font-weight: 700; }
+
+  /* FOOTER SLIDE */
+  .footer-slide {
+    background: linear-gradient(135deg, #0a0e27, #1a1a2e);
+    color: #fff; padding: 70px 60px; text-align: center;
+  }
+  .footer-slide h2 { font-size: 36px; margin-bottom: 16px; color: #00e7f9; }
+  .footer-slide p { color: rgba(255,255,255,.6); font-size: 17px; max-width: 600px; margin: 0 auto; }
+
+  @media print {
+    section, .cover, .footer-slide { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="cover-badge">Marketing Cloud Automation</div>
+  <h1>Email Marketing<br><span>Agent</span></h1>
+  <p>Uma visão completa do sistema de automação de email marketing: o que é, como funciona, e como os times podem usá-lo no dia a dia. Da proposta de layout à produção e agendamento.</p>
+  <div class="cover-meta">Grupo Primo · Fevereiro 2026 · Versão 2.0</div>
+</div>
+
+<!-- O PROBLEMA -->
+<section>
+  <div class="section-label">O Problema</div>
+  <h2>Por que automatizar?</h2>
+  <p class="lead">Gerar um email marketing de qualidade envolve muitas etapas manuais, sujeitas a erros, retrabalho e inconsistências entre marcas.</p>
+
+  <div class="problem-grid">
+    <div class="problem-card">
+      <h3>Tempo excessivo</h3>
+      <p>Montar um email do zero — com HTML, responsividade e personalização — levava horas por peça, mesmo com templates.</p>
+    </div>
+    <div class="problem-card">
+      <h3>Inconsistência visual</h3>
+      <p>Cada email saía diferente. Cores erradas, fontes fora do padrão, footers desatualizados entre as BUs.</p>
+    </div>
+    <div class="problem-card">
+      <h3>Processo opaco</h3>
+      <p>Sem visibilidade do que estava na fila, o que havia sido enviado, ou quando o próximo disparo seria feito.</p>
+    </div>
+  </div>
+</section>
+
+<!-- A SOLUÇÃO -->
+<section>
+  <div class="section-label">A Solução</div>
+  <h2>Email Marketing Agent</h2>
+  <p class="lead">Um agente de IA integrado ao fluxo de trabalho real da equipe. Recebe um .docx com o conteúdo, aplica a identidade visual da BU correta, gera HTML compatível com todos os clientes de email e faz upload diretamente no SFMC.</p>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num">1</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <h3>Receber o conteúdo</h3>
+        <p>O time deposita o arquivo <code>.docx</code> na pasta da BU no Google Drive. O agente localiza automaticamente.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num">2</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <h3>Extrair e interpretar</h3>
+        <p>O agente lê o .docx: extrai textos, imagens, links, cores de destaque e estrutura do email.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num">3</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <h3>Aplicar identidade da BU</h3>
+        <p>Carrega as cores, fontes, logo e footer corretos para a BU selecionada: Finclass, Bruno Perini, Faculdade Hub ou Thiago Nigro.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num">4</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <h3>Gerar HTML compatível</h3>
+        <p>Produz email 100% table-based, CSS inline, com CTA bulletproof (funciona no Outlook), preheader oculto e footer completo.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num">5</div>
+      </div>
+      <div class="flow-content">
+        <h3>Publicar e agendar no SFMC</h3>
+        <p>Faz upload das imagens e do email no Content Builder, cria o EmailSendDefinition e agenda o disparo com as DEs corretas.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AS SKILLS -->
+<section>
+  <div class="section-label">Componentes</div>
+  <h2>As Skills do Agente</h2>
+  <p class="lead">O agente é composto por skills especializadas, cada uma com uma responsabilidade clara. Podem ser usadas isoladamente ou em conjunto.</p>
+
+  <div class="skills-grid">
+    <div class="skill-card email">
+      <h3>/email</h3>
+      <span class="skill-tag">Email avulso</span>
+      <p>Gera um único email HTML a partir de um .docx. Ideal para comunicações pontuais, newsletters e peças únicas.</p>
+      <ul>
+        <li>Lê .docx da pasta inbox/ ou Drive</li>
+        <li>Pergunta a BU e o template</li>
+        <li>Gera HTML, abre preview no browser</li>
+        <li>Faz upload no SFMC Content Builder</li>
+      </ul>
+    </div>
+
+    <div class="skill-card campaign">
+      <h3>/campaign</h3>
+      <span class="skill-tag">Campanha (N emails)</span>
+      <p>Processa um .docx com múltiplas copies separadas por marcadores e gera N emails em batch. Permite revisão individual antes do upload.</p>
+      <ul>
+        <li>Detecta marcadores de separação no .docx</li>
+        <li>Gera cada email com seu contexto</li>
+        <li>Revisão e ajuste email a email</li>
+        <li>Upload em batch ao final</li>
+      </ul>
+    </div>
+
+    <div class="skill-card queue">
+      <h3>/queue</h3>
+      <span class="skill-tag">Fila de envios</span>
+      <p>Lê o Google Sheets de controle, processa todos os emails pendentes da fila e verifica séries recorrentes automaticamente.</p>
+      <ul>
+        <li>Dashboard dos envios pendentes</li>
+        <li>Processamento em lote</li>
+        <li>Detecção automática de recorrentes</li>
+        <li>Arquivamento no Histórico</li>
+      </ul>
+    </div>
+
+    <div class="skill-card catalog">
+      <h3>/catalog</h3>
+      <span class="skill-tag">Catálogo de templates</span>
+      <p>Gera previews visuais de todos os layouts disponíveis por BU e publica no Notion para que stakeholders possam escolher o template ideal antes de solicitar um email.</p>
+      <ul>
+        <li>6 templates × 4 BUs = 24 previews</li>
+        <li>Screenshots via Edge headless</li>
+        <li>Cards no Notion com cover image</li>
+        <li>Comandos: list, generate, preview, add</li>
+      </ul>
+    </div>
+
+    <div class="skill-card layout">
+      <h3>/layout</h3>
+      <span class="skill-tag">Proposta de layout</span>
+      <p>Recebe uma referência visual e um ID de campanha e gera 4 opções de layout HTML estruturalmente diferentes, publicando no Notion como cards visuais para escolha dos stakeholders.</p>
+      <ul>
+        <li>Analisa ref via Drive (imagem, PDF ou docx)</li>
+        <li>Propõe 4 arquétipos de estrutura</li>
+        <li>Gera 4 HTMLs com identidade da BU</li>
+        <li>Publica no Notion como "{ID} — Opção 1/2/3/4"</li>
+      </ul>
+    </div>
+
+    <div class="skill-card send">
+      <h3>/send</h3>
+      <span class="skill-tag">Agendamento SFMC</span>
+      <p>Especializado em criar e agendar envios no SFMC (BU Finclass). Coleta as configurações de disparo via conversa e cria os EmailSendDefinitions com todos os parâmetros corretos: sender, DEs de envio e exclusão, horário, tracking.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CATÁLOGO EM DETALHE -->
+<section>
+  <div class="section-label">Destaque</div>
+  <h2>O Catálogo de Templates</h2>
+  <p class="lead">Antes de pedir um email, stakeholders podem visualizar os layouts disponíveis para cada BU diretamente no Notion. Cada card mostra exatamente como o email vai parecer com a identidade da marca.</p>
+
+  <div class="catalog-flow">
+    <div class="catalog-step">
+      <div class="catalog-icon">📄</div>
+      <h4>6 Templates</h4>
+      <p>Full Hero, Text-First, Side Image, Multi-block, Minimal, Announcement</p>
+    </div>
+    <div class="catalog-step">
+      <div class="catalog-icon">🎨</div>
+      <h4>4 BUs</h4>
+      <p>Finclass, Bruno Perini, Faculdade Hub, Thiago Nigro — cada um com identidade visual própria</p>
+    </div>
+    <div class="catalog-step">
+      <div class="catalog-icon">📸</div>
+      <h4>Screenshot real</h4>
+      <p>Preview gerado via Edge headless: o que aparece é exatamente o que o cliente vai ver</p>
+    </div>
+    <div class="catalog-step">
+      <div class="catalog-icon">📋</div>
+      <h4>Notion Gallery</h4>
+      <p>24 cards publicados automaticamente no Notion com cover image, tags e filtros por BU e tipo</p>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <h3>Templates disponíveis</h3>
+    <ul>
+      <li><strong>Full Hero</strong> — imagem grande no topo + headline + body + CTA. Ideal para lançamentos.</li>
+      <li><strong>Text-First</strong> — headline em destaque + corpo de texto + imagem + CTA. Ideal para newsletters e educativos.</li>
+      <li><strong>Side Image</strong> — layout 2 colunas (texto + imagem). Ideal para produtos com imagem de produto.</li>
+      <li><strong>Multi-block</strong> — seções com ícone/barra colorida. Ideal para resumos, updates e séries de conteúdo.</li>
+      <li><strong>Minimal</strong> — tipografia limpa, sem hero. Ideal para comunicados formais e transacionais.</li>
+      <li><strong>Announcement</strong> — badge de destaque + data em evidência. Ideal para eventos, datas e lançamentos urgentes.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- LAYOUT PROPOSALS -->
+<section>
+  <div class="section-label">Novo</div>
+  <h2>Proposta de Layout por Campanha</h2>
+  <p class="lead">Antes de escrever uma linha de copy, a equipe pode enviar uma referência visual ao agente com o ID da campanha. Em minutos, 4 layouts estruturalmente distintos aparecem no Notion — prontos para aprovação.</p>
+
+  <div class="flow" style="max-width: 900px;">
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num" style="background:#e91e8c;">1</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <h3>Stakeholder envia a referência</h3>
+        <p>Sobe uma imagem, PDF ou doc na pasta <code>Refs</code> da BU no Drive. Qualquer referência serve: screenshot de email, moodboard, print de campanha anterior.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num" style="background:#e91e8c;">2</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <h3>Operador roda <code>/layout SSL0001</code></h3>
+        <p>O agente baixa a referência, analisa a intenção visual (estrutura, proporção imagem/texto, tom, paleta), propõe 4 arquétipos e aguarda confirmação antes de gerar.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num" style="background:#e91e8c;">3</div>
+        <div class="flow-line"></div>
+      </div>
+      <div class="flow-content">
+        <h3>4 HTMLs gerados com a identidade da BU</h3>
+        <p>Cada opção tem uma estrutura HTML genuinamente diferente (hero, side-by-side, tipografia pura, announcement…), com cores, logo e footer da BU aplicados, e elementos visuais da referência preservados.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num-col">
+        <div class="flow-num" style="background:#e91e8c;">4</div>
+      </div>
+      <div class="flow-content">
+        <h3>Cards aparecem no Notion para aprovação</h3>
+        <p>4 cards publicados automaticamente: <strong>SSL0001 — Opção 1</strong>, <strong>Opção 2</strong>, <strong>Opção 3</strong>, <strong>Opção 4</strong>. Com cover image, link para visualização e tags da campanha. O stakeholder escolhe e o operador usa o HTML aprovado.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight" style="border-color: #e91e8c; background: linear-gradient(135deg, #fff0f8, #fff8ff);">
+    <h3>Diferencial: a referência é levada a sério</h3>
+    <ul>
+      <li>O agente extrai a <strong>DNA visual</strong> da ref: paleta, proporção, tipografia, elementos-chave</li>
+      <li>Cada HTML gerado reflete a ref — não é um template genérico com cores da BU</li>
+      <li>Exemplos SSL0001: <code>$EGUNDO</code> e <code>$ALÁRIO</code> com $ dourado, fundo 100% escuro, emoji 🪙, mockup de app — tudo vindo da referência enviada</li>
+      <li>Stakeholders aprovam o <strong>conceito visual</strong> antes do copywriter começar — sem retrabalho de layout depois</li>
+    </ul>
+  </div>
+</section>
+
+<!-- PLANILHA -->
+<section>
+  <div class="section-label">Controle Operacional</div>
+  <h2>A Fila de Envios (Google Sheets)</h2>
+  <p class="lead">O Google Sheets é o painel de controle da operação. Nele ficam todos os envios pendentes, as configurações de séries recorrentes e o histórico completo.</p>
+
+  <table class="sheets-table">
+    <tr>
+      <th>Coluna</th>
+      <th>Campo</th>
+      <th>Quem preenche</th>
+      <th>Descrição</th>
+    </tr>
+    <tr>
+      <td>A</td>
+      <td><span class="badge badge-blue">status</span></td>
+      <td>Agente</td>
+      <td>pendente → processando → agendado</td>
+    </tr>
+    <tr>
+      <td>B</td>
+      <td><span class="badge badge-green">bu</span></td>
+      <td>Time / Agente</td>
+      <td>finclass | bruno-perini | faculdade-hub | thiago-nigro</td>
+    </tr>
+    <tr>
+      <td>C</td>
+      <td><span class="badge badge-gray">tipo</span></td>
+      <td>Time</td>
+      <td>email | campanha | newsletter | avulso</td>
+    </tr>
+    <tr>
+      <td>D</td>
+      <td><span class="badge badge-gray">nome</span></td>
+      <td>Time</td>
+      <td>Nome descritivo do email</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td><span class="badge badge-gray">docx_link</span></td>
+      <td>Time</td>
+      <td>Link do Google Drive para o .docx com o conteúdo</td>
+    </tr>
+    <tr>
+      <td>F</td>
+      <td><span class="badge badge-gray">data_envio</span></td>
+      <td>Time</td>
+      <td>Data de disparo (YYYY-MM-DD)</td>
+    </tr>
+    <tr>
+      <td>G</td>
+      <td><span class="badge badge-gray">horario</span></td>
+      <td>Time</td>
+      <td>Horário de disparo (HH:MM)</td>
+    </tr>
+    <tr>
+      <td>H</td>
+      <td><span class="badge badge-gray">de_envio</span></td>
+      <td>Time</td>
+      <td>DE de envio no SFMC</td>
+    </tr>
+    <tr>
+      <td>I</td>
+      <td><span class="badge badge-gray">de_exclusao</span></td>
+      <td>Time</td>
+      <td>DE de exclusão (supressão) no SFMC</td>
+    </tr>
+    <tr>
+      <td>J</td>
+      <td><span class="badge badge-blue">sfmc_asset_id</span></td>
+      <td>Agente</td>
+      <td>ID do asset criado no Content Builder</td>
+    </tr>
+    <tr>
+      <td>K</td>
+      <td><span class="badge badge-blue">sfmc_send_id</span></td>
+      <td>Agente</td>
+      <td>ID do EmailSendDefinition agendado</td>
+    </tr>
+    <tr>
+      <td>L</td>
+      <td><span class="badge badge-gray">obs</span></td>
+      <td>Ambos</td>
+      <td>Observações, erros, notas adicionais</td>
+    </tr>
+  </table>
+
+  <p style="margin-top: 20px; font-size: 14px; color: #888;">Aba <strong>Recorrentes</strong>: configura séries automáticas (ex: newsletter toda terça-feira). O agente verifica diariamente e insere na Fila quando o arquivo aparece no Drive.<br/>Aba <strong>Histórico</strong>: linhas arquivadas após cada envio concluído.</p>
+</section>
+
+<!-- COMO OS STAKEHOLDERS USAM -->
+<section>
+  <div class="section-label">Guia de Uso</div>
+  <h2>Como cada perfil usa o sistema</h2>
+  <p class="lead">O agente foi desenhado para ser simples para quem solicita e poderoso para quem opera. Cada perfil tem um fluxo claro.</p>
+
+  <div class="role-grid">
+    <div class="role-card">
+      <h3>Analista / Copywriter</h3>
+      <div class="role-subtitle">Quem cria o conteúdo</div>
+      <ol>
+        <li>Para campanhas novas: sobe uma referência visual na pasta <strong>Refs</strong> da BU no Drive</li>
+        <li>O operador roda <code>/layout &lt;ID&gt;</code> → 4 opções aparecem no Notion</li>
+        <li>Escolhe o layout aprovado e redige o conteúdo no formato correspondente</li>
+        <li>Salva o <strong>.docx</strong> na pasta da BU no Google Drive</li>
+        <li>Adiciona uma linha na aba <strong>Fila</strong> com os dados do envio</li>
+      </ol>
+    </div>
+
+    <div class="role-card">
+      <h3>Gestor de CRM / Ops</h3>
+      <div class="role-subtitle">Quem opera o agente</div>
+      <ol>
+        <li>Para proposta de layout de campanha: roda <code>/layout &lt;ID-campanha&gt;</code></li>
+        <li>Roda <code>/queue</code> para ver o dashboard de envios pendentes</li>
+        <li>Confirma os envios pendentes e aprova o processamento</li>
+        <li>Para emails urgentes: usa <code>/email</code> ou <code>/campaign</code> diretamente</li>
+        <li>Para configurar série recorrente: preenche a aba <strong>Recorrentes</strong></li>
+      </ol>
+    </div>
+
+    <div class="role-card">
+      <h3>Diretor / Head de Marketing</h3>
+      <div class="role-subtitle">Quem aprova e acompanha</div>
+      <ol>
+        <li>Recebe link do Notion com as 4 propostas de layout da campanha</li>
+        <li>Aprova o conceito visual <strong>antes</strong> da copy ser escrita — sem retrabalho</li>
+        <li>Abre o <strong>Catálogo</strong> para ver os templates permanentes disponíveis por BU</li>
+        <li>Acompanha o <strong>Histórico</strong> na planilha: o que saiu, quando, qual DE</li>
+      </ol>
+    </div>
+
+    <div class="role-card">
+      <h3>Designer</h3>
+      <div class="role-subtitle">Quem define identidade visual</div>
+      <ol>
+        <li>Sobe referências na pasta <code>Refs/&lt;bu&gt;</code> no Drive para inspirar novas campanhas</li>
+        <li>Mantém a identidade em <code>email-agent/brands/&lt;bu&gt;/brand.json</code></li>
+        <li>Ao atualizar cores ou logo: edita o brand.json e roda <code>/catalog generate &lt;bu&gt;</code></li>
+        <li>Valida os previews no Notion — tanto do catálogo quanto das propostas de campanha</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- COMANDOS DO CATÁLOGO -->
+<section>
+  <div class="section-label">Referência</div>
+  <h2>Comandos do Catálogo</h2>
+  <p class="lead">Todos os comandos são usados via Claude Code (terminal). Nenhum conhecimento técnico é necessário para browsing — apenas para geração.</p>
+
+  <div class="notion-box">
+    <ul class="notion-commands">
+      <li>
+        <code>/catalog list</code>
+        Lista todos os templates disponíveis com nome, tags e zonas de conteúdo
+      </li>
+      <li>
+        <code>/catalog generate</code>
+        Regera todos os 24 previews (todas as BUs × todos os templates)
+      </li>
+      <li>
+        <code>/catalog generate finclass</code>
+        Regera apenas os previews da Finclass (6 templates)
+      </li>
+      <li>
+        <code>/catalog generate finclass full-hero</code>
+        Regera apenas o preview Finclass × Full Hero
+      </li>
+      <li>
+        <code>/catalog preview full-hero finclass</code>
+        Gera e abre o preview no browser (sem subir para o Notion)
+      </li>
+      <li>
+        <code>/catalog add novo-template</code>
+        Cria a estrutura de scaffold para um novo template
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- COMANDOS LAYOUT -->
+<section>
+  <div class="section-label">Referência</div>
+  <h2>Comandos de Layout</h2>
+  <p class="lead">O <code>/layout</code> é ativado pelo operador sempre que uma nova campanha precisa de proposta visual. O stakeholder só precisa ter subido a referência no Drive.</p>
+
+  <div class="notion-box">
+    <ul class="notion-commands">
+      <li>
+        <code>/layout SSL0001</code>
+        Gera 4 propostas de layout para a campanha SSL0001 (BU perguntada se não informada)
+      </li>
+      <li>
+        <code>/layout SSL0001 finclass</code>
+        Gera diretamente sem perguntar a BU
+      </li>
+    </ul>
+  </div>
+
+  <p style="margin-top: 24px; font-size: 14px; color: #888; max-width: 720px;">
+    Após rodar o comando: o agente localiza a referência na pasta <strong>Refs</strong> da BU no Drive, analisa a imagem/PDF/doc, propõe 4 arquétipos e aguarda confirmação. Com "gera", produz os 4 HTMLs, tira screenshots e publica automaticamente os cards no Notion como <strong>{ID} — Opção 1/2/3/4</strong>.
+  </p>
+</section>
+
+<!-- TECNOLOGIA -->
+<section>
+  <div class="section-label">Tecnologia</div>
+  <h2>Como o sistema foi construído</h2>
+  <p class="lead">Toda a infraestrutura usa serviços já contratados pelo grupo. Sem custo adicional de hosting, plataformas externas ou ferramentas pagas.</p>
+
+  <div class="skills-grid">
+    <div class="skill-card email">
+      <h3>Salesforce Marketing Cloud</h3>
+      <span class="skill-tag">Email &amp; envio</span>
+      <p>Hospeda os assets de email, imagens e agenda os disparos via EmailSendDefinition. Toda a camada de envio fica no SFMC.</p>
+    </div>
+    <div class="skill-card campaign">
+      <h3>Google Drive &amp; Sheets</h3>
+      <span class="skill-tag">Armazenamento &amp; controle</span>
+      <p>Drive armazena os .docx de conteúdo por BU/campanha. Sheets é o painel de controle da fila de envios.</p>
+    </div>
+    <div class="skill-card queue">
+      <h3>Notion</h3>
+      <span class="skill-tag">Catálogo visual</span>
+      <p>Database em gallery view com todos os 24 previews de template × BU. Acessível a qualquer stakeholder sem precisar do Claude Code.</p>
+    </div>
+    <div class="skill-card catalog">
+      <h3>Claude Code</h3>
+      <span class="skill-tag">Agente de IA</span>
+      <p>O agente que orquestra tudo: lê documentos, gera HTML, faz uploads, agenda envios e mantém o catálogo atualizado.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRÓXIMOS PASSOS -->
+<section>
+  <div class="section-label">Roadmap</div>
+  <h2>O que vem a seguir</h2>
+  <p class="lead">A versão atual cobre o fluxo completo de produção e agendamento. As próximas fases expandem a capacidade de personalização e automação.</p>
+
+  <div class="problem-grid">
+    <div class="problem-card" style="border-color: #e91e8c;">
+      <h3 style="color: #b5166e;">Fase 4 — /layout refinamento</h3>
+      <p>Após escolha de uma opção: refinamento inline (ajuste de seção, troca de cor, edição de copy) antes de aprovação final. Persistência do HTML aprovado no catálogo permanente.</p>
+    </div>
+    <div class="problem-card" style="border-color: #2ecc71;">
+      <h3 style="color: #1a8a4a;">Fase 5 — Multi-BU no /queue</h3>
+      <p>Queue processando envios de todas as BUs em paralelo, com controle de prioridade e janelas de envio por BU.</p>
+    </div>
+    <div class="problem-card" style="border-color: #f39c12;">
+      <h3 style="color: #b7770d;">Fase 6 — Métricas e relatórios</h3>
+      <p>Pós-envio: o agente puxa as métricas do SFMC (open rate, CTR, bounces) e atualiza o Histórico com os resultados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FECHAMENTO -->
+<div class="footer-slide">
+  <h2>Pronto para usar.</h2>
+  <p>O catálogo já está no Notion. A fila está no Sheets. O agente está disponível no Claude Code. O próximo passo é a sua próxima solicitação.</p>
+</div>
+
+</body>
+</html>
