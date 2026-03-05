@@ -670,7 +670,7 @@
 </div>
 
 <script>
-let API = localStorage.getItem('ops_api_url') || ''
+let API = localStorage.getItem('ops_api_url') || 'https://platform-indol-five.vercel.app'
 
 // ─── Perfis da squad ───
 // Para trocar a foto: substitua null por uma URL de imagem (ex: SFMC ou link público)
@@ -688,7 +688,7 @@ function squadMember(name) {
 function opsPanel() {
   return {
     // Setup
-    apiUrl: localStorage.getItem('ops_api_url') || '',
+    apiUrl: localStorage.getItem('ops_api_url') || 'https://platform-indol-five.vercel.app',
     setupUrl: '',
 
     // Auth
