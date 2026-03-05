@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Ops Desk — Painel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  [x-cloak] { display: none !important; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #09090b; color: #fafafa; margin: 0; overflow: hidden; height: 100vh; }
+  .card { background: #18181b; border: 1px solid #27272a; border-radius: 0.75rem; }
+  .input { background: #09090b; border: 1px solid #3f3f46; color: #fafafa; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.8125rem; outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.15s; }
+  .input:focus { border-color: #71717a; }
+  .input::placeholder { color: #52525b; }
+  select.input option { background: #18181b; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; font-family: 'Inter', sans-serif; white-space: nowrap; }
+  .btn-primary { background: #fafafa; color: #09090b; }
+  .btn-primary:hover { background: #e4e4e7; }
+  .btn-primary:disabled { background: #3f3f46; color: #71717a; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid #3f3f46; color: #a1a1aa; }
+  .btn-outline:hover { border-color: #71717a; color: #fafafa; }
+  .btn-ghost { background: transparent; color: #71717a; padding: 0.375rem 0.5rem; }
+  .btn-ghost:hover { color: #fafafa; background: #27272a; }
+  .btn-danger { background: transparent; border: 1px solid #7f1d1d; color: #f87171; }
+  .btn-danger:hover { background: #7f1d1d22; }
+  .sidebar-link { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; border-radius:0.5rem; font-size:0.8125rem; color:#71717a; cursor:pointer; width:100%; background:transparent; border:none; text-align:left; transition: all 0.15s; }
+  .sidebar-link:hover { color:#fafafa; background:#27272a; }
+  .sidebar-link.active { background:#27272a; color:#fafafa; }
+  .badge { display:inline-flex; align-items:center; padding:0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:600; }
+  .badge-alta { background:#fef2f2; color:#ef4444; }
+  .badge-media { background:#fffbeb; color:#d97706; }
+  .badge-baixa { background:#f0fdf4; color:#16a34a; }
+  .badge-pendente { background:#27272a; color:#71717a; }
+  .status-badge { display:inline-flex; align-items:center; padding:0.125rem 0.625rem; border-radius:9999px; font-size:0.6875rem; font-weight:500; border: 1px solid; }
+  .s-recebida { border-color:#3f3f46; color:#a1a1aa; }
+  .s-em_analise { border-color:#854d0e; color:#fbbf24; }
+  .s-em_execucao { border-color:#1e40af; color:#60a5fa; }
+  .s-concluida { border-color:#14532d; color:#4ade80; }
+  .s-cancelada { border-color:#7f1d1d; color:#f87171; }
+  .task-row { display:grid; grid-template-columns: 6rem 1fr 6rem 7rem 6rem 7rem 2rem 2.5rem; align-items:center; gap:0.75rem; padding:0.75rem 1rem; border-bottom:1px solid #18181b; cursor:pointer; transition:background 0.1s; }
+  .task-row:hover { background:#18181b; }
+  .task-row.selected { background:#1c1c1e; }
+  .kanban-col { min-width: 240px; max-width: 240px; display:flex; flex-direction:column; gap:0.5rem; }
+  .kanban-card { background:#18181b; border:1px solid #27272a; border-radius:0.625rem; padding:0.75rem; cursor:pointer; transition:border-color 0.15s; }
+  .kanban-card:hover { border-color:#3f3f46; }
+  .kanban-card.selected { border-color:#71717a; }
+  .drawer { position:fixed; top:0; right:0; height:100vh; width:480px; background:#111113; border-left:1px solid #27272a; overflow-y:auto; z-index:50; transform:translateX(100%); transition:transform 0.2s ease; }
+  .drawer.open { transform:translateX(0); }
+  .timer-bar { background:#18181b; border-bottom:1px solid #27272a; padding:0.5rem 1rem; display:flex; align-items:center; gap:0.75rem; font-size:0.8125rem; }
+  .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .avatar { width:1.5rem; height:1.5rem; border-radius:9999px; display:inline-flex; align-items:center; justify-content:center; font-size:0.625rem; font-weight:700; color:#fff; flex-shrink:0; overflow:hidden; }
+  .avatar img { width:100%; height:100%; object-fit:cover; }
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#3f3f46; border-radius:4px; }
+</style>
+</head>
+<body x-data="opsPanel()" x-cloak @keydown.escape.window="selectedTask=null">
+
+<!-- LOGIN -->
+<div x-show="!session.token" class="h-screen flex items-center justify-center p-4">
+  <div class="card p-8 w-full max-w-sm">
+    <div class="flex items-center gap-2 mb-6">
+      <div class="w-7 h-7 bg-zinc-800 rounded-lg flex items-center justify-center">
+        <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <span class="font-semibold text-sm">CRM Ops Desk</span>
+    </div>
+    <h1 class="text-lg font-semibold mb-1">Acesso interno</h1>
+    <p class="text-zinc-500 text-sm mb-6">Apenas para a squad de marketing.</p>
+    <div class="space-y-3 mb-4">
+      <select class="input w-full" x-model="loginName">
+        <option value="">Selecione seu perfil</option>
+        <template x-for="m in squad" :key="m.name">
+          <option :value="m.name" x-text="m.name"></option>
+        </template>
+      </select>
+      <input class="input w-full" type="password" x-model="loginToken" x-ref="tokenInput" placeholder="Token de acesso" @keydown.enter="doLogin()">
+    </div>
+    <div x-show="loginError" class="text-xs text-red-400 mb-3" x-text="loginError"></div>
+    <button class="btn btn-primary w-full" :disabled="loginLoading" @click="doLogin()" x-text="loginLoading ? 'Entrando...' : 'Entrar'"></button>
+  </div>
+</div>
+
+<!-- PAINEL PRINCIPAL -->
+<div x-show="session.token" class="flex flex-col h-screen">
+
+  <!-- Timer bar (quando ativo) -->
+  <div x-show="timer.entryId" class="timer-bar">
+    <div class="w-2 h-2 rounded-full bg-green-400 pulse flex-shrink-0"></div>
+    <span class="text-zinc-400">Cronômetro ativo:</span>
+    <span class="font-medium truncate flex-1" x-text="timer.taskTitle"></span>
+    <span class="font-mono text-zinc-300 tabular-nums" x-text="timerDisplay()"></span>
+    <button class="btn btn-outline text-xs py-1 px-3" @click="openStopModal()">Parar</button>
+  </div>
+
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-52 flex-shrink-0 border-r border-zinc-800 flex flex-col p-3 gap-1">
+      <div class="px-2 py-3 mb-2">
+        <p class="text-xs font-semibold text-zinc-300">CRM Ops Desk</p>
+        <p class="text-xs text-zinc-600 mt-0.5" x-text="session.name"></p>
+      </div>
+
+      <button class="sidebar-link" :class="panelView==='lista' ? 'active' : ''" @click="panelView='lista'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        Fila
+        <span x-show="tasks.length" class="ml-auto text-xs bg-zinc-800 text-zinc-400 px-1.5 rounded" x-text="filteredTasks().length"></span>
+      </button>
+
+      <button class="sidebar-link" :class="panelView==='kanban' ? 'active' : ''" @click="panelView='kanban'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+        Kanban
+      </button>
+
+      <button class="sidebar-link" :class="panelView==='stats' ? 'active' : ''" @click="panelView='stats'; loadStats()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Stats
+      </button>
+
+      <div class="flex-1"></div>
+
+      <div class="border-t border-zinc-800 pt-3 mt-3 space-y-1">
+        <button class="sidebar-link text-xs" @click="loadTasks()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Atualizar
+        </button>
+        <button class="sidebar-link text-xs" @click="doLogout()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          Sair
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+
+      <!-- Top bar: filtros -->
+      <div class="border-b border-zinc-800 px-4 py-3 flex items-center gap-3 flex-shrink-0">
+        <input class="input w-48" type="text" x-model="filters.search" placeholder="Buscar...">
+        <select class="input w-36" x-model="filters.bu">
+          <option value="">Todas as BUs</option>
+          <option>Finclass</option>
+          <option>Bruno Perini</option>
+          <option>Faculdade Hub</option>
+          <option>Thiago Nigro</option>
+          <option>Portfel</option>
+          <option>Grão</option>
+        </select>
+        <select class="input w-40" x-model="filters.status">
+          <option value="">Todos os status</option>
+          <option value="recebida">Recebida</option>
+          <option value="em_analise">Em análise</option>
+          <option value="em_execucao">Em execução</option>
+          <option value="concluida">Concluída</option>
+          <option value="cancelada">Cancelada</option>
+        </select>
+        <select class="input w-44" x-model="filters.type">
+          <option value="">Todos os tipos</option>
+          <option value="email">Email</option>
+          <option value="mensagem-wpp">WPP</option>
+          <option value="sms">SMS</option>
+          <option value="outros">Outros</option>
+        </select>
+        <div class="flex-1"></div>
+        <button class="btn btn-ghost text-xs gap-1.5" @click="showArchived = !showArchived"
+          :class="showArchived ? 'text-zinc-300' : 'text-zinc-600'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+          <span x-text="showArchived ? 'Ocultar concluídas' : 'Mostrar concluídas'"></span>
+        </button>
+        <span class="text-xs text-zinc-600" x-text="loading ? 'Carregando...' : filteredTasks().length + ' tasks'"></span>
+      </div>
+
+      <!-- LISTA VIEW -->
+      <div x-show="panelView==='lista'" class="flex-1 overflow-y-auto">
+        <!-- Header da lista -->
+        <div class="task-row text-xs text-zinc-600 font-medium border-b border-zinc-800 cursor-default hover:bg-transparent">
+          <span>Prioridade</span>
+          <span>Task</span>
+          <span>BU</span>
+          <span>Tipo</span>
+          <span>Prazo</span>
+          <span>Status</span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <!-- Rows -->
+        <template x-if="!loading && filteredTasks().length === 0">
+          <div class="text-center py-16 text-zinc-600 text-sm">Nenhuma task encontrada.</div>
+        </template>
+
+        <template x-for="task in filteredTasks()" :key="task.id">
+          <div class="task-row" :class="selectedTask?.id === task.id ? 'selected' : ''" @click="selectTask(task)">
+            <!-- Prioridade -->
+            <div class="flex items-center gap-1.5">
+              <div class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                :class="{
+                  'bg-red-500': task.priority_label==='Alta',
+                  'bg-yellow-500': task.priority_label==='Media',
+                  'bg-green-500': task.priority_label==='Baixa',
+                  'bg-zinc-600': !task.priority_label || task.priority_label==='Pendente'
+                }"></div>
+              <span class="text-xs font-mono text-zinc-500" x-text="task.priority_score ?? '—'"></span>
+            </div>
+            <!-- Título + protocolo -->
+            <div class="min-w-0">
+              <p class="text-sm font-medium truncate" x-text="task.title"></p>
+              <p class="text-xs text-zinc-600" x-text="task.protocol"></p>
+            </div>
+            <!-- BU -->
+            <span class="text-xs text-zinc-400 truncate" x-text="task.bu"></span>
+            <!-- Tipo -->
+            <span class="text-xs text-zinc-500 truncate" x-text="typeLabel(task.type)"></span>
+            <!-- Prazo -->
+            <span class="text-xs" :class="deadlineColor(task.requested_deadline)" x-text="deadlineText(task.requested_deadline)"></span>
+            <!-- Status -->
+            <span class="status-badge" :class="'s-' + task.status" x-text="statusLabel(task.status)"></span>
+            <!-- Avatar responsável -->
+            <div class="flex justify-center">
+              <template x-if="task.assignee_name">
+                <div class="avatar" :style="'background:' + squadMember(task.assignee_name).color" :title="task.assignee_name">
+                  <img x-show="squadMember(task.assignee_name).photo" :src="squadMember(task.assignee_name).photo">
+                  <span x-show="!squadMember(task.assignee_name).photo" x-text="squadMember(task.assignee_name).initials"></span>
+                </div>
+              </template>
+              <template x-if="!task.assignee_name"><span></span></template>
+            </div>
+            <!-- Ações rápidas -->
+            <button class="btn-ghost rounded-md p-1.5 flex-shrink-0"
+              @click.stop="startTimer(task)"
+              x-show="!timer.entryId || timer.taskId !== task.id"
+              title="Iniciar timer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+          </div>
+        </template>
+      </div>
+
+      <!-- KANBAN VIEW -->
+      <div x-show="panelView==='kanban'" class="flex-1 overflow-x-auto overflow-y-hidden p-4">
+        <div class="flex gap-4 h-full">
+          <template x-for="col in kanbanCols" :key="col.key">
+            <div class="kanban-col flex-shrink-0">
+              <div class="flex items-center justify-between mb-3 px-1">
+                <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wide" x-text="col.label"></span>
+                <span class="text-xs text-zinc-600" x-text="tasksInCol(col.key).length"></span>
+              </div>
+              <div class="space-y-2 overflow-y-auto rounded-lg transition-colors"
+                style="max-height: calc(100vh - 200px); min-height: 60px;"
+                :class="dragOverCol === col.key ? 'bg-zinc-800/50 ring-1 ring-zinc-600' : ''"
+                @dragover.prevent="dragOverCol = col.key"
+                @dragleave="dragOverCol = null"
+                @drop.prevent="dropToCol(col.key)">
+                <template x-for="task in tasksInCol(col.key)" :key="task.id">
+                  <div class="kanban-card" draggable="true"
+                    :class="selectedTask?.id === task.id ? 'selected' : ''"
+                    @dragstart="draggedTask = task; $event.dataTransfer.effectAllowed = 'move'"
+                    @dragend="draggedTask = null; dragOverCol = null"
+                    @click="selectTask(task)">
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                      <span class="badge" :class="'badge-' + (task.priority_label || 'pendente').toLowerCase()" x-text="task.priority_label || 'Pendente'"></span>
+                      <span class="text-xs text-zinc-600" x-text="task.bu"></span>
+                    </div>
+                    <p class="text-sm font-medium leading-snug mb-1" x-text="task.title"></p>
+                    <p class="text-xs text-zinc-600 mb-2" x-text="task.protocol"></p>
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs" :class="deadlineColor(task.requested_deadline)" x-text="deadlineText(task.requested_deadline)"></span>
+                      <template x-if="task.assignee_name">
+                        <div class="avatar" :style="'background:' + squadMember(task.assignee_name).color" :title="task.assignee_name">
+                          <img x-show="squadMember(task.assignee_name).photo" :src="squadMember(task.assignee_name).photo" :alt="task.assignee_name">
+                          <span x-show="!squadMember(task.assignee_name).photo" x-text="squadMember(task.assignee_name).initials"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+                <template x-if="tasksInCol(col.key).length === 0">
+                  <div class="text-center py-6 text-zinc-700 text-xs">Vazio</div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+      <!-- STATS VIEW -->
+      <div x-show="panelView==='stats'" class="flex-1 overflow-y-auto p-6">
+        <div x-show="statsLoading" class="text-center py-16 text-zinc-600 text-sm">Carregando...</div>
+
+        <template x-if="!statsLoading && stats !== null">
+          <div>
+            <!-- Meu painel -->
+            <div class="mb-8">
+              <h2 class="text-sm font-semibold text-zinc-300 mb-4">Meu painel — <span x-text="session.name"></span></h2>
+              <template x-if="myStats()">
+                <div>
+                  <div class="grid grid-cols-4 gap-3 mb-4">
+                    <div class="card p-4">
+                      <p class="text-xs text-zinc-600 mb-1">Atribuídas</p>
+                      <p class="text-2xl font-bold" x-text="myStats().assigned"></p>
+                    </div>
+                    <div class="card p-4">
+                      <p class="text-xs text-zinc-600 mb-1">Concluídas</p>
+                      <p class="text-2xl font-bold text-green-400" x-text="myStats().completed"></p>
+                    </div>
+                    <div class="card p-4">
+                      <p class="text-xs text-zinc-600 mb-1">Em execução</p>
+                      <p class="text-2xl font-bold text-blue-400" x-text="myStats().in_progress"></p>
+                    </div>
+                    <div class="card p-4">
+                      <p class="text-xs text-zinc-600 mb-1">Tempo total</p>
+                      <p class="text-2xl font-bold" x-text="fmtMinutes(myStats().total_minutes)"></p>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="card p-4">
+                      <p class="text-xs text-zinc-600 mb-2">Por BU</p>
+                      <template x-for="[bu, count] in Object.entries(myStats().by_bu).sort((a,b)=>b[1]-a[1])" :key="bu">
+                        <div class="flex items-center justify-between text-sm mb-1.5">
+                          <span class="text-zinc-400" x-text="bu"></span>
+                          <span class="text-zinc-300 font-medium" x-text="count"></span>
+                        </div>
+                      </template>
+                    </div>
+                    <div class="card p-4">
+                      <p class="text-xs text-zinc-600 mb-2">Por tipo</p>
+                      <template x-for="[type, count] in Object.entries(myStats().by_type).sort((a,b)=>b[1]-a[1])" :key="type">
+                        <div class="flex items-center justify-between text-sm mb-1.5">
+                          <span class="text-zinc-400" x-text="typeLabel(type)"></span>
+                          <span class="text-zinc-300 font-medium" x-text="count"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <template x-if="!myStats()">
+                <p class="text-sm text-zinc-600">Nenhuma task atribuída para você ainda.</p>
+              </template>
+            </div>
+
+            <!-- Equipe -->
+            <div>
+              <h2 class="text-sm font-semibold text-zinc-300 mb-4">Equipe</h2>
+              <template x-if="stats.length === 0">
+                <p class="text-sm text-zinc-600">Nenhum dado ainda.</p>
+              </template>
+              <div class="grid grid-cols-2 gap-3">
+                <template x-for="member in stats" :key="member.name">
+                  <div class="card p-4">
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden flex-shrink-0"
+                          :style="'background:' + squadMember(member.name).color">
+                          <img x-show="squadMember(member.name).photo" :src="squadMember(member.name).photo" class="w-full h-full object-cover">
+                          <span x-show="!squadMember(member.name).photo" x-text="squadMember(member.name).initials"></span>
+                        </div>
+                        <span class="text-sm font-medium" x-text="member.name"></span>
+                      </div>
+                      <span class="text-xs text-zinc-600" x-text="fmtMinutes(member.total_minutes)"></span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p class="text-lg font-bold" x-text="member.assigned"></p>
+                        <p class="text-xs text-zinc-600">total</p>
+                      </div>
+                      <div>
+                        <p class="text-lg font-bold text-green-400" x-text="member.completed"></p>
+                        <p class="text-xs text-zinc-600">concluídas</p>
+                      </div>
+                      <div>
+                        <p class="text-lg font-bold text-blue-400" x-text="member.in_progress"></p>
+                        <p class="text-xs text-zinc-600">em exec.</p>
+                      </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-600 flex justify-between">
+                      <span>Top BU: <span class="text-zinc-400" x-text="topEntry(member.by_bu)"></span></span>
+                      <span>Top tipo: <span class="text-zinc-400" x-text="typeLabel(topEntry(member.by_type))"></span></span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- DRAWER: detalhes da task -->
+<div class="drawer" :class="selectedTask ? 'open' : ''">
+  <template x-if="selectedTask">
+    <div class="p-6">
+      <!-- Header do drawer -->
+      <div class="flex items-start justify-between mb-5">
+        <div class="flex-1 min-w-0 pr-4">
+          <p class="text-xs text-zinc-500 mb-1" x-text="selectedTask.protocol"></p>
+          <h2 class="font-semibold text-base leading-snug" x-text="selectedTask.title"></h2>
+          <p class="text-xs text-zinc-500 mt-1.5" x-text="selectedTask.bu + ' · ' + typeLabel(selectedTask.type)"></p>
+        </div>
+        <button class="btn-ghost rounded-md flex-shrink-0" @click="selectedTask=null">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Prioridade -->
+      <div class="flex items-center gap-2 mb-5 p-3 rounded-lg bg-zinc-900">
+        <span class="badge" :class="'badge-' + (selectedTask.priority_label || 'pendente').toLowerCase()" x-text="selectedTask.priority_label || 'Pendente'"></span>
+        <span class="text-xs text-zinc-500" x-show="selectedTask.priority_score" x-text="'Score: ' + selectedTask.priority_score"></span>
+        <span class="text-xs text-zinc-600 ml-auto" x-text="selectedTask.priority_justification"></span>
+      </div>
+
+      <!-- Ações principais -->
+      <div class="grid grid-cols-2 gap-2 mb-5">
+        <!-- Status -->
+        <div>
+          <p class="text-xs text-zinc-600 mb-1.5">Status</p>
+          <select class="input w-full text-xs" x-model="drawerStatus" @change="updateStatus()">
+            <option value="recebida">Recebida</option>
+            <option value="em_analise">Em análise</option>
+            <option value="em_execucao">Em execução</option>
+            <option value="concluida">Concluída</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+        <!-- Responsável -->
+        <div>
+          <p class="text-xs text-zinc-600 mb-1.5">Responsável</p>
+          <select class="input w-full text-xs" x-model="drawerAssignee" @change="updateAssignee()">
+            <option value="">Sem responsável</option>
+            <template x-for="m in squad" :key="m.name">
+              <option :value="m.name" x-text="m.name"></option>
+            </template>
+          </select>
+          <button class="text-xs text-zinc-600 hover:text-zinc-400 mt-1.5" @click="drawerAssignee=session.name; updateAssignee()">Assumir para mim</button>
+        </div>
+      </div>
+
+      <!-- Timer -->
+      <div class="rounded-lg bg-zinc-900 p-3 mb-5">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-medium text-zinc-400">Registro de tempo</p>
+          <template x-if="timer.entryId && timer.taskId === selectedTask.id">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono text-green-400" x-text="timerDisplay()"></span>
+              <button class="btn text-xs py-1 px-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700" @click="openStopModal()">Parar</button>
+            </div>
+          </template>
+          <template x-if="!timer.entryId || timer.taskId !== selectedTask.id">
+            <button class="btn text-xs py-1 px-3 bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+              :disabled="!!timer.entryId"
+              @click="startTimer(selectedTask)"
+              x-text="timer.entryId ? 'Timer em outro' : 'Iniciar'">
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Detalhes -->
+      <div class="space-y-4 text-sm">
+        <div x-show="selectedTask.description">
+          <p class="text-xs text-zinc-600 mb-1">Descrição</p>
+          <p class="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap" x-text="selectedTask.description"></p>
+        </div>
+
+        <div x-show="selectedTask.requested_deadline">
+          <p class="text-xs text-zinc-600 mb-1">Prazo solicitado</p>
+          <p class="text-sm" :class="deadlineColor(selectedTask.requested_deadline)" x-text="selectedTask.requested_deadline + (selectedTask.is_deadline_flexible ? ' (flexível)' : ' (fixo)')"></p>
+        </div>
+
+        <div x-show="selectedTask.consequences_of_delay">
+          <p class="text-xs text-zinc-600 mb-1">Se atrasar...</p>
+          <p class="text-zinc-400 text-sm" x-text="selectedTask.consequences_of_delay"></p>
+        </div>
+
+        <div x-show="selectedTask.is_campaign_linked">
+          <p class="text-xs text-zinc-600 mb-1">Campanha vinculada</p>
+          <p class="text-zinc-300 text-sm" x-text="selectedTask.campaign_linked"></p>
+        </div>
+
+        <div x-show="selectedTask.impact_type">
+          <p class="text-xs text-zinc-600 mb-1">Impacto</p>
+          <p class="text-zinc-300 text-sm capitalize" x-text="selectedTask.impact_type?.replace('-', ' ')"></p>
+        </div>
+
+        <div x-show="selectedTask.links?.filter(Boolean).length">
+          <p class="text-xs text-zinc-600 mb-1">Links</p>
+          <div class="space-y-1">
+            <template x-for="link in selectedTask.links?.filter(Boolean)" :key="link">
+              <a :href="link" target="_blank" class="block text-xs text-blue-400 hover:text-blue-300 truncate" x-text="link"></a>
+            </template>
+          </div>
+        </div>
+
+        <div x-show="selectedTask.ops_attachments?.length">
+          <p class="text-xs text-zinc-600 mb-1.5">Anexos</p>
+          <div class="space-y-1.5">
+            <template x-for="att in selectedTask.ops_attachments" :key="att.id">
+              <a :href="att.signed_url" target="_blank"
+                class="flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 transition-colors"
+                :class="!att.signed_url ? 'opacity-50 pointer-events-none' : ''">
+                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                <span class="truncate flex-1" x-text="att.filename"></span>
+                <svg class="w-3 h-3 flex-shrink-0 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              </a>
+            </template>
+          </div>
+        </div>
+
+        <div class="border-t border-zinc-800 pt-4">
+          <p class="text-xs text-zinc-600 mb-1">Solicitante</p>
+          <p class="text-sm text-zinc-300" x-text="selectedTask.requester_name"></p>
+          <p class="text-xs text-zinc-600" x-text="selectedTask.requester_email"></p>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-zinc-700 pt-2">
+          <span x-text="'Criado: ' + formatDate(selectedTask.created_at)"></span>
+          <span x-show="selectedTask.updated_at !== selectedTask.created_at" x-text="'Atualizado: ' + formatDate(selectedTask.updated_at)"></span>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+
+<!-- Overlay drawer -->
+<div x-show="selectedTask" class="fixed inset-0 z-40 bg-black/20" @click="selectedTask=null" style="display:none"></div>
+
+<!-- MODAL: parar timer -->
+<div x-show="stopModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+  <div class="absolute inset-0 bg-black/50" @click="stopModal=false"></div>
+  <div class="card p-6 w-full max-w-sm relative z-10">
+    <h3 class="font-semibold mb-1">Parar cronômetro</h3>
+    <p class="text-sm text-zinc-500 mb-4">O que você fez nesse tempo?</p>
+    <textarea class="input w-full" rows="3" x-model="stopNote" placeholder="Ex: Criei o HTML do email, revisei copy..."></textarea>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-outline flex-1" @click="stopModal=false">Cancelar</button>
+      <button class="btn btn-primary flex-1" @click="stopTimer()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = localStorage.getItem('ops_api_url') || ''
+
+// ─── Perfis da squad ───
+// Para trocar a foto: substitua null por uma URL de imagem (ex: SFMC ou link público)
+// Configure os membros da squad aqui
+const SQUAD = [
+  { name: 'Membro 1', initials: 'M1', color: '#6366f1', photo: null },
+  { name: 'Membro 2', initials: 'M2', color: '#f59e0b', photo: null },
+  { name: 'Membro 3', initials: 'M3', color: '#10b981', photo: null },
+]
+
+function squadMember(name) {
+  return SQUAD.find(m => m.name === name) || { name, initials: (name||'?').charAt(0).toUpperCase(), color: '#52525b', photo: null }
+}
+
+function opsPanel() {
+  return {
+    // Auth
+    session: JSON.parse(localStorage.getItem('ops_session') || 'null') || { token: '', name: '' },
+    loginName: '', loginToken: '', loginError: '', loginLoading: false,
+    squad: SQUAD,
+
+    // Panel
+    panelView: 'lista',
+    tasks: [],
+    loading: false,
+    selectedTask: null,
+    drawerStatus: '',
+    drawerAssignee: '',
+    showArchived: false,
+
+    // Stats
+    stats: null,
+    statsLoading: false,
+
+    // Filters
+    filters: { search: '', bu: '', status: '', type: '' },
+
+    // Timer
+    timer: { entryId: null, taskId: null, taskTitle: '', startedAt: null },
+    timerInterval: null,
+    timerTick: 0,
+    stopModal: false,
+    stopNote: '',
+
+    // Drag & drop
+    draggedTask: null,
+    dragOverCol: null,
+
+    // Kanban columns
+    kanbanCols: [
+      { key: 'recebida',    label: 'Recebida' },
+      { key: 'em_analise',  label: 'Em análise' },
+      { key: 'em_execucao', label: 'Em execução' },
+      { key: 'concluida',   label: 'Concluída' },
+      { key: 'cancelada',   label: 'Cancelada' },
+    ],
+
+    // ─── Auth ───
+    async doLogin() {
+      this.loginError = ''
+      if (!this.loginName.trim() || !this.loginToken.trim()) {
+        this.loginError = 'Preencha nome e token.'
+        return
+      }
+      this.loginLoading = true
+      try {
+        const res = await fetch(`${API}/api/ops/squad/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: this.loginToken, name: this.loginName }),
+        })
+        const data = await res.json()
+        if (!data.ok) throw new Error(data.error || 'Token inválido')
+        this.session = { token: this.loginToken, name: data.name }
+        localStorage.setItem('ops_session', JSON.stringify(this.session))
+        this.loginToken = ''
+        await this.loadTasks()
+        this.startTimerInterval()
+      } catch (e) {
+        this.loginError = e.message
+      } finally {
+        this.loginLoading = false
+      }
+    },
+
+    doLogout() {
+      localStorage.removeItem('ops_session')
+      this.session = { token: '', name: '' }
+      this.tasks = []
+      this.selectedTask = null
+      clearInterval(this.timerInterval)
+    },
+
+    // ─── Tasks ───
+    async loadTasks() {
+      this.loading = true
+      try {
+        const res = await fetch(`${API}/api/ops/tasks?limit=200`, {
+          headers: { 'Authorization': `Bearer ${this.session.token}` },
+        })
+        const data = await res.json()
+        if (data.tasks) this.tasks = data.tasks
+      } catch {}
+      finally { this.loading = false }
+    },
+
+    filteredTasks() {
+      return this.tasks.filter(t => {
+        // Auto-arquivo: oculta concluidas/canceladas por padrão
+        if (!this.showArchived && !this.filters.status) {
+          if (t.status === 'concluida' || t.status === 'cancelada') return false
+        }
+        if (this.filters.bu     && t.bu !== this.filters.bu)         return false
+        if (this.filters.status && t.status !== this.filters.status) return false
+        if (this.filters.type   && t.type !== this.filters.type)     return false
+        if (this.filters.search) {
+          const q = this.filters.search.toLowerCase()
+          if (!t.title?.toLowerCase().includes(q) && !t.protocol?.toLowerCase().includes(q) && !t.requester_name?.toLowerCase().includes(q)) return false
+        }
+        return true
+      })
+    },
+
+    tasksInCol(status) {
+      return this.filteredTasks().filter(t => t.status === status)
+    },
+
+    async dropToCol(status) {
+      if (!this.draggedTask || this.draggedTask.status === status) {
+        this.draggedTask = null
+        this.dragOverCol = null
+        return
+      }
+      await this.patchTask(this.draggedTask.id, { status })
+      this.draggedTask = null
+      this.dragOverCol = null
+    },
+
+    async selectTask(task) {
+      this.selectedTask = task
+      this.drawerStatus = task.status
+      this.drawerAssignee = task.assignee_name || ''
+      // Busca detalhes completos com anexos
+      try {
+        const res = await fetch(`${API}/api/ops/tasks/${task.id}`, {
+          headers: { 'Authorization': `Bearer ${this.session.token}` },
+        })
+        const data = await res.json()
+        if (data.task) { this.selectedTask = data.task }
+      } catch {}
+    },
+
+    async updateStatus() {
+      if (!this.selectedTask) return
+      await this.patchTask(this.selectedTask.id, { status: this.drawerStatus })
+      // Auto-arquivo: fecha drawer ao concluir/cancelar
+      if (!this.showArchived && (this.drawerStatus === 'concluida' || this.drawerStatus === 'cancelada')) {
+        this.selectedTask = null
+      }
+    },
+
+    async updateAssignee() {
+      if (!this.selectedTask) return
+      await this.patchTask(this.selectedTask.id, { assignee_name: this.drawerAssignee })
+    },
+
+    async patchTask(id, update) {
+      try {
+        const res = await fetch(`${API}/api/ops/tasks/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.session.token}` },
+          body: JSON.stringify(update),
+        })
+        const data = await res.json()
+        if (data.task) {
+          const idx = this.tasks.findIndex(t => t.id === id)
+          if (idx !== -1) this.tasks[idx] = data.task
+          if (this.selectedTask?.id === id) this.selectedTask = data.task
+        }
+      } catch {}
+    },
+
+    // ─── Timer ───
+    async startTimer(task) {
+      if (this.timer.entryId) return
+      try {
+        const res = await fetch(`${API}/api/ops/time`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.session.token}` },
+          body: JSON.stringify({ action: 'start', task_id: task.id, user_name: this.session.name }),
+        })
+        const data = await res.json()
+        if (data.ok) {
+          this.timer = { entryId: data.entry_id, taskId: task.id, taskTitle: task.title, startedAt: Date.now() }
+          localStorage.setItem('ops_timer', JSON.stringify(this.timer))
+        }
+      } catch {}
+    },
+
+    openStopModal() {
+      this.stopNote = ''
+      this.stopModal = true
+    },
+
+    async stopTimer() {
+      if (!this.timer.entryId) return
+      try {
+        await fetch(`${API}/api/ops/time`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.session.token}` },
+          body: JSON.stringify({ action: 'stop', entry_id: this.timer.entryId, note: this.stopNote }),
+        })
+      } catch {}
+      this.timer = { entryId: null, taskId: null, taskTitle: '', startedAt: null }
+      localStorage.removeItem('ops_timer')
+      this.stopModal = false
+    },
+
+    startTimerInterval() {
+      clearInterval(this.timerInterval)
+      this.timerInterval = setInterval(() => { this.timerTick++ }, 1000)
+    },
+
+    timerDisplay() {
+      if (!this.timer.startedAt) return '00:00:00'
+      const elapsed = Math.floor((Date.now() - this.timer.startedAt) / 1000) + this.timerTick * 0
+      const s = elapsed % 60
+      const m = Math.floor(elapsed / 60) % 60
+      const h = Math.floor(elapsed / 3600)
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    },
+
+    // ─── Labels / formatters ───
+    statusLabel(s) {
+      return { recebida:'Recebida', em_analise:'Em análise', em_execucao:'Em execução', concluida:'Concluída', cancelada:'Cancelada' }[s] || s
+    },
+
+    typeLabel(t) {
+      return { email:'Email', 'mensagem-wpp':'WPP', sms:'SMS', outros:'Outros' }[t] || t
+    },
+
+    deadlineText(d) {
+      if (!d) return '—'
+      const days = Math.ceil((new Date(d) - new Date()) / 86400000)
+      if (days < 0)  return `${Math.abs(days)}d atraso`
+      if (days === 0) return 'Hoje'
+      if (days === 1) return 'Amanhã'
+      return `${days} dias`
+    },
+
+    deadlineColor(d) {
+      if (!d) return 'text-zinc-600'
+      const days = Math.ceil((new Date(d) - new Date()) / 86400000)
+      if (days < 0)  return 'text-red-500'
+      if (days <= 2) return 'text-orange-400'
+      if (days <= 7) return 'text-yellow-400'
+      return 'text-zinc-400'
+    },
+
+    formatDate(iso) {
+      if (!iso) return ''
+      return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
+    },
+
+    // ─── Stats ───
+    async loadStats() {
+      this.statsLoading = true
+      try {
+        const res = await fetch(`${API}/api/ops/stats`, {
+          headers: { 'Authorization': `Bearer ${this.session.token}` },
+        })
+        const data = await res.json()
+        this.stats = data.team || []
+      } catch {}
+      finally { this.statsLoading = false }
+    },
+
+    myStats() {
+      return this.stats?.find(u => u.name === this.session.name) || null
+    },
+
+    fmtMinutes(m) {
+      if (!m) return '0min'
+      const h = Math.floor(m / 60)
+      const min = m % 60
+      return h > 0 ? `${h}h${min > 0 ? min + 'min' : ''}` : `${min}min`
+    },
+
+    topEntry(obj) {
+      if (!obj) return '—'
+      const entries = Object.entries(obj)
+      if (!entries.length) return '—'
+      return entries.sort((a, b) => b[1] - a[1])[0][0]
+    },
+
+    // ─── Init ───
+    init() {
+      // Restaura timer do localStorage
+      const saved = localStorage.getItem('ops_timer')
+      if (saved) {
+        try { this.timer = JSON.parse(saved) } catch {}
+      }
+      if (this.session.token) {
+        this.loadTasks()
+        this.startTimerInterval()
+        // Auto-refresh a cada 60s
+        setInterval(() => this.loadTasks(), 60000)
+      }
+    },
+  }
+}
+</script>
+</body>
+</html>

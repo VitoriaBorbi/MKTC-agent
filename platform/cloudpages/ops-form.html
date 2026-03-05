@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Ops Desk</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  [x-cloak] { display: none !important; }
+  body { font-family: 'Inter', sans-serif; background: #09090b; color: #fafafa; min-height: 100vh; }
+  .card { background: #18181b; border: 1px solid #27272a; border-radius: 0.75rem; }
+  .input { background: #09090b; border: 1px solid #3f3f46; color: #fafafa; border-radius: 0.5rem; padding: 0.625rem 0.75rem; font-size: 0.875rem; width: 100%; outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.15s; }
+  .input:focus { border-color: #71717a; }
+  .input::placeholder { color: #52525b; }
+  .input-err { border-color: #ef4444 !important; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; font-family: 'Inter', sans-serif; }
+  .btn-primary { background: #fafafa; color: #09090b; }
+  .btn-primary:hover { background: #e4e4e7; }
+  .btn-primary:disabled { background: #3f3f46; color: #71717a; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid #3f3f46; color: #a1a1aa; }
+  .btn-outline:hover { border-color: #71717a; color: #fafafa; }
+  .step-dot { width: 2rem; height: 2rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; transition: all 0.2s; }
+  .step-active { background: #fafafa; color: #09090b; }
+  .step-done { background: #27272a; color: #a1a1aa; }
+  .step-pending { background: #18181b; border: 1px solid #3f3f46; color: #52525b; }
+  .chip { display: inline-flex; align-items: center; gap: 0.375rem; background: #27272a; border: 1px solid #3f3f46; border-radius: 0.375rem; padding: 0.25rem 0.625rem; font-size: 0.75rem; color: #a1a1aa; }
+  .chip button { color: #52525b; hover: color #fafafa; line-height: 1; }
+  .radio-card { border: 1px solid #3f3f46; border-radius: 0.5rem; padding: 0.75rem 1rem; cursor: pointer; transition: all 0.15s; }
+  .radio-card:hover { border-color: #71717a; }
+  .radio-card.selected { border-color: #fafafa; background: rgba(255,255,255,0.04); }
+  label { font-size: 0.8125rem; color: #a1a1aa; font-weight: 500; display: block; margin-bottom: 0.375rem; }
+  .field { display: flex; flex-direction: column; gap: 0.25rem; }
+  .err-msg { font-size: 0.75rem; color: #ef4444; }
+  .toggle { width: 2.5rem; height: 1.25rem; background: #27272a; border-radius: 9999px; position: relative; cursor: pointer; transition: background 0.15s; border: none; flex-shrink: 0; }
+  .toggle.on { background: #fafafa; }
+  .toggle::after { content: ''; position: absolute; width: 1rem; height: 1rem; background: #71717a; border-radius: 9999px; top: 0.125rem; left: 0.125rem; transition: all 0.15s; }
+  .toggle.on::after { left: 1.375rem; background: #09090b; }
+  .priority-alta { color: #ef4444; }
+  .priority-media { color: #f59e0b; }
+  .priority-baixa { color: #22c55e; }
+</style>
+</head>
+<body x-data="opsDesk()" x-cloak>
+
+<!-- Setup screen -->
+<div x-show="!apiUrl" class="min-h-screen flex items-center justify-center p-4">
+  <div class="card p-8 w-full max-w-sm">
+    <h1 class="text-lg font-semibold mb-1">CRM Ops Desk</h1>
+    <p class="text-sm text-zinc-500 mb-6">Configure a URL da API para continuar.</p>
+    <div class="field mb-4">
+      <label>URL da API (Vercel)</label>
+      <input class="input" type="url" x-model="setupUrl" placeholder="https://seu-projeto.vercel.app">
+    </div>
+    <button class="btn btn-primary w-full" @click="saveSetup()">Salvar e continuar</button>
+  </div>
+</div>
+
+<!-- App principal -->
+<div x-show="apiUrl" class="min-h-screen">
+
+  <!-- Status view -->
+  <div x-show="view === 'status'" class="min-h-screen flex items-center justify-center p-4">
+    <div class="card p-8 w-full max-w-lg">
+      <!-- Lookup form -->
+      <div x-show="!statusTask && !statusLoading && !statusError">
+        <div class="flex items-center gap-2 mb-1">
+          <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <h1 class="text-lg font-semibold">Acompanhar task</h1>
+        </div>
+        <p class="text-sm text-zinc-500 mb-6">Digite o protocolo recebido após o envio.</p>
+        <div class="field mb-4">
+          <label>Protocolo</label>
+          <input class="input" type="text" x-model="statusProtocol" placeholder="MKTC-2026-0001" @keydown.enter="lookupTask()">
+        </div>
+        <button class="btn btn-primary w-full" @click="lookupTask()">Buscar</button>
+        <button class="btn btn-outline w-full mt-2" @click="view='form'">Enviar nova demanda</button>
+      </div>
+
+      <!-- Loading -->
+      <div x-show="statusLoading" class="text-center py-8 text-zinc-500 text-sm">Buscando...</div>
+
+      <!-- Error -->
+      <div x-show="statusError" class="text-center py-8">
+        <p class="text-sm text-red-400 mb-4" x-text="statusError"></p>
+        <button class="btn btn-outline" @click="statusError=null; statusProtocol=''">Tentar novamente</button>
+      </div>
+
+      <!-- Task found -->
+      <div x-show="statusTask">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <p class="text-xs text-zinc-500 mb-1" x-text="statusTask?.protocol"></p>
+            <h2 class="font-semibold text-base" x-text="statusTask?.title"></h2>
+            <p class="text-xs text-zinc-500 mt-1" x-text="statusTask?.bu"></p>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full border"
+            :class="{
+              'border-zinc-600 text-zinc-400': statusTask?.status === 'recebida',
+              'border-yellow-600 text-yellow-400': statusTask?.status === 'em_analise',
+              'border-blue-600 text-blue-400': statusTask?.status === 'em_execucao',
+              'border-green-600 text-green-400': statusTask?.status === 'concluida',
+              'border-red-800 text-red-400': statusTask?.status === 'cancelada',
+            }"
+            x-text="statusLabels[statusTask?.status] || statusTask?.status">
+          </span>
+        </div>
+
+        <!-- Timeline -->
+        <div class="space-y-3 mb-6">
+          <template x-for="s in statusTimeline()" :key="s.key">
+            <div class="flex items-center gap-3">
+              <div class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"
+                :class="s.done ? 'bg-zinc-200' : 'bg-zinc-800 border border-zinc-700'">
+                <template x-if="s.done">
+                  <svg class="w-3 h-3 text-zinc-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                </template>
+              </div>
+              <span class="text-sm" :class="s.done ? 'text-zinc-300' : 'text-zinc-600'" x-text="s.label"></span>
+            </div>
+          </template>
+        </div>
+
+        <div class="text-xs text-zinc-600 border-t border-zinc-800 pt-4 mb-4">
+          Prioridade: <span :class="'priority-' + statusTask?.priority_label?.toLowerCase()" x-text="statusTask?.priority_label"></span>
+          <template x-if="statusTask?.priority_justification">
+            <span x-text="' — ' + statusTask?.priority_justification"></span>
+          </template>
+        </div>
+
+        <div class="flex gap-2">
+          <button class="btn btn-outline flex-1" @click="statusTask=null; statusProtocol=''">Buscar outra</button>
+          <button class="btn btn-primary flex-1" @click="view='form'; submitted=false; step=1; resetForm()">Nova demanda</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form view -->
+  <div x-show="view === 'form'" class="min-h-screen flex flex-col items-center justify-start py-10 px-4">
+
+    <!-- Success screen -->
+    <div x-show="submitted" class="card p-8 w-full max-w-lg text-center">
+      <div class="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h2 class="text-xl font-semibold mb-2">Demanda recebida!</h2>
+      <p class="text-zinc-500 text-sm mb-6">Guarde o protocolo abaixo para acompanhar o status da sua solicitação.</p>
+      <div class="bg-zinc-900 border border-zinc-700 rounded-lg px-6 py-4 mb-2">
+        <p class="text-xs text-zinc-500 mb-1">Protocolo</p>
+        <p class="text-2xl font-bold tracking-wide" x-text="submittedProtocol"></p>
+      </div>
+      <template x-if="submittedPriority">
+        <p class="text-xs text-zinc-500 mb-6">
+          Prioridade estimada:
+          <span :class="'priority-' + submittedPriority.toLowerCase()" x-text="submittedPriority"></span>
+        </p>
+      </template>
+      <div class="flex gap-2 mt-4">
+        <button class="btn btn-outline flex-1" @click="view='status'; statusProtocol=submittedProtocol; lookupTask()">
+          Acompanhar status
+        </button>
+        <button class="btn btn-primary flex-1" @click="submitted=false; step=1; resetForm()">
+          Nova demanda
+        </button>
+      </div>
+    </div>
+
+    <!-- Form wizard -->
+    <div x-show="!submitted" class="w-full max-w-lg">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-xl font-semibold">CRM Ops Desk</h1>
+          <p class="text-zinc-500 text-sm">Envie sua demanda para a squad de marketing</p>
+        </div>
+        <button class="btn btn-outline text-xs py-1 px-3" @click="view='status'; statusTask=null; statusError=null">
+          Acompanhar
+        </button>
+      </div>
+
+      <!-- Steps -->
+      <div class="flex items-center gap-2 mb-8">
+        <template x-for="n in [1,2,3,4]" :key="n">
+          <div class="flex items-center gap-2">
+            <div class="step-dot" :class="step > n ? 'step-done' : step === n ? 'step-active' : 'step-pending'">
+              <template x-if="step > n">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              </template>
+              <template x-if="step <= n">
+                <span x-text="n"></span>
+              </template>
+            </div>
+            <template x-if="n < 4">
+              <div class="flex-1 h-px w-12" :class="step > n ? 'bg-zinc-600' : 'bg-zinc-800'"></div>
+            </template>
+          </div>
+        </template>
+        <span class="text-xs text-zinc-600 ml-2" x-text="stepLabel()"></span>
+      </div>
+
+      <!-- Error banner -->
+      <div x-show="submitError" class="bg-red-950 border border-red-800 text-red-400 text-sm rounded-lg p-3 mb-4" x-text="submitError"></div>
+
+      <!-- STEP 1: Identificação -->
+      <div x-show="step === 1" class="card p-6 space-y-4">
+        <h2 class="font-medium text-sm text-zinc-300 mb-2">Identificação</h2>
+
+        <div class="field">
+          <label>Nome completo *</label>
+          <input class="input" :class="errs.requester_name ? 'input-err' : ''" type="text" x-model="form.requester_name" placeholder="Seu nome">
+          <span class="err-msg" x-show="errs.requester_name" x-text="errs.requester_name"></span>
+        </div>
+
+        <div class="field">
+          <label>Email *</label>
+          <input class="input" :class="errs.requester_email ? 'input-err' : ''" type="email" x-model="form.requester_email" placeholder="seu@email.com">
+          <span class="err-msg" x-show="errs.requester_email" x-text="errs.requester_email"></span>
+        </div>
+
+        <div class="field">
+          <label>BU *</label>
+          <select class="input" :class="errs.bu ? 'input-err' : ''" x-model="form.bu">
+            <option value="">Selecione a BU</option>
+            <option value="Finclass">Finclass</option>
+            <option value="Bruno Perini">Bruno Perini</option>
+            <option value="Faculdade Hub">Faculdade Hub</option>
+            <option value="Thiago Nigro">Thiago Nigro</option>
+            <option value="Portfel">Portfel</option>
+            <option value="Grão">Grão</option>
+          </select>
+          <span class="err-msg" x-show="errs.bu" x-text="errs.bu"></span>
+        </div>
+      </div>
+
+      <!-- STEP 2: A demanda -->
+      <div x-show="step === 2" class="card p-6 space-y-4">
+        <h2 class="font-medium text-sm text-zinc-300 mb-2">A demanda</h2>
+
+        <div class="field">
+          <label>Título *</label>
+          <input class="input" :class="errs.title ? 'input-err' : ''" type="text" x-model="form.title" placeholder="Ex: Email Black Friday — Finclass">
+          <span class="err-msg" x-show="errs.title" x-text="errs.title"></span>
+        </div>
+
+        <div class="field">
+          <label>Tipo *</label>
+          <div class="grid grid-cols-2 gap-2">
+            <template x-for="t in taskTypes" :key="t.value">
+              <div class="radio-card" :class="form.type === t.value ? 'selected' : ''" @click="form.type = t.value">
+                <p class="text-sm font-medium" x-text="t.label"></p>
+                <p class="text-xs text-zinc-500 mt-0.5" x-text="t.desc"></p>
+              </div>
+            </template>
+          </div>
+          <span class="err-msg" x-show="errs.type" x-text="errs.type"></span>
+          <input x-show="form.type === 'outros'" class="input mt-2" type="text" x-model="form.outros_description" placeholder="Especifique o tipo de demanda...">
+        </div>
+
+        <div class="field">
+          <label>Descrição detalhada</label>
+          <textarea class="input" rows="4" x-model="form.description" placeholder="Contexto, referências, o que precisa ser feito..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Links relevantes</label>
+          <template x-for="(link, i) in form.links" :key="i">
+            <div class="flex gap-2 mb-2">
+              <input class="input" type="url" x-model="form.links[i]" placeholder="https://">
+              <button class="btn btn-outline px-3 py-2 text-zinc-500 hover:text-red-400" @click="form.links.splice(i,1)" x-show="form.links.length > 1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </template>
+          <button class="btn btn-outline text-xs w-full mt-1" @click="form.links.push('')">+ Adicionar link</button>
+        </div>
+
+        <div class="field">
+          <label>Anexos <span class="text-zinc-600">(máx. 4MB por arquivo)</span></label>
+          <div class="border border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-zinc-500 transition-colors" @click="$refs.fileInput.click()">
+            <p class="text-sm text-zinc-500">Clique para selecionar arquivos</p>
+            <p class="text-xs text-zinc-700 mt-1">PDF, DOCX, XLSX, CSV, PNG, JPG</p>
+          </div>
+          <input type="file" x-ref="fileInput" class="hidden" multiple accept=".pdf,.docx,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.webp" @change="handleFiles($event)">
+          <div class="flex flex-wrap gap-2 mt-2">
+            <template x-for="(f, i) in form.files" :key="i">
+              <div class="chip">
+                <span x-text="f.name.length > 24 ? f.name.slice(0,21)+'...' : f.name"></span>
+                <button class="hover:text-red-400" @click="form.files.splice(i,1)">×</button>
+              </div>
+            </template>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-1">
+            <template x-for="e in fileErrors" :key="e">
+              <span class="err-msg" x-text="e"></span>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Contexto de priorização -->
+      <div x-show="step === 3" class="card p-6 space-y-5">
+        <h2 class="font-medium text-sm text-zinc-300 mb-2">Contexto de priorização</h2>
+        <p class="text-xs text-zinc-600 -mt-1">Essas informações determinam a prioridade da sua demanda.</p>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="field">
+            <label>Para quando precisa?</label>
+            <input class="input" type="date" x-model="form.requested_deadline">
+            <input class="input mt-2" type="time" x-model="form.requested_time" placeholder="Horário (opcional)">
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="toggle mt-1.5" :class="form.is_deadline_flexible ? 'on' : ''" @click="form.is_deadline_flexible = !form.is_deadline_flexible"></button>
+            <span class="text-xs text-zinc-500 mt-1">Prazo flexível</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>O que acontece se atrasar?</label>
+          <textarea class="input" rows="2" x-model="form.consequences_of_delay" placeholder="Ex: Campanha vai no ar sem o email, perdemos a janela de vendas..."></textarea>
+        </div>
+
+        <div class="field">
+          <div class="flex items-center justify-between mb-2">
+            <label class="mb-0">Vinculada a campanha ativa?</label>
+            <button class="toggle" :class="form.is_campaign_linked ? 'on' : ''" @click="form.is_campaign_linked = !form.is_campaign_linked"></button>
+          </div>
+          <input x-show="form.is_campaign_linked" class="input" type="text" x-model="form.campaign_linked" placeholder="Nome da campanha">
+        </div>
+
+        <div class="field">
+          <div class="flex items-center justify-between">
+            <label class="mb-0">É uma demanda recorrente?</label>
+            <button class="toggle" :class="form.is_recurrent ? 'on' : ''" @click="form.is_recurrent = !form.is_recurrent"></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Impacto esperado</label>
+          <div class="grid grid-cols-2 gap-2">
+            <template x-for="imp in impactTypes" :key="imp.value">
+              <div class="radio-card" :class="form.impact_type === imp.value ? 'selected' : ''" @click="form.impact_type = imp.value">
+                <p class="text-sm font-medium" x-text="imp.label"></p>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Confirmação -->
+      <div x-show="step === 4" class="card p-6">
+        <h2 class="font-medium text-sm text-zinc-300 mb-4">Confirmar e enviar</h2>
+
+        <div class="space-y-3 text-sm">
+          <div class="flex gap-3 py-3 border-b border-zinc-800">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Solicitante</span>
+            <span x-text="form.requester_name + ' (' + form.requester_email + ')'"></span>
+          </div>
+          <div class="flex gap-3 py-3 border-b border-zinc-800">
+            <span class="text-zinc-500 w-28 flex-shrink-0">BU</span>
+            <span x-text="form.bu"></span>
+          </div>
+          <div class="flex gap-3 py-3 border-b border-zinc-800">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Tipo</span>
+            <span x-text="taskTypes.find(t => t.value === form.type)?.label || form.type"></span>
+          </div>
+          <div class="flex gap-3 py-3 border-b border-zinc-800">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Título</span>
+            <span x-text="form.title"></span>
+          </div>
+          <div class="flex gap-3 py-3 border-b border-zinc-800" x-show="form.requested_deadline">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Prazo</span>
+            <span x-text="form.requested_deadline + (form.requested_time ? ' às ' + form.requested_time : '') + (form.is_deadline_flexible ? ' (flexível)' : ' (fixo)')"></span>
+          </div>
+          <div class="flex gap-3 py-3 border-b border-zinc-800" x-show="form.is_campaign_linked">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Campanha</span>
+            <span x-text="form.campaign_linked"></span>
+          </div>
+          <div class="flex gap-3 py-3 border-b border-zinc-800" x-show="form.impact_type">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Impacto</span>
+            <span x-text="impactTypes.find(i => i.value === form.impact_type)?.label"></span>
+          </div>
+          <div class="flex gap-3 py-3" x-show="form.files.length > 0">
+            <span class="text-zinc-500 w-28 flex-shrink-0">Anexos</span>
+            <span x-text="form.files.length + ' arquivo(s)'"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-outline flex-1" x-show="step > 1" @click="step--">Voltar</button>
+        <button
+          class="btn btn-primary flex-1"
+          :disabled="loading"
+          @click="step < 4 ? nextStep() : submitForm()"
+          x-text="loading ? 'Enviando...' : step < 4 ? 'Continuar' : 'Enviar demanda'">
+        </button>
+      </div>
+
+    </div><!-- /form wizard -->
+  </div><!-- /form view -->
+
+</div><!-- /app principal -->
+
+<script>
+function opsDesk() {
+  return {
+    apiUrl: localStorage.getItem('ops_api_url') || '',
+    setupUrl: '',
+    view: new URLSearchParams(location.search).get('view') || 'form',
+    step: 1,
+    loading: false,
+    submitted: false,
+    submittedProtocol: '',
+    submittedPriority: '',
+    submitError: '',
+    errs: {},
+    fileErrors: [],
+
+    // Status lookup
+    statusProtocol: new URLSearchParams(location.search).get('p') || '',
+    statusTask: null,
+    statusLoading: false,
+    statusError: null,
+    statusLabels: {
+      recebida: 'Recebida',
+      em_analise: 'Em análise',
+      em_execucao: 'Em execução',
+      concluida: 'Concluída',
+      cancelada: 'Cancelada',
+    },
+
+    taskTypes: [
+      { value: 'email',          label: 'Email',           desc: 'Disparo de email' },
+      { value: 'mensagem-wpp',   label: 'WPP',             desc: 'WhatsApp / disparo' },
+      { value: 'sms',            label: 'SMS',             desc: 'Disparo de SMS' },
+      { value: 'outros',         label: 'Outros',          desc: 'Especifique abaixo' },
+    ],
+    impactTypes: [
+      { value: 'vendas',     label: 'Vendas' },
+      { value: 'captacao',   label: 'Captação' },
+      { value: 'fup',        label: 'FUP' },
+      { value: 'operacional', label: 'Operacional' },
+    ],
+
+    form: {
+      requester_name: '', requester_email: '', bu: '',
+      title: '', type: '', outros_description: '', description: '',
+      links: [''], files: [],
+      requested_deadline: '', requested_time: '', is_deadline_flexible: false,
+      consequences_of_delay: '', is_campaign_linked: false,
+      campaign_linked: '', is_recurrent: false, impact_type: '',
+    },
+
+    saveSetup() {
+      if (!this.setupUrl) return
+      const url = this.setupUrl.replace(/\/$/, '')
+      localStorage.setItem('ops_api_url', url)
+      this.apiUrl = url
+      if (this.statusProtocol) {
+        this.view = 'status'
+        this.lookupTask()
+      }
+    },
+
+    stepLabel() {
+      return ['Identificação', 'A demanda', 'Priorização', 'Confirmação'][this.step - 1]
+    },
+
+    validateStep() {
+      this.errs = {}
+      if (this.step === 1) {
+        if (!this.form.requester_name.trim()) this.errs.requester_name = 'Campo obrigatório'
+        if (!this.form.requester_email.trim()) this.errs.requester_email = 'Campo obrigatório'
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.requester_email)) this.errs.requester_email = 'Email inválido'
+        if (!this.form.bu) this.errs.bu = 'Selecione a BU'
+      }
+      if (this.step === 2) {
+        if (!this.form.title.trim()) this.errs.title = 'Campo obrigatório'
+        if (!this.form.type) this.errs.type = 'Selecione um tipo'
+      }
+      return Object.keys(this.errs).length === 0
+    },
+
+    nextStep() {
+      if (!this.validateStep()) return
+      this.step++
+    },
+
+    handleFiles(e) {
+      this.fileErrors = []
+      const files = Array.from(e.target.files)
+      const MAX = 4 * 1024 * 1024
+      const ALLOWED = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/png', 'image/jpeg', 'image/gif', 'image/webp']
+      for (const f of files) {
+        if (f.size > MAX) { this.fileErrors.push(`${f.name}: excede 4MB`); continue }
+        if (!ALLOWED.includes(f.type)) { this.fileErrors.push(`${f.name}: tipo não permitido`); continue }
+        this.form.files.push(f)
+      }
+      e.target.value = ''
+    },
+
+    async submitForm() {
+      if (!this.validateStep()) return
+      this.loading = true
+      this.submitError = ''
+
+      try {
+        // 1. Criar task
+        const payload = {
+          requester_name: this.form.requester_name,
+          requester_email: this.form.requester_email,
+          bu: this.form.bu,
+          title: this.form.title,
+          type: this.form.type,
+          description: this.form.description,
+          links: this.form.links.filter(l => l.trim()),
+          requested_deadline: this.form.requested_deadline || null,
+          requested_time: this.form.requested_time || null,
+          outros_description: this.form.type === 'outros' ? this.form.outros_description : null,
+          is_deadline_flexible: this.form.is_deadline_flexible,
+          consequences_of_delay: this.form.consequences_of_delay,
+          is_campaign_linked: this.form.is_campaign_linked,
+          campaign_linked: this.form.campaign_linked,
+          is_recurrent: this.form.is_recurrent,
+          impact_type: this.form.impact_type,
+        }
+
+        const res = await fetch(`${this.apiUrl}/api/ops/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json()
+        if (!data.success) throw new Error(data.error || 'Erro ao criar task')
+
+        const taskId = data.id
+
+        // 2. Upload de anexos (um por vez)
+        for (const file of this.form.files) {
+          const fd = new FormData()
+          fd.append('task_id', taskId)
+          fd.append('file', file)
+          await fetch(`${this.apiUrl}/api/ops/attachments`, { method: 'POST', body: fd })
+          // Erros de upload não bloqueiam o sucesso da task
+        }
+
+        this.submittedProtocol = data.protocol
+        this.submittedPriority = data.priority_label
+        this.submitted = true
+
+      } catch (e) {
+        this.submitError = e.message || 'Erro ao enviar. Tente novamente.'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async lookupTask() {
+      if (!this.statusProtocol.trim()) return
+      this.statusLoading = true
+      this.statusError = null
+      this.statusTask = null
+      try {
+        const res = await fetch(`${this.apiUrl}/api/ops/tasks/${encodeURIComponent(this.statusProtocol.trim())}`)
+        const data = await res.json()
+        if (!data.task) throw new Error('Task não encontrada')
+        this.statusTask = data.task
+      } catch (e) {
+        this.statusError = e.message || 'Task não encontrada. Verifique o protocolo.'
+      } finally {
+        this.statusLoading = false
+      }
+    },
+
+    statusTimeline() {
+      const steps = [
+        { key: 'recebida',     label: 'Demanda recebida' },
+        { key: 'em_analise',   label: 'Em análise pela squad' },
+        { key: 'em_execucao',  label: 'Em execução' },
+        { key: 'concluida',    label: 'Concluída' },
+      ]
+      const order = ['recebida', 'em_analise', 'em_execucao', 'concluida']
+      const current = this.statusTask?.status
+      const idx = order.indexOf(current)
+      return steps.map((s, i) => ({ ...s, done: i <= idx }))
+    },
+
+    resetForm() {
+      this.form = {
+        requester_name: '', requester_email: '', bu: '',
+        title: '', type: '', description: '',
+        links: [''], files: [],
+        requested_deadline: '', is_deadline_flexible: false,
+        consequences_of_delay: '', is_campaign_linked: false,
+        campaign_linked: '', is_recurrent: false, impact_type: '',
+      }
+      this.errs = {}
+      this.fileErrors = []
+      this.submitError = ''
+    },
+
+    init() {
+      // Se vier com ?view=status&p=PROTOCOLO, redireciona direto
+      if (this.view === 'status' && this.statusProtocol && this.apiUrl) {
+        this.lookupTask()
+      }
+    },
+  }
+}
+</script>
+</body>
+</html>
