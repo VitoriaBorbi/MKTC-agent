@@ -451,7 +451,7 @@ function qsGet(k) { try { return new URLSearchParams(location.search).get(k) } c
 
 function opsDesk() {
   return {
-    apiUrl: safeGet('ops_api_url') || 'https://platform-indol-five.vercel.app',
+    apiUrl: (function(){ const s = safeGet('ops_api_url') || ''; return s.startsWith('https://') ? s : 'https://platform-indol-five.vercel.app' })(),
     setupUrl: '',
     view: qsGet('view') || 'form',
     step: 1,
