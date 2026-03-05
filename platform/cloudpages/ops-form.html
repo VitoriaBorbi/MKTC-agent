@@ -12,8 +12,6 @@
   [x-cloak] { display: none !important; }
   body { font-family: 'Inter', sans-serif; background: #09090b; color: #fafafa; min-height: 100vh; }
   #app-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  #app-root[x-cloak] ~ #app-loading { display: flex; }
-  #app-root:not([x-cloak]) ~ #app-loading { display: none; }
   .card { background: #18181b; border: 1px solid #27272a; border-radius: 0.75rem; }
   .input { background: #09090b; border: 1px solid #3f3f46; color: #fafafa; border-radius: 0.5rem; padding: 0.625rem 0.75rem; font-size: 0.875rem; width: 100%; outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.15s; }
   .input:focus { border-color: #71717a; }
@@ -50,7 +48,7 @@
 
 <div id="app-loading"><p style="color:#52525b;font-size:0.875rem;">Carregando...</p></div>
 
-<div id="app-root" x-data="opsDesk()" x-cloak>
+<div id="app-root" x-data="opsDesk()" x-cloak x-init="document.getElementById('app-loading').style.display='none'">
 
 <!-- Setup screen -->
 <div x-show="!apiUrl" class="min-h-screen flex items-center justify-center p-4">

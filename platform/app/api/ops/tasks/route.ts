@@ -36,8 +36,9 @@ function calcPriority(task: Record<string, unknown>) {
   }
   // Urgência declarada (1-5) influencia diretamente o score
   if (task.urgency_level) {
-    const bonus = [0, 0, 5, 15, 25, 40][task.urgency_level as number] ?? 0
-    if (bonus > 0) { score += bonus; factors.push(`urgência ${task.urgency_level}`) }
+    const ul = typeof task.urgency_level === 'number' ? task.urgency_level : Number(task.urgency_level)
+    const bonus = [0, 0, 5, 15, 25, 40][ul] ?? 0
+    if (bonus > 0) { score += bonus; factors.push(`urgência ${ul}`) }
   }
 
   score = Math.min(score, 100)
