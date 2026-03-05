@@ -11,6 +11,9 @@
 <style>
   [x-cloak] { display: none !important; }
   body { font-family: 'Inter', sans-serif; background: #09090b; color: #fafafa; min-height: 100vh; }
+  #app-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  #app-root[x-cloak] ~ #app-loading { display: flex; }
+  #app-root:not([x-cloak]) ~ #app-loading { display: none; }
   .card { background: #18181b; border: 1px solid #27272a; border-radius: 0.75rem; }
   .input { background: #09090b; border: 1px solid #3f3f46; color: #fafafa; border-radius: 0.5rem; padding: 0.625rem 0.75rem; font-size: 0.875rem; width: 100%; outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.15s; }
   .input:focus { border-color: #71717a; }
@@ -43,7 +46,11 @@
   .priority-baixa { color: #22c55e; }
 </style>
 </head>
-<body x-data="opsDesk()" x-cloak>
+<body>
+
+<div id="app-loading"><p style="color:#52525b;font-size:0.875rem;">Carregando...</p></div>
+
+<div id="app-root" x-data="opsDesk()" x-cloak>
 
 <!-- Setup screen -->
 <div x-show="!apiUrl" class="min-h-screen flex items-center justify-center p-4">
@@ -436,12 +443,19 @@
 
 </div><!-- /app principal -->
 
+</div><!-- /app-root -->
+
 <script>
+function safeGet(key) { try { return localStorage.getItem(key) } catch { return null } }
+function safeSet(key, val) { try { localStorage.setItem(key, val) } catch {} }
+function safeRemove(key) { try { localStorage.removeItem(key) } catch {} }
+function qsGet(k) { try { return new URLSearchParams(location.search).get(k) } catch { return null } }
+
 function opsDesk() {
   return {
-    apiUrl: localStorage.getItem('ops_api_url') || '',
+    apiUrl: safeGet('ops_api_url') || '',
     setupUrl: '',
-    view: new URLSearchParams(location.search).get('view') || 'form',
+    view: qsGet('view') || 'form',
     step: 1,
     loading: false,
     submitted: false,
@@ -452,7 +466,7 @@ function opsDesk() {
     fileErrors: [],
 
     // Status lookup
-    statusProtocol: new URLSearchParams(location.search).get('p') || '',
+    statusProtocol: qsGet('p') || '',
     statusTask: null,
     statusLoading: false,
     statusError: null,
@@ -490,7 +504,7 @@ function opsDesk() {
     saveSetup() {
       if (!this.setupUrl) return
       const url = this.setupUrl.replace(/\/$/, '')
-      localStorage.setItem('ops_api_url', url)
+      safeSet('ops_api_url', url)
       this.apiUrl = url
       if (this.statusProtocol) {
         this.view = 'status'
