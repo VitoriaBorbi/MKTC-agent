@@ -8,13 +8,13 @@ function authHeader() {
   return { Authorization: `Basic ${b64}`, 'Content-Type': 'application/json', Accept: 'application/json' }
 }
 
-// Maps platform status → Jira transition ID
+// Maps platform status → Jira transition ID (projeto MA — MKTC Agent)
 const STATUS_TRANSITION: Record<string, string> = {
-  em_andamento: '151', // In Progress
-  aceita:       '151', // In Progress
-  concluida:    '131', // Done
-  recusada:     '61',  // Declined
-  cancelada:    '71',  // Cancelled
+  em_andamento: '21', // Em andamento
+  aceita:       '21', // Em andamento
+  concluida:    '31', // Itens concluídos
+  recusada:     '31', // Itens concluídos (sem "Declined" no MA)
+  cancelada:    '11', // Itens Pendentes (arquiva de volta ao backlog)
 }
 
 // Maps platform priority → Jira priority name

@@ -60,7 +60,22 @@
   ::-webkit-scrollbar-thumb { background:#3f3f46; border-radius:4px; }
 </style>
 </head>
-<body x-data="opsPanel()" x-cloak @keydown.escape.window="selectedTask=null">
+<body x-data="opsPanel" @keydown.escape.window="selectedTask=null">
+
+<!-- Loading placeholder — visível antes do Alpine inicializar -->
+<div id="ops-loading" style="display:flex;align-items:center;justify-content:center;height:100vh;background:#09090b;color:#71717a;font-size:0.875rem;font-family:Inter,sans-serif;">
+  <div style="text-align:center;">
+    <div style="width:2rem;height:2rem;border:2px solid #3f3f46;border-top-color:#fff;border-radius:50%;margin:0 auto 1rem;animation:spin 0.8s linear infinite;"></div>
+    <p>Carregando painel…</p>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<script>
+  document.addEventListener('alpine:init', function() {
+    var el = document.getElementById('ops-loading');
+    if (el) el.style.display = 'none';
+  });
+</script>
 
 <!-- SETUP (URL da API) -->
 <div x-show="!apiUrl" class="h-screen flex items-center justify-content p-4" style="display:flex;align-items:center;justify-content:center">
@@ -571,6 +586,18 @@
           <p class="text-xs text-zinc-600" x-text="selectedTask.requester_email"></p>
         </div>
 
+        <template x-if="selectedTask.jira_issue_key">
+          <div class="border-t border-zinc-800 pt-4">
+            <p class="text-xs text-zinc-600 mb-1">Jira</p>
+            <a :href="'https://timeprimo.atlassian.net/browse/' + selectedTask.jira_issue_key"
+               target="_blank"
+               class="inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M11.75 2C6.364 2 2 6.364 2 11.75S6.364 21.5 11.75 21.5 21.5 17.136 21.5 11.75 17.136 2 11.75 2zm.55 14.5h-1.1v-6.5h1.1v6.5zm-.55-8a.85.85 0 1 1 0-1.7.85.85 0 0 1 0 1.7z"/></svg>
+              <span x-text="selectedTask.jira_issue_key"></span>
+            </a>
+          </div>
+        </template>
+
         <div class="flex items-center justify-between text-xs text-zinc-700 pt-2">
           <span x-text="'Criado: ' + formatDate(selectedTask.created_at)"></span>
           <span x-show="selectedTask.updated_at !== selectedTask.created_at" x-text="'Atualizado: ' + formatDate(selectedTask.updated_at)"></span>
@@ -670,7 +697,17 @@
 </div>
 
 <script>
-const _stored = localStorage.getItem('ops_api_url') || ''
+function safeLS(key, fallback) {
+  try { return localStorage.getItem(key) } catch(e) { return fallback || null }
+}
+function safeSetLS(key, val) {
+  try { localStorage.setItem(key, val) } catch(e) {}
+}
+function safeRemoveLS(key) {
+  try { localStorage.removeItem(key) } catch(e) {}
+}
+
+const _stored = safeLS('ops_api_url') || ''
 let API = _stored.startsWith('https://') ? _stored : 'https://platform-indol-five.vercel.app'
 
 // ─── Perfis da squad ───
@@ -693,7 +730,7 @@ function opsPanel() {
     setupUrl: '',
 
     // Auth
-    session: JSON.parse(localStorage.getItem('ops_session') || 'null') || { token: '', name: '' },
+    session: JSON.parse(safeLS('ops_session') || 'null') || { token: '', name: '' },
     loginName: '', loginToken: '', loginError: '', loginLoading: false,
     squad: SQUAD,
 
@@ -749,7 +786,7 @@ function opsPanel() {
     saveSetup() {
       if (!this.setupUrl.trim()) return
       const url = this.setupUrl.trim().replace(/\/$/, '')
-      localStorage.setItem('ops_api_url', url)
+      safeSetLS('ops_api_url', url)
       API = url
       this.apiUrl = url
     },
@@ -771,7 +808,7 @@ function opsPanel() {
         const data = await res.json()
         if (!data.ok) throw new Error(data.error || 'Token inválido')
         this.session = { token: this.loginToken, name: data.name }
-        localStorage.setItem('ops_session', JSON.stringify(this.session))
+        safeSetLS('ops_session', JSON.stringify(this.session))
         this.loginToken = ''
         await this.loadTasks()
         this.startTimerInterval()
@@ -783,7 +820,7 @@ function opsPanel() {
     },
 
     doLogout() {
-      localStorage.removeItem('ops_session')
+      safeRemoveLS('ops_session')
       this.session = { token: '', name: '' }
       this.tasks = []
       this.selectedTask = null
@@ -858,7 +895,7 @@ function opsPanel() {
           this.selectedTask = data.task
           this.notesValue = data.task.internal_notes || ''
         }
-      } catch {}
+      } catch(e) {}
     },
 
     async updateStatus() {
@@ -888,7 +925,7 @@ function opsPanel() {
           if (idx !== -1) this.tasks[idx] = data.task
           if (this.selectedTask?.id === id) this.selectedTask = data.task
         }
-      } catch {}
+      } catch(e) {}
     },
 
     // ─── Timer ───
@@ -903,9 +940,9 @@ function opsPanel() {
         const data = await res.json()
         if (data.ok) {
           this.timer = { entryId: data.entry_id, taskId: task.id, taskTitle: task.title, startedAt: Date.now() }
-          localStorage.setItem('ops_timer', JSON.stringify(this.timer))
+          safeSetLS('ops_timer', JSON.stringify(this.timer))
         }
-      } catch {}
+      } catch(e) {}
     },
 
     openStopModal() {
@@ -921,9 +958,9 @@ function opsPanel() {
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.session.token}` },
           body: JSON.stringify({ action: 'stop', entry_id: this.timer.entryId, note: this.stopNote }),
         })
-      } catch {}
+      } catch(e) {}
       this.timer = { entryId: null, taskId: null, taskTitle: '', startedAt: null }
-      localStorage.removeItem('ops_timer')
+      safeRemoveLS('ops_timer')
       this.stopModal = false
     },
 
@@ -982,7 +1019,7 @@ function opsPanel() {
         })
         const data = await res.json()
         this.stats = data.team || []
-      } catch {}
+      } catch(e) {}
       finally { this.statsLoading = false }
     },
 
@@ -1062,16 +1099,16 @@ function opsPanel() {
         }
         this.notesSaved = true
         setTimeout(() => { this.notesSaved = false }, 2000)
-      } catch {}
+      } catch(e) {}
       this.notesSaving = false
     },
 
     // ─── Init ───
     init() {
       // Restaura timer do localStorage
-      const saved = localStorage.getItem('ops_timer')
+      const saved = safeLS('ops_timer')
       if (saved) {
-        try { this.timer = JSON.parse(saved) } catch {}
+        try { this.timer = JSON.parse(saved) } catch(e) {}
       }
       if (this.session.token) {
         this.loadTasks()
@@ -1082,6 +1119,10 @@ function opsPanel() {
     },
   }
 }
+
+document.addEventListener('alpine:init', () => {
+  Alpine.data('opsPanel', opsPanel)
+})
 </script>
 </body>
 </html>
