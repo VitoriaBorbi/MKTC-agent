@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createJiraIssue } from '@/lib/jira'
 
 export const maxDuration = 30
 
@@ -101,6 +102,26 @@ export async function POST(req: Request) {
       .single()
 
     if (error) throw new Error(error.message)
+
+    // Create Jira issue (non-blocking — failure doesn't affect response)
+    createJiraIssue({
+      protocol: data.protocol,
+      title,
+      type,
+      bu,
+      bu_subdivision: bu_subdivision || null,
+      description,
+      links: links.filter(Boolean),
+      requester_name,
+      requester_email,
+      requested_deadline: requested_deadline || null,
+      urgency_level: urgency_level || null,
+      priority_label: data.priority_label,
+    }).then(async (jiraKey) => {
+      if (jiraKey) {
+        await supabase.from('ops_tasks').update({ jira_issue_key: jiraKey }).eq('id', data.id)
+      }
+    }).catch(() => { /* non-fatal */ })
 
     return ok({ success: true, protocol: data.protocol, id: data.id, priority_label: data.priority_label })
   } catch (e) {

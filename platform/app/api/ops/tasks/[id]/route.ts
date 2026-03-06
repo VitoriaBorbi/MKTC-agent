@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { transitionJiraIssue } from '@/lib/jira'
 
 export const maxDuration = 15
 
@@ -93,6 +94,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     .single()
 
   if (error) return err(error.message)
+
+  // Sync status to Jira if status changed and we have a jira key
+  if (update.status && data?.jira_issue_key) {
+    transitionJiraIssue(data.jira_issue_key as string, update.status as string).catch(() => {})
+  }
+
   return ok({ success: true, task: data })
 }
 
