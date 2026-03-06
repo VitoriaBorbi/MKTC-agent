@@ -82,11 +82,19 @@ export async function POST(req: NextRequest) {
 
     const uploadData = await uploadRes.json()
 
-    if (!uploadRes.ok || !uploadData.publishedURL) {
-      throw new Error(`Upload falhou (${uploadRes.status}): ${JSON.stringify(uploadData).slice(0, 300)}`)
+    if (!uploadRes.ok) {
+      throw new Error(`Upload falhou (${uploadRes.status}): ${JSON.stringify(uploadData).slice(0, 500)}`)
     }
 
-    return NextResponse.json({ success: true, url: uploadData.publishedURL }, { headers: CORS_HEADERS })
+    const publishedURL = uploadData.publishedURL
+      || uploadData.fileProperties?.publishedURL
+      || uploadData.thumbnail?.thumbnailUrl
+
+    if (!publishedURL) {
+      throw new Error(`Upload OK (${uploadRes.status}) mas publishedURL ausente: ${JSON.stringify(uploadData).slice(0, 800)}`)
+    }
+
+    return NextResponse.json({ success: true, url: publishedURL }, { headers: CORS_HEADERS })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
     console.error('[/api/upload-image]', message)
