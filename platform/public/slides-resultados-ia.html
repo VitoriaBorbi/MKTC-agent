@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MKTC Email Agent — Resultados</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:    #09090b;
+    --bg2:   #18181b;
+    --bg3:   #27272a;
+    --zinc:  #3f3f46;
+    --muted: #71717a;
+    --dim:   #a1a1aa;
+    --text:  #fafafa;
+    --cyan:  #00e7f9;
+    --green: #10b981;
+    --yellow:#f59e0b;
+    --red:   #ef4444;
+    --purple:#8b5cf6;
+  }
+  html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ── SLIDES CONTAINER ── */
+  .deck { width: 100vw; height: 100vh; position: relative; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 64px 80px;
+    opacity: 0; pointer-events: none;
+    transform: translateX(40px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .slide.active {
+    opacity: 1; pointer-events: all; transform: translateX(0);
+  }
+  .slide.out-left {
+    opacity: 0; transform: translateX(-40px);
+  }
+
+  /* ── NAV ── */
+  .nav {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 16px; z-index: 100;
+    background: rgba(9,9,11,0.8); backdrop-filter: blur(12px);
+    border: 1px solid var(--bg3); border-radius: 40px; padding: 8px 16px;
+  }
+  .nav-btn {
+    background: none; border: none; cursor: pointer; color: var(--dim);
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.15s;
+  }
+  .nav-btn:hover { background: var(--bg3); color: var(--text); }
+  .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .nav-counter { font-size: 12px; color: var(--muted); min-width: 48px; text-align: center; }
+  .nav-dots { display: flex; gap: 6px; }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--zinc); transition: all 0.2s; cursor: pointer; }
+  .nav-dot.active { background: var(--cyan); width: 18px; border-radius: 3px; }
+
+  /* ── TYPOGRAPHY ── */
+  .tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cyan); background: rgba(0,231,249,0.08); border: 1px solid rgba(0,231,249,0.2); border-radius: 4px; padding: 3px 10px; margin-bottom: 24px; }
+  .s-title { font-size: clamp(36px, 5vw, 68px); font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; }
+  .s-sub { font-size: clamp(14px, 1.8vw, 18px); color: var(--dim); margin-top: 16px; max-width: 640px; line-height: 1.6; }
+  .accent { color: var(--cyan); }
+  .dim { color: var(--muted); font-weight: 400; }
+
+  /* ── SLIDE 1: HERO ── */
+  .s1 { background: var(--bg); }
+  .s1 .s-title span { display: block; }
+  .s1-meta { display: flex; gap: 40px; margin-top: 52px; flex-wrap: wrap; }
+  .s1-stat .val { font-size: 32px; font-weight: 700; line-height: 1; }
+  .s1-stat .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+  .s1-sep { width: 1px; background: var(--bg3); }
+
+  /* ── SLIDE 2: NUMBERS ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+  .kpi { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 14px; padding: 28px 24px; }
+  .kpi .k-num { font-size: clamp(36px, 4vw, 56px); font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+  .kpi .k-label { font-size: 13px; color: var(--dim); margin-top: 8px; line-height: 1.4; }
+  .kpi .k-sub { font-size: 11px; color: var(--zinc); margin-top: 5px; }
+  .kpi.c-cyan .k-num { color: var(--cyan); }
+  .kpi.c-green .k-num { color: var(--green); }
+  .kpi.c-yellow .k-num { color: var(--yellow); }
+  .kpi.c-purple .k-num { color: var(--purple); }
+
+  /* ── SLIDE 3: TIMELINE ── */
+  .tl { display: flex; flex-direction: column; gap: 0; margin-top: 32px; position: relative; }
+  .tl::before { content:''; position:absolute; left:17px; top:0; bottom:0; width:1px; background:var(--bg3); }
+  .tl-row { display: flex; gap: 20px; padding-bottom: 20px; }
+  .tl-dot { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; z-index:1; border:2px solid var(--zinc); color:var(--muted); background:var(--bg); }
+  .tl-dot.cy { border-color:var(--cyan); color:var(--cyan); background:rgba(0,231,249,0.08); }
+  .tl-dot.gr { border-color:var(--green); color:var(--green); background:rgba(16,185,129,0.08); }
+  .tl-dot.ye { border-color:var(--yellow); color:var(--yellow); background:rgba(245,158,11,0.08); }
+  .tl-body { padding-top: 5px; }
+  .tl-date { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; }
+  .tl-title { font-size:14px; font-weight:600; margin-top:2px; }
+  .tl-desc { font-size:12px; color:var(--dim); margin-top:3px; line-height:1.5; }
+  .chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+  .chip { font-size:10px; background:var(--bg3); color:var(--dim); padding:2px 7px; border-radius:4px; }
+  .chip.cy { background:rgba(0,231,249,0.1); color:var(--cyan); }
+  .chip.gr { background:rgba(16,185,129,0.1); color:var(--green); }
+  .chip.ye { background:rgba(245,158,11,0.1); color:var(--yellow); }
+
+  /* ── SLIDE 4: SSL0001 ── */
+  .ssl-hero { margin-top: 36px; }
+  .ssl-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .ssl-stat { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 12px; padding: 20px 24px; }
+  .ssl-stat .sv { font-size: 32px; font-weight: 800; color: var(--cyan); letter-spacing: -0.02em; }
+  .ssl-stat .sl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .ssl-flow { display: flex; align-items: center; gap: 0; margin-top: 32px; flex-wrap: wrap; }
+  .ssl-step { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 8px; padding: 10px 16px; font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .ssl-step strong { display: block; font-size: 13px; font-weight: 600; color: var(--text); }
+  .ssl-arrow { font-size: 16px; color: var(--zinc); padding: 0 8px; }
+  .ssl-highlight { margin-top: 24px; padding: 16px 20px; background: rgba(0,231,249,0.06); border: 1px solid rgba(0,231,249,0.25); border-radius: 10px; font-size: 14px; line-height: 1.6; }
+  .ssl-highlight strong { color: var(--cyan); }
+
+  /* ── SLIDE 5: VELOCIDADE ── */
+  .bars { margin-top: 36px; display: flex; flex-direction: column; gap: 18px; }
+  .bar-row { display: flex; align-items: center; gap: 16px; }
+  .bar-label { font-size: 13px; color: var(--dim); width: 180px; flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; height: 32px; background: var(--bg3); border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding: 0 14px; font-size: 12px; font-weight: 600; }
+  .bar-fill.manual { background: var(--zinc); color: var(--muted); }
+  .bar-fill.blocks { background: rgba(245,158,11,0.5); color: var(--text); }
+  .bar-fill.agent { background: linear-gradient(90deg, var(--cyan), rgba(0,231,249,0.5)); color: #09090b; }
+  .speed-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+
+  /* ── SLIDE 6: COMPARATIVO ── */
+  .compare { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 32px; }
+  .c-col { border-radius: 12px; overflow: hidden; border: 1px solid var(--bg3); }
+  .c-col.manual { border-color: var(--zinc); }
+  .c-col.blocks { border-color: rgba(245,158,11,0.3); }
+  .c-col.agent { border-color: rgba(0,231,249,0.35); }
+  .c-head { padding: 13px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+  .c-col.manual .c-head { background: var(--bg3); color: var(--dim); }
+  .c-col.blocks .c-head { background: rgba(245,158,11,0.1); color: var(--yellow); }
+  .c-col.agent .c-head { background: rgba(0,231,249,0.1); color: var(--cyan); }
+  .c-row { display: flex; align-items: baseline; justify-content: space-between; padding: 10px 18px; border-top: 1px solid var(--bg3); gap: 8px; }
+  .c-row .ck { font-size: 12px; color: var(--muted); flex: 1; }
+  .c-row .cv { font-size: 13px; font-weight: 600; text-align: right; }
+  .c-col.manual .cv { color: var(--dim); }
+  .c-col.blocks .cv { color: var(--yellow); }
+  .c-col.agent .cv { color: var(--cyan); }
+
+  /* ── SLIDE 7: EVOLUÇÃO ── */
+  .evo { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: start; margin-top: 36px; }
+  .evo-col { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 12px; padding: 22px 24px; }
+  .evo-col.now { border-color: rgba(0,231,249,0.3); }
+  .evo-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
+  .evo-col.then .evo-lbl { color: var(--muted); }
+  .evo-col.now .evo-lbl { color: var(--cyan); }
+  .evo-item { font-size: 13px; color: var(--dim); margin-bottom: 9px; padding-left: 16px; position: relative; line-height: 1.4; }
+  .evo-item::before { content: '·'; position: absolute; left: 0; color: var(--zinc); }
+  .evo-col.now .evo-item::before { content: '✓'; color: var(--green); }
+  .evo-col.now .evo-item { color: var(--text); }
+  .evo-arrow { display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 24px; padding-top: 80px; }
+
+  /* ── SLIDE 8: SKILLS ── */
+  .skills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 36px; }
+  .sk { background: var(--bg2); border: 1px solid var(--bg3); border-radius: 12px; padding: 18px 20px; }
+  .sk-name { font-size: 15px; font-weight: 700; font-family: monospace; color: var(--cyan); }
+  .sk-desc { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .sk-badge { display: inline-block; font-size: 10px; background: rgba(16,185,129,0.1); color: var(--green); border-radius: 4px; padding: 2px 7px; margin-top: 10px; font-weight: 600; }
+
+  /* ── SLIDE 9: ENCERRAMENTO ── */
+  .s9 { align-items: center; text-align: center; }
+  .s9 .s-title { font-size: clamp(40px, 6vw, 80px); }
+
+  /* ── HINT ── */
+  .hint { position: fixed; top: 20px; right: 24px; font-size: 11px; color: var(--zinc); }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 1 ═══ -->
+  <div class="slide s1 active" data-index="0">
+    <div class="tag">MKTC Email Agent · Fev 2026</div>
+    <div class="s-title">
+      <span><span class="accent">27 emails</span> gerados.</span>
+      <span>Em <span class="accent">7 dias.</span></span>
+      <span class="dim" style="font-size:0.6em;">Sem abrir o Email Studio uma vez.</span>
+    </div>
+    <div class="s1-meta">
+      <div class="s1-stat"><div class="val" style="color:var(--cyan)">20 fev</div><div class="lbl">Primeiro email</div></div>
+      <div class="s1-sep"></div>
+      <div class="s1-stat"><div class="val" style="color:var(--cyan)">28 fev</div><div class="lbl">Último email</div></div>
+      <div class="s1-sep"></div>
+      <div class="s1-stat"><div class="val">2</div><div class="lbl">BUs atendidas</div></div>
+      <div class="s1-sep"></div>
+      <div class="s1-stat"><div class="val">5</div><div class="lbl">Campanhas</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 2 ═══ -->
+  <div class="slide" data-index="1">
+    <div class="tag">Números</div>
+    <div class="s-title">O que foi produzido</div>
+    <div class="kpi-grid">
+      <div class="kpi c-cyan">
+        <div class="k-num">27</div>
+        <div class="k-label">Emails HTML gerados</div>
+        <div class="k-sub">Arquivos prontos para produção</div>
+      </div>
+      <div class="kpi c-green">
+        <div class="k-num">8</div>
+        <div class="k-label">Enviados / agendados no SFMC</div>
+        <div class="k-sub">Com asset IDs confirmados</div>
+      </div>
+      <div class="kpi c-yellow">
+        <div class="k-num">5</div>
+        <div class="k-label">Campanhas & projetos</div>
+        <div class="k-sub">SSL0001, VIT0001, Jornada, MBAIA, Carnaval</div>
+      </div>
+      <div class="kpi c-purple">
+        <div class="k-num">9 em 14'</div>
+        <div class="k-label">Série Jornada (record)</div>
+        <div class="k-sub">9 emails em uma única sessão de 14 min</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 3 ═══ -->
+  <div class="slide" data-index="2">
+    <div class="tag">Linha do tempo</div>
+    <div class="s-title">7 dias, 5 campanhas</div>
+    <div class="tl">
+      <div class="tl-row">
+        <div class="tl-dot cy">1</div>
+        <div class="tl-body">
+          <div class="tl-date">20 Fev — Dia 0 · Skills criadas</div>
+          <div class="tl-title">Finclass — Segundo Salário · primeiros 5 HTMLs gerados no mesmo dia</div>
+          <div class="chips"><span class="chip cy">/email</span><span class="chip">SSL0001 v1</span><span class="chip">Finclass</span></div>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot">2</div>
+        <div class="tl-body">
+          <div class="tl-date">21 Fev — Dia 1</div>
+          <div class="tl-title">Finclass — Email Venda Carnaval · 1 email avulso</div>
+          <div class="chips"><span class="chip cy">/email</span><span class="chip">Avulso</span></div>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot ye">3</div>
+        <div class="tl-body">
+          <div class="tl-date">23 Fev — Dia 3</div>
+          <div class="tl-title">Finclass — Jornada completa · 9 emails em 14 minutos + FH MBAIA0003 enviado (18h00)</div>
+          <div class="chips"><span class="chip cy">/email</span><span class="chip ye">Record: 9 em 14min</span><span class="chip gr">Enviado SFMC · ID 36115</span></div>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot cy">4</div>
+        <div class="tl-body">
+          <div class="tl-date">24–25 Fev — Dias 4–5</div>
+          <div class="tl-title">Finclass — SSL0001 versão final · 6 emails agendados via API</div>
+          <div class="chips"><span class="chip cy">/email</span><span class="chip cy">/send</span><span class="chip gr">6× SFMC · IDs 36188–36222</span></div>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot gr">5</div>
+        <div class="tl-body">
+          <div class="tl-date">26–28 Fev — Dias 6–8</div>
+          <div class="tl-title">Finclass — VIT0001 Venda Vitalício · pipeline completa com imagens</div>
+          <div class="chips"><span class="chip cy">/email</span><span class="chip cy">/send</span><span class="chip gr">Agendado 28/02 10h · ID 36353</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 4 ═══ -->
+  <div class="slide" data-index="3">
+    <div class="tag">Destaque</div>
+    <div class="s-title">SSL0001 — lançamento <span class="accent">inteiro</span><br>feito aqui.</div>
+    <div class="ssl-stat-row">
+      <div class="ssl-stat"><div class="sv">6</div><div class="sl">emails de campanha</div></div>
+      <div class="ssl-stat"><div class="sv">0</div><div class="sl">cliques no SFMC</div></div>
+      <div class="ssl-stat"><div class="sv">100%</div><div class="sl">automatizado via API</div></div>
+    </div>
+    <div class="ssl-flow">
+      <div class="ssl-step"><strong>.docx recebido</strong>copy da campanha</div>
+      <div class="ssl-arrow">→</div>
+      <div class="ssl-step"><strong>6 HTMLs gerados</strong>/email skill</div>
+      <div class="ssl-arrow">→</div>
+      <div class="ssl-step"><strong>Upload Content Builder</strong>API REST</div>
+      <div class="ssl-arrow">→</div>
+      <div class="ssl-step"><strong>Email Studio</strong>SOAP API</div>
+      <div class="ssl-arrow">→</div>
+      <div class="ssl-step"><strong>6 ESDs criadas</strong>+ agendamento</div>
+    </div>
+    <div class="ssl-highlight">
+      <strong>Nenhum passo foi feito manualmente.</strong> Cópia, geração de HTML, upload ao Content Builder, criação dos emails no Email Studio, configuração de DEs de envio e exclusão, criação das EmailSendDefinitions e agendamento de cada disparo — tudo via terminal.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 5 ═══ -->
+  <div class="slide" data-index="4">
+    <div class="tag">Velocidade</div>
+    <div class="s-title">Tempo por email</div>
+    <div class="bars">
+      <div class="bar-row">
+        <div class="bar-label">HTML manual</div>
+        <div class="bar-track"><div class="bar-fill manual" style="width:100%">6–12h por email</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Content Blocks (SFMC)</div>
+        <div class="bar-track"><div class="bar-fill blocks" style="width:33%">2–4h</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Agente IA (média)</div>
+        <div class="bar-track"><div class="bar-fill agent" style="width:8%">~45 min</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Jornada (9 emails)</div>
+        <div class="bar-track"><div class="bar-fill agent" style="width:2%">14 min total</div></div>
+      </div>
+    </div>
+    <div class="speed-kpis">
+      <div class="kpi c-cyan" style="margin-top:0"><div class="k-num">~8×</div><div class="k-label">mais rápido que HTML manual</div></div>
+      <div class="kpi c-green" style="margin-top:0"><div class="k-num">~3×</div><div class="k-label">mais rápido que Content Blocks</div></div>
+      <div class="kpi c-yellow" style="margin-top:0"><div class="k-num">~160h</div><div class="k-label">economizadas nos 27 emails</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 6 ═══ -->
+  <div class="slide" data-index="5">
+    <div class="tag">Comparativo</div>
+    <div class="s-title">Três formas de fazer o mesmo email</div>
+    <div class="compare">
+      <div class="c-col manual">
+        <div class="c-head">HTML Manual</div>
+        <div class="c-row"><span class="ck">Por email</span><span class="cv">6–12h</span></div>
+        <div class="c-row"><span class="ck">Campanha 6 emails</span><span class="cv">3–5 dias</span></div>
+        <div class="c-row"><span class="ck">Flexibilidade visual</span><span class="cv">Total</span></div>
+        <div class="c-row"><span class="ck">Upload SFMC</span><span class="cv">Manual (UI)</span></div>
+        <div class="c-row"><span class="ck">Agendamento</span><span class="cv">Manual (UI)</span></div>
+        <div class="c-row"><span class="ck">Consistência de marca</span><span class="cv">Depende do dev</span></div>
+        <div class="c-row"><span class="ck">Quem executa</span><span class="cv">Dev HTML</span></div>
+        <div class="c-row"><span class="ck">27 emails</span><span class="cv">162–324h</span></div>
+      </div>
+      <div class="c-col blocks">
+        <div class="c-head">Content Blocks SFMC</div>
+        <div class="c-row"><span class="ck">Por email</span><span class="cv">2–4h</span></div>
+        <div class="c-row"><span class="ck">Campanha 6 emails</span><span class="cv">1–2 dias</span></div>
+        <div class="c-row"><span class="ck">Flexibilidade visual</span><span class="cv">Limitada</span></div>
+        <div class="c-row"><span class="ck">Upload SFMC</span><span class="cv">Manual (drag & drop)</span></div>
+        <div class="c-row"><span class="ck">Agendamento</span><span class="cv">Manual (UI)</span></div>
+        <div class="c-row"><span class="ck">Consistência de marca</span><span class="cv">Depende do template</span></div>
+        <div class="c-row"><span class="ck">Quem executa</span><span class="cv">Analista CRM</span></div>
+        <div class="c-row"><span class="ck">27 emails</span><span class="cv">54–108h</span></div>
+      </div>
+      <div class="c-col agent">
+        <div class="c-head">Agente IA (MKTC)</div>
+        <div class="c-row"><span class="ck">Por email</span><span class="cv">~45 min</span></div>
+        <div class="c-row"><span class="ck">Campanha 6 emails</span><span class="cv">~4h</span></div>
+        <div class="c-row"><span class="ck">Flexibilidade visual</span><span class="cv">Total + brand guide</span></div>
+        <div class="c-row"><span class="ck">Upload SFMC</span><span class="cv">Automático (API)</span></div>
+        <div class="c-row"><span class="ck">Agendamento</span><span class="cv">Automático (SOAP)</span></div>
+        <div class="c-row"><span class="ck">Consistência de marca</span><span class="cv">100% garantida</span></div>
+        <div class="c-row"><span class="ck">Quem executa</span><span class="cv">Qualquer um</span></div>
+        <div class="c-row"><span class="ck">27 emails</span><span class="cv">~20h</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 7 ═══ -->
+  <div class="slide" data-index="6">
+    <div class="tag">Evolução</div>
+    <div class="s-title">Do dia 0 ao dia 8</div>
+    <div class="evo">
+      <div class="evo-col then">
+        <div class="evo-lbl">20 Fev — Dia 0</div>
+        <div class="evo-item">Gera HTML a partir de docx</div>
+        <div class="evo-item">Sem integração SFMC</div>
+        <div class="evo-item">Upload manual do HTML</div>
+        <div class="evo-item">Sem controle de send classifications</div>
+        <div class="evo-item">Imagens do docx não suportadas</div>
+        <div class="evo-item">Sem DEs configuráveis</div>
+        <div class="evo-item">Sem fila ou rastreio</div>
+        <div class="evo-item">1 BU</div>
+      </div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-col now">
+        <div class="evo-lbl">28 Fev — Dia 8</div>
+        <div class="evo-item">HTML + imagens extraídas e upadas ao SFMC</div>
+        <div class="evo-item">Content Builder via API REST</div>
+        <div class="evo-item">Email Studio via SOAP API</div>
+        <div class="evo-item">Send Classifications + Sender Profiles</div>
+        <div class="evo-item">DEs de envio e exclusão por email</div>
+        <div class="evo-item">ESD criada e agendada via SOAP</div>
+        <div class="evo-item">Fila (Sheets) + Catálogo (Notion)</div>
+        <div class="evo-item">4 BUs + platform self-service</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 8 ═══ -->
+  <div class="slide" data-index="7">
+    <div class="tag">O que foi construído</div>
+    <div class="s-title">6 skills, 1 plataforma</div>
+    <div class="skills">
+      <div class="sk"><div class="sk-name">/email</div><div class="sk-desc">Geração de HTML a partir de .docx. Extrai copy e imagens, aplica brand guide, gera layout table-based compatível com todos os clientes.</div><div class="sk-badge">Core</div></div>
+      <div class="sk"><div class="sk-name">/send</div><div class="sk-desc">Upload ao Content Builder + criação de Email no Email Studio + EmailSendDefinition + agendamento — tudo via SOAP/REST.</div><div class="sk-badge">SFMC Integration</div></div>
+      <div class="sk"><div class="sk-name">/queue</div><div class="sk-desc">Gerencia a fila de envios via Google Sheets. Status, histórico e organização de campanhas por BU.</div><div class="sk-badge">Workflow</div></div>
+      <div class="sk"><div class="sk-name">/catalog</div><div class="sk-desc">Gera previews visuais dos templates via Edge headless, faz upload ao SFMC e publica cards no Notion.</div><div class="sk-badge">Self-service</div></div>
+      <div class="sk"><div class="sk-name">/campaign</div><div class="sk-desc">Processa .docx com N copies, gera N HTMLs em batch, revisão individual e upload ao Content Builder.</div><div class="sk-badge">Batch</div></div>
+      <div class="sk"><div class="sk-name">MKTC Platform</div><div class="sk-desc">CloudPage + Next.js: geração com IA, fila de aprovação, preview, agendamento e biblioteca de prompts — self-service para o time.</div><div class="sk-badge">Platform</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SLIDE 9 ═══ -->
+  <div class="slide s9" data-index="8">
+    <div class="tag">Resumo</div>
+    <div class="s-title" style="text-align:center">
+      <span class="accent">27 emails.</span><br>
+      7 dias.<br>
+      <span class="dim">Zero Email Studio.</span>
+    </div>
+    <div class="s-sub" style="text-align:center; margin-top:28px; margin-left:auto; margin-right:auto;">
+      Da criação das skills à pipeline completa — copy, HTML, imagens, Content Builder, Email Studio, send definitions e agendamento, 100% automatizado.
+    </div>
+    <div style="margin-top:40px; font-size:12px; color:var(--zinc); text-align:center;">
+      MKTC Email Agent · Finclass + Faculdade Hub · Fev 2026
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="go(-1)" disabled>&#8592;</button>
+  <div class="nav-dots" id="dots"></div>
+  <span class="nav-counter" id="counter">1 / 9</span>
+  <button class="nav-btn" id="nextBtn" onclick="go(1)">&#8594;</button>
+</div>
+
+<div class="hint">← → ou setas do teclado</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let cur = 0;
+
+  // Build dots
+  const dotsEl = document.getElementById('dots');
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  });
+
+  function goTo(next) {
+    if (next < 0 || next >= total) return;
+    const prev = cur;
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add('out-left');
+    setTimeout(() => slides[prev].classList.remove('out-left'), 350);
+    cur = next;
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+    document.getElementById('counter').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 0;
+    document.getElementById('nextBtn').disabled = cur === total - 1;
+  }
+
+  function go(dir) { goTo(cur + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+  });
+</script>
+</body>
+</html>
