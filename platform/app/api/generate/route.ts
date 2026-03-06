@@ -155,7 +155,7 @@ REGRAS TÉCNICAS OBRIGATÓRIAS:
 - Layout 100% em <table> — NUNCA usar <div> para estrutura
 - CSS 100% inline — NUNCA usar <style> ou classes externas
 - Fontes: Arial, Helvetica, sans-serif
-- Imagens: display:block; border:0; width e height explícitos (use height="auto" quando dinâmico)
+- Imagens de conteúdo: width="560" style="display:block;border:0;width:100%;max-width:560px;height:auto;" — SEMPRE este padrão, nunca width maior que 560px
 - Botão CTA: background:${brand.cta}; color:${brand.cta_text}; padding:14px 32px; border-radius:4px; text-decoration:none; font-weight:bold; display:inline-block;
 - Links CTA: <a href="%%=v(@link_tag)=%%" style="...">TEXTO</a>
 - NUNCA usar data: URIs para imagens
