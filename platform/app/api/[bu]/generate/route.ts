@@ -2,7 +2,17 @@ import Anthropic from '@anthropic-ai/sdk'
 import { BRANDS } from '@/lib/brands/config'
 import { BU } from '@/types'
 
-export const maxDuration = 60
+export const maxDuration = 120
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS })
+}
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -222,6 +232,7 @@ export async function POST(
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      ...CORS_HEADERS,
     },
   })
 }
