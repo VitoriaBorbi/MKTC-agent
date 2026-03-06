@@ -28,13 +28,15 @@ async function getEnterpriseToken(subdomain: string): Promise<string> {
   return data.access_token as string
 }
 
-const ASSET_TYPE: Record<string, number> = {
-  'image/png':  28,
-  'image/jpeg': 23,
-  'image/jpg':  23,
-  'image/gif':  31,
-  'image/webp': 28,
+const ASSET_TYPE: Record<string, { id: number; name: string }> = {
+  'image/png':  { id: 28, name: 'png' },
+  'image/jpeg': { id: 23, name: 'jpg' },
+  'image/jpg':  { id: 23, name: 'jpg' },
+  'image/gif':  { id: 31, name: 'gif' },
+  'image/webp': { id: 28, name: 'png' },
 }
+
+const SUPPORTED_TYPES = new Set(Object.keys(ASSET_TYPE))
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,6 +44,10 @@ export async function POST(req: NextRequest) {
 
     if (!imageB64) {
       return NextResponse.json({ error: 'imageB64 obrigatório' }, { status: 400, headers: CORS_HEADERS })
+    }
+
+    if (!SUPPORTED_TYPES.has(mediaType)) {
+      return NextResponse.json({ error: `Tipo não suportado: ${mediaType}` }, { status: 400, headers: CORS_HEADERS })
     }
 
     const subdomain = process.env.SFMC_SUBDOMAIN
@@ -53,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     const ts       = Date.now()
     const safeName = `mktc_${ts}_${filename.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40)}`
-    const typeId   = ASSET_TYPE[mediaType] ?? 28
+    const assetType = ASSET_TYPE[mediaType] ?? { id: 28, name: 'png' }
 
     const uploadRes = await fetch(
       `https://${subdomain}.rest.marketingcloudapis.com/asset/v1/content/assets`,
@@ -65,9 +71,9 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           name:      safeName,
-          assetType: { id: typeId },
-          file:      imageB64,        // raw base64, without the "data:..." prefix
-          category:  { id: 273324 }, // Content Builder root → CDN image.m.grupo-primo.com
+          assetType: { id: assetType.id, name: assetType.name },
+          file:      imageB64,
+          category:  { id: 273324 },
         }),
       }
     )

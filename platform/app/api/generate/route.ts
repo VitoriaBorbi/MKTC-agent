@@ -162,9 +162,10 @@ REGRAS TÉCNICAS OBRIGATÓRIAS:
 - NUNCA omitir o header e o footer da marca
 
 SOBRE IMAGENS NO CONTEÚDO:
-- Use URLs absolutas começando com https://
-- Para hero images, use placeholder de qualidade: https://via.placeholder.com/600x400/[cor_hex_sem_hash]/ffffff?text=Imagem
-- Substitua [cor_hex_sem_hash] pela cor secundária da marca sem o # (ex: 0a0e27)
+- Use APENAS as URLs de imagem fornecidas explicitamente no prompt do usuário (campo IMAGENS DO DOCUMENTO)
+- Se não houver URLs de imagem fornecidas: NÃO insira nenhuma tag <img> no corpo do email — crie um layout puramente tipográfico e visual com tabelas coloridas, blocos de destaque e seções escuras/claras
+- NUNCA usar via.placeholder.com, placehold.co, lorempixel.com ou qualquer URL de placeholder externo — essas URLs são bloqueadas por clientes de email e resultam em espaços em branco
+- Se o conteúdo menciona uma imagem (ex: "print", "comparativo", "depoimento") mas não há URL fornecida: substitua por um bloco de destaque tipográfico com o texto relevante em fundo colorido
 
 Gere APENAS o HTML completo do email. Sem explicações, sem markdown, sem blocos de código.
 Comece diretamente com <!DOCTYPE html>`
