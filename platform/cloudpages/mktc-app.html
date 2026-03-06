@@ -1691,8 +1691,14 @@ function mktcApp() {
             body: JSON.stringify({ imageB64: img.b64, mediaType: img.mediaType, filename: img.filename }),
           });
           const data = await resp.json();
-          if (data.url) urls.push(data.url);
-        } catch(_) { /* não-fatal: segue sem imagem */ }
+          if (data.url) {
+            urls.push(data.url);
+          } else {
+            this.showToast('Upload img falhou: ' + (data.error || resp.status), 'error');
+          }
+        } catch(e) {
+          this.showToast('Upload img erro de rede: ' + e.message, 'error');
+        }
       }
       return urls;
     },
