@@ -4,14 +4,31 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useEmailStore } from '@/lib/store'
+import { usePromptStore } from '@/lib/prompt-store'
 import { StatusPill } from '@/components/platform/status-pill'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { BU } from '@/types'
-import { ArrowLeftIcon, CheckIcon, MonitorIcon, SmartphoneIcon, CopyIcon } from 'lucide-react'
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  MonitorIcon,
+  SmartphoneIcon,
+  CopyIcon,
+  Trash2Icon,
+  BookmarkIcon,
+  XIcon,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { AgendarModal } from '@/components/platform/agendar-modal'
 
@@ -53,21 +70,25 @@ export default function EmailDetailPage() {
   const bu = params.bu as BU
   const emailId = params.id as string
 
-  const { getById, updateEmail, updateStatus } = useEmailStore()
+  const { getById, updateEmail, removeEmail } = useEmailStore()
+  const { addPrompt } = usePromptStore()
   const email = getById(emailId)
 
   const [assunto, setAssunto] = useState(email?.assunto || '')
   const [preheader, setPreheader] = useState(email?.preheader || '')
   const [html, setHtml] = useState(email?.html_content || SAMPLE_HTML)
 
-  // Sync when store hydrates from localStorage (runs after first render)
   useEffect(() => {
     if (email?.html_content) setHtml(email.html_content)
     if (email?.assunto) setAssunto(email.assunto)
     if (email?.preheader) setPreheader(email.preheader)
   }, [email?.id])
+
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop')
   const [showAgendar, setShowAgendar] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
+  const [promptNome, setPromptNome] = useState('')
 
   if (!email) {
     return (
@@ -87,6 +108,27 @@ export default function EmailDetailPage() {
     toast.success('Alterações salvas!')
   }
 
+  function handleDelete() {
+    const nome = email?.nome ?? ''
+    removeEmail(emailId)
+    toast.success(`"${nome}" removido.`)
+    router.push(`/${bu}/fila`)
+  }
+
+  function handleSavePrompt() {
+    if (!promptNome.trim() || !email) return
+    addPrompt({
+      bu,
+      nome: promptNome.trim(),
+      conteudo: email.copy_text || assunto || email.nome,
+      template_id: email.template_id,
+      tags: [email.tipo, ...(email.campanha_id ? [email.campanha_id] : [])],
+    })
+    setShowSavePrompt(false)
+    setPromptNome('')
+    toast.success('Prompt salvo na biblioteca!')
+  }
+
   return (
     <div className="flex flex-col gap-4 h-full">
       {/* Header */}
@@ -101,6 +143,16 @@ export default function EmailDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"
+            title="Salvar como prompt"
+            onClick={() => { setPromptNome(email.nome); setShowSavePrompt(true) }}>
+            <BookmarkIcon className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            title="Excluir email"
+            onClick={() => setShowDeleteConfirm(true)}>
+            <Trash2Icon className="w-4 h-4" />
+          </Button>
           <Button variant="outline" size="sm" onClick={handleSave} className="hidden sm:flex">
             Salvar
           </Button>
@@ -146,7 +198,7 @@ export default function EmailDetailPage() {
 
       <Separator />
 
-      {/* Editor + Preview — stacked on mobile, side-by-side on desktop */}
+      {/* Editor + Preview */}
       <Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
         <TabsList className="h-8 w-full md:w-auto self-start">
           <TabsTrigger value="preview" className="text-xs flex-1 md:flex-none">Preview</TabsTrigger>
@@ -242,6 +294,59 @@ export default function EmailDetailPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Excluir email</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja excluir <span className="font-medium text-foreground">"{email.nome}"</span>?
+            Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2Icon className="w-3.5 h-3.5 mr-1.5" />
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save prompt dialog */}
+      <Dialog open={showSavePrompt} onOpenChange={setShowSavePrompt}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookmarkIcon className="w-4 h-4 text-primary" />
+              Salvar na biblioteca
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Salva o prompt/copy deste email para reutilizar em gerações futuras.
+          </p>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Nome do prompt</label>
+            <Input
+              value={promptNome}
+              onChange={e => setPromptNome(e.target.value)}
+              placeholder="ex: Email de venda vitalício"
+              className="h-8 text-sm"
+              onKeyDown={e => { if (e.key === 'Enter') handleSavePrompt() }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSavePrompt(false)}>Cancelar</Button>
+            <Button onClick={handleSavePrompt} disabled={!promptNome.trim()}>
+              <BookmarkIcon className="w-3.5 h-3.5 mr-1.5" />
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {showAgendar && (
         <AgendarModal

@@ -179,6 +179,11 @@
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         Catálogo
       </button>
+      <button @click="navigateTo('prompts')"
+        class="sidebar-link" :class="view === 'prompts' ? 'active' : ''">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        Prompts
+      </button>
       <div class="mt-auto pt-3 border-t border-zinc-800">
         <button @click="navigateTo('nova-solicitacao')" class="w-full btn btn-primary justify-center text-xs">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -213,15 +218,34 @@
           <p class="text-xs text-zinc-500 mt-0.5">Visão geral dos envios</p>
         </div>
 
-        <!-- KPI cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-          <template x-for="kpi in kpiCards" :key="kpi.label">
-            <div class="card p-4">
-              <p class="text-xs text-zinc-500 mb-1" x-text="kpi.label"></p>
-              <p class="text-2xl font-bold" x-text="kpi.value"></p>
-              <p x-show="kpi.sub" class="text-xs text-zinc-500 mt-1" x-text="kpi.sub"></p>
+        <!-- Performance Dataviews -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-zinc-300">Performance SFMC</span>
+            <div class="flex items-center gap-2">
+              <div class="flex gap-1">
+                <template x-for="d in [7, 30, 90]" :key="d">
+                  <button @click="setDataviewDays(d)"
+                    class="px-2 py-1 text-xs rounded transition-colors"
+                    :class="dataviewDays === d ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-white'">
+                    <span x-text="d + 'd'"></span>
+                  </button>
+                </template>
+              </div>
+              <button @click="loadDataviews()" class="p-1 text-zinc-500 hover:text-white transition-colors" title="Atualizar">
+                <svg class="w-3.5 h-3.5" :class="dataviewLoading ? 'animate-spin' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </button>
             </div>
-          </template>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <template x-for="kpi in kpiCards" :key="kpi.label">
+              <div class="card p-4" :class="dataviewLoading ? 'opacity-50' : ''">
+                <p class="text-xs text-zinc-500 mb-1" x-text="kpi.label"></p>
+                <p class="text-xl font-bold" x-text="kpi.value"></p>
+                <p x-show="kpi.sub" class="text-xs text-zinc-500 mt-1" x-text="kpi.sub"></p>
+              </div>
+            </template>
+          </div>
         </div>
 
         <!-- Recent emails -->
@@ -334,6 +358,12 @@
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
+            <button @click="openSavePromptModal()" class="btn btn-ghost p-2 text-zinc-400 hover:text-white" title="Salvar como prompt">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </button>
+            <button @click="deleteConfirmDetail = true" class="btn btn-ghost p-2 text-zinc-400 hover:text-red-400" title="Excluir email">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
             <button @click="saveDetail()" class="btn btn-outline text-xs" :disabled="detail.saving">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               <span x-text="detail.saving ? 'Salvando…' : 'Salvar'"></span>
@@ -434,7 +464,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Data de envio</label>
-              <input x-model="detail.sendDate" type="date" class="input">
+              <input x-model="detail.sendDate" type="date" class="input" :min="todayStr">
             </div>
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Horário (BRT)</label>
@@ -744,7 +774,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Data de envio <span class="text-zinc-600">(opcional)</span></label>
-              <input x-model="wizard.sendDate" type="date" class="input">
+              <input x-model="wizard.sendDate" type="date" class="input" :min="todayStr">
             </div>
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Horário (BRT) <span class="text-zinc-600">(opcional)</span></label>
@@ -947,6 +977,57 @@
         </div>
       </div>
 
+      <!-- ======================================================= -->
+      <!-- PROMPTS VIEW -->
+      <!-- ======================================================= -->
+      <div x-show="!loading && !loadError && view === 'prompts'" class="max-w-3xl">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h1 class="text-lg font-semibold">Biblioteca de Prompts</h1>
+            <p class="text-xs text-zinc-500 mt-0.5">Prompts salvos para reutilizar em novas gerações</p>
+          </div>
+        </div>
+
+        <div x-show="prompts.filter(p => p.bu === bu).length === 0" class="text-center py-16 text-zinc-500 text-sm">
+          <svg class="w-8 h-8 mx-auto opacity-30 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <p>Nenhum prompt salvo ainda.</p>
+          <p class="text-xs mt-1">Salve prompts a partir de emails na fila usando o ícone de marcador.</p>
+        </div>
+
+        <div class="space-y-3">
+          <template x-for="p in prompts.filter(p => p.bu === bu)" :key="p.id">
+            <div class="card p-4">
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <svg class="w-4 h-4 text-zinc-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                  <span class="font-medium text-sm truncate" x-text="p.nome"></span>
+                  <span x-show="p.template_id" class="text-xs text-zinc-500 shrink-0" x-text="'· ' + p.template_id"></span>
+                </div>
+                <div class="flex gap-1 shrink-0">
+                  <button @click="navigator.clipboard.writeText(p.conteudo).then(() => showToast('Copiado!'))"
+                    class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-700 transition-colors" title="Copiar">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                  <button @click="deletePrompt(p.id)"
+                    class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-red-900/20 transition-colors" title="Excluir">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </div>
+              <p class="text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap" style="display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden" x-text="p.conteudo"></p>
+              <div class="flex items-center justify-between mt-3">
+                <div class="flex gap-1.5 flex-wrap">
+                  <template x-for="t in p.tags" :key="t">
+                    <span x-show="t" class="px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400 border border-zinc-700" x-text="t"></span>
+                  </template>
+                </div>
+                <span class="text-xs text-zinc-600" x-text="new Date(p.created_at).toLocaleDateString('pt-BR')"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -971,9 +1052,10 @@
       <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       <span class="text-[10px]">Catálogo</span>
     </button>
-    <button @click="navigateTo('nova-solicitacao')" class="flex flex-col items-center gap-0.5 px-3 py-1 text-zinc-500">
-      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span class="text-[10px]">Mais</span>
+    <button @click="navigateTo('prompts')" class="flex flex-col items-center gap-0.5 px-3 py-1"
+      :class="view === 'prompts' ? 'text-white' : 'text-zinc-500'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      <span class="text-[10px]">Prompts</span>
     </button>
   </nav>
 
@@ -995,7 +1077,7 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-zinc-500 mb-1 block">Data de envio</label>
-          <input x-model="schedule.sendDate" type="date" class="input">
+          <input x-model="schedule.sendDate" type="date" class="input" :min="todayStr">
         </div>
         <div>
           <label class="text-xs text-zinc-500 mb-1 block">Horário (BRT)</label>
@@ -1102,6 +1184,63 @@
 </div>
 
 <!-- ============================================================ -->
+<!-- DELETE CONFIRM MODAL (email detail) -->
+<!-- ============================================================ -->
+<div x-show="deleteConfirmDetail" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="card w-full max-w-sm">
+    <div class="p-5 border-b border-zinc-800">
+      <h2 class="font-semibold text-sm">Excluir email</h2>
+    </div>
+    <div class="p-5 space-y-4">
+      <p class="text-sm text-zinc-400">
+        Tem certeza que deseja excluir
+        <span class="font-medium text-white" x-text="selectedEmail && ('&quot;' + selectedEmail.Nome + '&quot;')"></span>?
+        Esta ação não pode ser desfeita.
+      </p>
+      <div class="flex gap-2">
+        <button @click="deleteConfirmDetail = false" class="btn btn-outline flex-1 justify-center">Cancelar</button>
+        <button @click="deleteFromDetail()" class="btn btn-danger flex-1 justify-center">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SAVE PROMPT MODAL -->
+<!-- ============================================================ -->
+<div x-show="savePromptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="card w-full max-w-sm">
+    <div class="flex items-center justify-between p-5 border-b border-zinc-800">
+      <h2 class="font-semibold text-sm flex items-center gap-2">
+        <svg class="w-4 h-4 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        Salvar na biblioteca
+      </h2>
+      <button @click="savePromptModal = false" class="text-zinc-500 hover:text-white">✕</button>
+    </div>
+    <div class="p-5 space-y-4">
+      <p class="text-xs text-zinc-400">Salva o prompt/copy deste email para reutilizar em gerações futuras.</p>
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">Nome do prompt</label>
+        <input x-model="savePromptNome" class="input"
+          placeholder="ex: Email de venda vitalício"
+          @keydown.enter="confirmSavePrompt()"
+          x-ref="savePromptInput">
+      </div>
+      <div class="flex gap-2">
+        <button @click="savePromptModal = false" class="btn btn-outline flex-1 justify-center">Cancelar</button>
+        <button @click="confirmSavePrompt()" class="btn btn-primary flex-1 justify-center" :disabled="!savePromptNome.trim()">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
 <!-- APP SCRIPT -->
 <!-- ============================================================ -->
 <script>
@@ -1116,12 +1255,21 @@ function mktcApp() {
     bu:            'finclass',
     emails:        [],
     stats:         {total: 0, rascunho: 0, em_aprovacao: 0, aprovado: 0, agendado: 0, enviado: 0},
+    dataviewStats: {sends: 0, opens: 0, openRate: 0, clicks: 0, ctr: 0, bounces: 0},
+    dataviewDays:  30,
+    dataviewLoading: false,
+    dataviewError:   null,
+    sendClassificationsList: [],
     selectedEmail:   null,
     loading:         false,
     loadError:       null,
     filaSearch:      '',
     filaFilter:      'all',
-    deleteConfirmId: null,
+    deleteConfirmId:     null,
+    deleteConfirmDetail: false,
+    prompts:         [],
+    savePromptModal: false,
+    savePromptNome:  '',
     toast:           {show: false, message: '', type: 'success'},
 
     detail: {
@@ -1160,7 +1308,12 @@ function mktcApp() {
       if (savedUrl) this.API_URL = savedUrl;
       const savedBU = localStorage.getItem('mktc_bu');
       if (savedBU) this.bu = savedBU;
-      if (this.API_URL) this.loadDashboard();
+      this.loadPromptsFromStorage();
+      if (this.API_URL) {
+        this.loadDashboard();
+        this.loadDataviews();
+        this.loadSendClassifications();
+      }
     },
 
     saveApiUrl() {
@@ -1185,6 +1338,7 @@ function mktcApp() {
       if (newView === 'dashboard') await this.loadDashboard();
       else if (newView === 'fila') await this.loadEmails();
       else if (newView === 'nova-solicitacao') this.resetWizard();
+      // 'prompts' and 'catalogo' use in-memory data only
     },
 
     async changeBU(newBU) {
@@ -1192,7 +1346,11 @@ function mktcApp() {
       localStorage.setItem('mktc_bu', newBU);
       this.emails = [];
       this.stats = {total: 0, rascunho: 0, em_aprovacao: 0, aprovado: 0, agendado: 0, enviado: 0};
+      this.dataviewStats = {sends: 0, opens: 0, openRate: 0, clicks: 0, ctr: 0, bounces: 0};
+      this.sendClassificationsList = [];
       if (this.view === 'dashboard' || this.view === 'fila') await this.loadDashboard();
+      this.loadDataviews();
+      this.loadSendClassifications();
     },
 
     retryLoad() {
@@ -1405,8 +1563,10 @@ function mktcApp() {
     },
 
     async deleteEmail(id) {
+      const email = this.emails.find(e => e.ID === id);
+      if (!email) { this.deleteConfirmId = null; return; }
       try {
-        await this.apiCall('delete_email', { ID: id });
+        await this.apiCall('save_email', { email: { ...email, Status: 'deletado' } });
         localStorage.removeItem('mktc_html_' + id);
         this.emails = this.emails.filter(e => e.ID !== id);
         this.deleteConfirmId = null;
@@ -1673,6 +1833,109 @@ function mktcApp() {
       }
     },
 
+    // ========== DATAVIEWS ==========
+    async loadDataviews() {
+      if (!this.API_URL) return;
+      this.dataviewLoading = true;
+      this.dataviewError   = null;
+      try {
+        const resp = await fetch(`https://platform-indol-five.vercel.app/api/${this.bu}/dataviews?days=${this.dataviewDays}`);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        this.dataviewStats = {
+          sends:    data.sends    || 0,
+          opens:    data.opens    || 0,
+          openRate: data.openRate || 0,
+          clicks:   data.clicks   || 0,
+          ctr:      data.ctr      || 0,
+          bounces:  data.bounces  || 0,
+        };
+      } catch(e) {
+        this.dataviewError = e.message;
+      } finally {
+        this.dataviewLoading = false;
+      }
+    },
+
+    setDataviewDays(days) {
+      this.dataviewDays = days;
+      this.loadDataviews();
+    },
+
+    async loadSendClassifications() {
+      if (!this.API_URL) return;
+      try {
+        const resp = await fetch(`https://platform-indol-five.vercel.app/api/${this.bu}/send-classifications`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (Array.isArray(data) && data.length > 0) {
+          this.sendClassificationsList = data.map(sc => ({ name: sc.label, key: sc.id }));
+        }
+      } catch(_) { /* non-fatal: fallback to static */ }
+    },
+
+    // ========== DELETE FROM DETAIL ==========
+    async deleteFromDetail() {
+      if (!this.selectedEmail) return;
+      try {
+        await this.apiCall('save_email', {
+          email: { ...this.selectedEmail, Status: 'deletado' }
+        });
+        localStorage.removeItem('mktc_html_' + this.selectedEmail.ID);
+        this.emails = this.emails.filter(e => e.ID !== this.selectedEmail.ID);
+        this.deleteConfirmDetail = false;
+        this.showToast('Email removido.', 'success');
+        await this.navigateTo('fila');
+      } catch(e) {
+        this.deleteConfirmDetail = false;
+        this.showToast('Erro ao excluir: ' + e.message, 'error');
+      }
+    },
+
+    // ========== PROMPTS ==========
+    loadPromptsFromStorage() {
+      try {
+        const raw = localStorage.getItem('mktc_prompts');
+        this.prompts = raw ? JSON.parse(raw) : [];
+      } catch(_) { this.prompts = []; }
+    },
+
+    savePromptsToStorage() {
+      try {
+        localStorage.setItem('mktc_prompts', JSON.stringify(this.prompts));
+      } catch(_) {}
+    },
+
+    openSavePromptModal() {
+      if (!this.selectedEmail) return;
+      this.savePromptNome = this.selectedEmail.Nome || '';
+      this.savePromptModal = true;
+    },
+
+    confirmSavePrompt() {
+      if (!this.savePromptNome.trim() || !this.selectedEmail) return;
+      const prompt = {
+        id: Date.now().toString(),
+        bu: this.bu,
+        nome: this.savePromptNome.trim(),
+        conteudo: this.selectedEmail.Copy_Text || this.detail.assunto || this.selectedEmail.Nome || '',
+        template_id: this.selectedEmail.Template_ID || '',
+        tags: [this.selectedEmail.Status || ''].filter(Boolean),
+        created_at: new Date().toISOString(),
+      };
+      this.prompts = [prompt, ...this.prompts];
+      this.savePromptsToStorage();
+      this.savePromptModal = false;
+      this.savePromptNome  = '';
+      this.showToast('Prompt salvo na biblioteca!', 'success');
+    },
+
+    deletePrompt(id) {
+      this.prompts = this.prompts.filter(p => p.id !== id);
+      this.savePromptsToStorage();
+      this.showToast('Prompt removido.', 'success');
+    },
+
     // ========== COMPUTED ==========
     get filteredEmails() {
       return this.emails.filter(e => {
@@ -1687,12 +1950,17 @@ function mktcApp() {
 
     get kpiCards() {
       return [
-        {label: 'Total',        value: this.stats.total,        sub: ''},
-        {label: 'Rascunhos',    value: this.stats.rascunho,     sub: ''},
-        {label: 'Em aprovação', value: this.stats.em_aprovacao, sub: ''},
-        {label: 'Agendados',    value: this.stats.agendado,     sub: ''},
-        {label: 'Enviados',     value: this.stats.enviado,      sub: ''},
+        {label: 'Envios',           value: this.dataviewStats.sends,                            sub: 'últimos ' + this.dataviewDays + 'd'},
+        {label: 'Aberturas',        value: this.dataviewStats.opens,                            sub: 'únicas'},
+        {label: 'Taxa de abertura', value: (this.dataviewStats.openRate || 0).toFixed(1) + '%', sub: ''},
+        {label: 'Cliques',          value: this.dataviewStats.clicks,                           sub: 'únicos'},
+        {label: 'CTR',              value: (this.dataviewStats.ctr || 0).toFixed(2) + '%',      sub: ''},
+        {label: 'Bounces',          value: this.dataviewStats.bounces,                          sub: ''},
       ];
+    },
+
+    get todayStr() {
+      return new Date().toISOString().split('T')[0];
     },
 
     get templateList() {
@@ -1724,7 +1992,7 @@ function mktcApp() {
     },
 
     get buScheduleConfig() {
-      const cfg = {
+      const staticCfg = {
         'finclass': {
           sendClassifications: [
             { name: 'Equipe Finclass', key: '84' },
@@ -1741,7 +2009,13 @@ function mktcApp() {
         'portfel':       { sendClassifications: [], trackingFolders: [] },
         'grao':          { sendClassifications: [], trackingFolders: [] },
       };
-      return cfg[this.bu] || { sendClassifications: [], trackingFolders: [] };
+      const base = staticCfg[this.bu] || { sendClassifications: [], trackingFolders: [] };
+      return {
+        sendClassifications: this.sendClassificationsList.length > 0
+          ? this.sendClassificationsList
+          : base.sendClassifications,
+        trackingFolders: base.trackingFolders,
+      };
     },
 
     get filaFilters() {

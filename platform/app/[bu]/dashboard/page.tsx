@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { getBrand } from '@/lib/brands/config'
 import { useEmailStore } from '@/lib/store'
@@ -9,16 +10,40 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import {
-  FileTextIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  CalendarIcon,
   SendIcon,
+  MailOpenIcon,
+  MousePointerClickIcon,
+  AlertTriangleIcon,
   ArrowRightIcon,
   PlusIcon,
+  TrendingUpIcon,
+  RefreshCwIcon,
+  Loader2Icon,
+  UserMinusIcon,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+
+interface DataviewStats {
+  sends: number
+  opens: number
+  openRate: number
+  clicks: number
+  ctr: number
+  bounces: number
+  unsubscribes: number
+}
+
+const KPI_CONFIG = [
+  { key: 'sends',        label: 'Envios',          icon: SendIcon,                  color: 'text-blue-400',    bg: 'bg-blue-900/20',    fmt: (v: number) => v.toLocaleString('pt-BR') },
+  { key: 'opens',        label: 'Aberturas únicas', icon: MailOpenIcon,             color: 'text-emerald-400', bg: 'bg-emerald-900/20', fmt: (v: number) => v.toLocaleString('pt-BR') },
+  { key: 'openRate',     label: 'Taxa de abertura', icon: TrendingUpIcon,           color: 'text-green-400',   bg: 'bg-green-900/20',   fmt: (v: number) => `${v}%` },
+  { key: 'clicks',       label: 'Cliques únicos',   icon: MousePointerClickIcon,    color: 'text-cyan-400',    bg: 'bg-cyan-900/20',    fmt: (v: number) => v.toLocaleString('pt-BR') },
+  { key: 'ctr',          label: 'CTR',              icon: TrendingUpIcon,           color: 'text-violet-400',  bg: 'bg-violet-900/20',  fmt: (v: number) => `${v}%` },
+  { key: 'bounces',      label: 'Bounces',          icon: AlertTriangleIcon,        color: 'text-red-400',     bg: 'bg-red-900/20',     fmt: (v: number) => v.toLocaleString('pt-BR') },
+] as const
+
+const DAYS_OPTIONS = [7, 30, 90] as const
 
 export default function DashboardPage() {
   const params = useParams()
@@ -27,21 +52,31 @@ export default function DashboardPage() {
   const { getByBU } = useEmailStore()
   const emails = getByBU(bu)
   const agendados = emails.filter(e => e.status === 'agendado')
-  const stats = {
-    rascunho:  emails.filter(e => e.status === 'rascunho').length,
-    aguardando: emails.filter(e => e.status === 'aguardando_aprovacao' || e.status === 'pendente').length,
-    aprovado:  emails.filter(e => e.status === 'aprovado').length,
-    agendado:  emails.filter(e => e.status === 'agendado').length,
-    enviado:   emails.filter(e => e.status === 'enviado').length,
-  }
 
-  const KPI_CARDS = [
-    { label: 'Rascunhos',    value: stats.rascunho,  icon: FileTextIcon,    color: 'text-zinc-400' },
-    { label: 'Ag. aprovação',value: stats.aguardando, icon: ClockIcon,       color: 'text-orange-400' },
-    { label: 'Aprovados',    value: stats.aprovado,   icon: CheckCircleIcon, color: 'text-emerald-400' },
-    { label: 'Agendados',    value: stats.agendado,   icon: CalendarIcon,    color: 'text-blue-400' },
-    { label: 'Enviados',     value: stats.enviado,    icon: SendIcon,        color: 'text-green-400' },
-  ]
+  const [days, setDays] = useState<7 | 30 | 90>(30)
+  const [stats, setStats] = useState<DataviewStats | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
+
+  const fetchStats = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    setNote(null)
+    try {
+      const res = await fetch(`/api/${bu}/dataviews?days=${days}`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Erro ao buscar stats')
+      setStats(json.data)
+      if (json.note) setNote(json.note)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+    } finally {
+      setLoading(false)
+    }
+  }, [bu, days])
+
+  useEffect(() => { fetchStats() }, [fetchStats])
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -69,19 +104,73 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {KPI_CARDS.map(({ label, value, icon: Icon, color }) => (
-          <Card key={label} className="border-border bg-card hover:bg-accent/30 transition-colors cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-muted-foreground">{label}</span>
-                <Icon className={`w-4 h-4 ${color}`} />
-              </div>
-              <span className="text-3xl font-bold">{value}</span>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Performance Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Performance SFMC
+          </h2>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-md border border-border overflow-hidden">
+              {DAYS_OPTIONS.map(d => (
+                <button
+                  key={d}
+                  onClick={() => setDays(d)}
+                  className={`text-xs px-2.5 py-1 transition-colors ${
+                    days === d
+                      ? 'bg-primary/15 text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {d}d
+                </button>
+              ))}
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={fetchStats} disabled={loading}>
+              {loading
+                ? <Loader2Icon className="w-3.5 h-3.5 animate-spin" />
+                : <RefreshCwIcon className="w-3.5 h-3.5" />}
+            </Button>
+          </div>
+        </div>
+
+        {note && (
+          <p className="text-xs text-muted-foreground bg-accent/20 border border-border rounded px-3 py-1.5">
+            {note}
+          </p>
+        )}
+        {error && (
+          <p className="text-xs text-red-400 bg-red-900/20 border border-red-900/40 rounded px-3 py-1.5">
+            {error}
+          </p>
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {loading && !stats
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="border-border bg-card animate-pulse">
+                  <CardContent className="p-4">
+                    <div className="h-3 bg-accent/40 rounded mb-3 w-3/4" />
+                    <div className="h-7 bg-accent/40 rounded w-1/2" />
+                  </CardContent>
+                </Card>
+              ))
+            : KPI_CONFIG.map(({ key, label, icon: Icon, color, bg, fmt }) => (
+                <Card key={key} className="border-border bg-card hover:bg-accent/30 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-muted-foreground leading-tight">{label}</span>
+                      <div className={`p-1 rounded-md ${bg}`}>
+                        <Icon className={`w-3 h-3 ${color}`} />
+                      </div>
+                    </div>
+                    <span className="text-2xl font-bold tabular-nums">
+                      {stats ? fmt(stats[key as keyof DataviewStats] as number) : '—'}
+                    </span>
+                  </CardContent>
+                </Card>
+              ))}
+        </div>
       </div>
 
       {/* Fila ativa */}

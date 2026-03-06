@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -155,6 +155,25 @@ function DEList({
 export function AgendarModal({ bu, emailNome, assunto, html, campaignEmails, onClose, onConfirm }: Props) {
   const isCampaign = (campaignEmails?.length ?? 0) > 1
 
+  // Dynamic send classifications — load from SFMC, fall back to static list
+  const [sendClassOptions, setSendClassOptions] = useState<{ id: string; label: string }[]>(
+    SEND_CLASSIFICATIONS[bu] || []
+  )
+  const [loadingClassifications, setLoadingClassifications] = useState(false)
+
+  useEffect(() => {
+    setLoadingClassifications(true)
+    fetch(`/api/${bu}/send-classifications`)
+      .then(r => r.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setSendClassOptions(json.data)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingClassifications(false))
+  }, [bu])
+
   // Global settings
   const [sendClass, setSendClass] = useState(SEND_CLASSIFICATIONS[bu][0]?.id || '')
   const [date, setDate] = useState('')
@@ -278,13 +297,16 @@ export function AgendarModal({ bu, emailNome, assunto, html, campaignEmails, onC
 
           {/* Remetente */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Remetente</label>
+            <label className="text-sm font-medium">
+              Remetente
+              {loadingClassifications && <span className="text-xs text-muted-foreground ml-2">(carregando...)</span>}
+            </label>
             <Select value={sendClass} onValueChange={setSendClass} disabled={loading}>
               <SelectTrigger className="h-9">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-                {SEND_CLASSIFICATIONS[bu].map(sc => (
+                {sendClassOptions.map(sc => (
                   <SelectItem key={sc.id} value={sc.id}>{sc.label}</SelectItem>
                 ))}
               </SelectContent>
@@ -292,16 +314,40 @@ export function AgendarModal({ bu, emailNome, assunto, html, campaignEmails, onC
           </div>
 
           {/* Data e horário */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Data (BRT)</label>
-              <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="h-9" disabled={loading} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Horário (BRT)</label>
-              <Input type="time" value={time} onChange={e => setTime(e.target.value)} className="h-9" disabled={loading} />
-            </div>
-          </div>
+          {(() => {
+            const todayStr = new Date().toISOString().split('T')[0]
+            const now = new Date()
+            const pad = (n: number) => String(n).padStart(2, '0')
+            const minTime = date === todayStr
+              ? `${pad(now.getHours())}:${pad(now.getMinutes())}`
+              : undefined
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Data (BRT)</label>
+                  <Input
+                    type="date"
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    min={todayStr}
+                    className="h-9"
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Horário (BRT)</label>
+                  <Input
+                    type="time"
+                    value={time}
+                    onChange={e => setTime(e.target.value)}
+                    min={minTime}
+                    className="h-9"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Pasta do email no CB */}
           <div className="space-y-1.5">

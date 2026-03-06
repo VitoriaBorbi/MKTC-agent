@@ -471,6 +471,7 @@ export default function NovaSolicitacaoPage() {
                         assunto,
                         preheader,
                         html_content: generatedHTML,
+                        copy_text: copyText,
                         template_id: templateId,
                       })
                       toast.success('Email salvo na fila!')

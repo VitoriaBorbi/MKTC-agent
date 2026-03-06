@@ -22,6 +22,7 @@ export interface Email {
   html_content?: string
   sfmc_asset_id?: string
   sfmc_send_id?: string
+  copy_text?: string
   template_id?: string
   preview_url?: string
   send_classification?: string
