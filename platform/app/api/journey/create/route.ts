@@ -46,6 +46,30 @@ async function getBUToken(subdomain: string, mid: string): Promise<string> {
   return data.access_token as string
 }
 
+async function createEventDefinition(
+  subdomain: string,
+  token: string,
+  name: string
+): Promise<string> {
+  const res = await fetch(
+    `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/eventDefinitions`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        name: `${name} — Entry`,
+        type: 'APIEvent',
+        dataExtensionId: null,
+        filterDefinitionId: null,
+        isActive: false,
+      }),
+    }
+  )
+  const data = await res.json()
+  if (!res.ok) throw new Error(`EventDef falhou (${res.status}): ${JSON.stringify(data).slice(0, 300)}`)
+  return data.eventDefinitionKey as string
+}
+
 async function createEmailAsset(
   subdomain: string,
   token: string,
@@ -87,7 +111,8 @@ function buildJourneyPayload(
   name: string,
   description: string,
   steps: Step[],
-  assetIds: number[]
+  assetIds: number[],
+  eventDefinitionKey: string
 ): object {
   const activities: object[] = []
   const firstKey = 'email-activity-1'
@@ -151,7 +176,7 @@ function buildJourneyPayload(
         name: 'Entrada API',
         type: 'APIEvent',
         metaData: {
-          eventDefinitionKey: `APIEvent-${crypto.randomUUID()}`,
+          eventDefinitionKey,
         },
         outcomes: activities.length > 0 ? [outcome(firstKey)] : [],
       },
@@ -194,8 +219,11 @@ export async function POST(req: Request) {
       assetIds.push(id)
     }
 
-    // 2. Create Journey Builder journey draft
-    const journeyPayload = buildJourneyPayload(name, description, steps, assetIds)
+    // 2. Create EventDefinition (required for APIEvent trigger)
+    const eventDefinitionKey = await createEventDefinition(subdomain, token, name)
+
+    // 3. Create Journey Builder journey draft
+    const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
 
     // Try bare journey first (no activities) to isolate issue
     const barePayload = {
