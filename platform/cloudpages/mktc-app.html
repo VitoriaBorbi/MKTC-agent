@@ -603,6 +603,10 @@
               <input x-model="wizard.preheader" class="input" placeholder="Aparece após o assunto na caixa de entrada…">
             </div>
             <div>
+              <label class="text-xs text-zinc-500 mb-1 block">Faixa de destaque <span class="text-zinc-600">(opcional — ex: OFERTA ESPECIAL · VÁLIDA ATÉ DOMINGO)</span></label>
+              <input x-model="wizard.customHeader" class="input" placeholder="Texto da faixa colorida logo abaixo do header da marca…">
+            </div>
+            <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="text-xs text-zinc-500">Copy completa <span class="text-zinc-400">*</span></label>
                 <button type="button" @click="$refs.docxInput.click()"
@@ -1165,11 +1169,35 @@
                     </div>
                   </template>
                 </div>
+                <!-- Faixa de destaque -->
+                <div class="mb-2">
+                  <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Faixa de destaque <span class="normal-case font-normal text-zinc-700">(opcional)</span></label>
+                  <input x-model="step.customHeader" class="input text-xs" placeholder="Ex: OFERTA ESPECIAL · VÁLIDA ATÉ DOMINGO">
+                </div>
                 <!-- Copy textarea -->
                 <div class="mb-3">
                   <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Copy do email</label>
                   <textarea x-model="step.copyText" class="input text-xs w-full font-mono leading-relaxed" rows="6"
                     placeholder="Cole ou edite a copy completa do email aqui…"></textarea>
+                </div>
+                <!-- Images -->
+                <div class="mb-3">
+                  <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Imagens <span class="normal-case font-normal text-zinc-700">(opcional — serão inseridas no email)</span></label>
+                  <div class="flex flex-wrap gap-2 mb-2" x-show="step.imageUrls && step.imageUrls.length > 0">
+                    <template x-for="(url, ui) in step.imageUrls || []" :key="ui">
+                      <div class="relative group">
+                        <img :src="url" class="h-14 w-14 object-cover rounded border border-zinc-700">
+                        <button @click="step.imageUrls.splice(ui, 1)"
+                          class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                      </div>
+                    </template>
+                  </div>
+                  <label class="btn btn-ghost text-xs border border-zinc-700 hover:border-zinc-500 cursor-pointer inline-flex items-center gap-1.5"
+                    :class="journey.imagesUploading ? 'opacity-50 pointer-events-none' : ''">
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span x-text="journey.imagesUploading ? 'Enviando…' : 'Adicionar imagens'"></span>
+                    <input type="file" accept="image/*" multiple class="hidden" @change="uploadStepImages(idx, $event)">
+                  </label>
                 </div>
                 <!-- Preview button -->
                 <button @click="previewStepHtml(idx)"
@@ -1564,7 +1592,7 @@ function mktcApp() {
     },
 
     wizard: {
-      step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '',
+      step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '', customHeader: '',
       emailNome: '', templateId: 'full-hero', campanhaNome: '',
       refImageFile: null, refImagePreview: null, refImageB64: null,
       docxLoading: false, manualMode: false, manualHtml: '',
@@ -1584,6 +1612,7 @@ function mktcApp() {
       result: null,
       previewOpen: false, previewLoading: false,
       previewHtml: null, previewStepName: '',
+      imagesUploading: false,
     },
 
     // ========== INIT ==========
@@ -1920,7 +1949,7 @@ function mktcApp() {
     // ========== WIZARD ==========
     resetWizard() {
       this.wizard = {
-        step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '',
+        step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '', customHeader: '',
         emailNome: '', templateId: 'full-hero', campanhaNome: '',
         refImageFile: null, refImagePreview: null, refImageB64: null,
         docxLoading: false, manualMode: false, manualHtml: '',
@@ -2081,6 +2110,7 @@ function mktcApp() {
             emailNome:   emailName,
             refImageB64: this.wizard.refImageB64 || null,
             imageUrls,
+            customHeader: this.wizard.customHeader || '',
           })
         });
         if (!genResp.ok) throw new Error('HTTP ' + genResp.status);
@@ -2167,7 +2197,40 @@ function mktcApp() {
         result: null,
         previewOpen: false, previewLoading: false,
         previewHtml: null, previewStepName: '',
+        imagesUploading: false,
       };
+    },
+
+    async uploadStepImages(idx, event) {
+      const files = [...event.target.files];
+      if (!files.length) return;
+      this.journey.imagesUploading = true;
+      try {
+        for (const file of files) {
+          const b64 = await new Promise(resolve => {
+            const r = new FileReader();
+            r.onload = e => resolve(e.target.result.split(',')[1]);
+            r.readAsDataURL(file);
+          });
+          const resp = await fetch('https://platform-indol-five.vercel.app/api/upload-image', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ imageB64: b64, mediaType: file.type, filename: file.name }),
+          });
+          const json = await resp.json();
+          if (json.url) {
+            if (!this.journey.structure.steps[idx].imageUrls) this.journey.structure.steps[idx].imageUrls = [];
+            this.journey.structure.steps[idx].imageUrls.push(json.url);
+          } else {
+            this.showToast('Erro ao subir imagem: ' + (json.error || 'falhou'), 'error');
+          }
+        }
+      } catch(e) {
+        this.showToast('Erro ao subir imagem: ' + e.message, 'error');
+      } finally {
+        this.journey.imagesUploading = false;
+        event.target.value = '';
+      }
     },
 
     async previewStepHtml(idx) {
@@ -2188,6 +2251,8 @@ function mktcApp() {
             preheader: step.preheader || '',
             templateId: step.template || 'full-hero',
             emailNome: step.name,
+            customHeader: step.customHeader || '',
+            imageUrls: step.imageUrls || [],
           }),
         });
         const json = await resp.json();
@@ -2256,7 +2321,7 @@ function mktcApp() {
       const steps = this.journey.structure.steps;
       steps.push({
         id: Date.now(), name: 'Novo email', delay: 3, delayUnit: 'days',
-        subject: '', preheader: '', copyText: '', template: 'full-hero',
+        subject: '', preheader: '', customHeader: '', copyText: '', template: 'full-hero', imageUrls: [],
       });
     },
 
@@ -2284,9 +2349,11 @@ function mktcApp() {
               bu: this.bu,
               copyText: step.copyText || '',
               assunto: step.subject,
-              preheader: step.preheader,
+              preheader: step.preheader || '',
               templateId: step.template || 'full-hero',
               emailNome: step.name,
+              customHeader: step.customHeader || '',
+              imageUrls: step.imageUrls || [],
             }),
           });
           if (!resp.ok) throw new Error(`Erro gerando email ${i + 1}: HTTP ${resp.status}`);

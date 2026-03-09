@@ -61,7 +61,7 @@ async function createEmailAsset(
     views: {
       html: { content: html },
       subjectline: { content: subject || name },
-      preheader: { content: preheader || '' },
+      // preheader intentionally omitted — causes 400 in SFMC CB API
     },
   }
   if (categoryId) body.category = { id: categoryId }

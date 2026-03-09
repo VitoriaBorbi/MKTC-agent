@@ -95,6 +95,7 @@ export async function POST(req: Request) {
     const {
       bu = 'finclass', copyText = '', assunto = '', preheader = '', templateId = 'full-hero',
       sfmcUrl = '', emailNome = '', refImageB64 = '', imageUrls = [] as string[],
+      customHeader = '',
     } = body
 
     const brand = BRANDS[bu] || BRANDS.finclass
@@ -169,7 +170,9 @@ ESTRUTURA OBRIGATÓRIA — nesta ordem exata:
    a. PREHEADER OCULTO: <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#ffffff;line-height:1px;">TEXTO_PREHEADER</div>
    b. WRAPPER externo: <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${brand.email_bg};">
    c. HEADER DA MARCA (obrigatório — use exatamente este HTML):
-${headerHtml}
+${headerHtml}${customHeader ? `
+   c2. FAIXA DE DESTAQUE (obrigatório — inserir exatamente este HTML logo após o header da marca):
+<table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:600px;"><tr><td style="background-color:${brand.primary}; padding:12px 24px; text-align:center;"><p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:14px; font-weight:bold; color:${brand.cta_text};">${customHeader}</p></td></tr></table>` : ''}
    d. CONTAINER DO CONTEÚDO (max-width 600px, fundo branco ou ${brand.secondary} conforme o design)
       → Aqui vai o conteúdo do email seguindo o template escolhido
    e. FOOTER OBRIGATÓRIO (obrigatório — use exatamente este HTML):
