@@ -19,6 +19,7 @@ interface Brand {
   logo: string
   email_bg: string
   footer_text: string
+  footer_tagline?: string
 }
 
 const BRANDS: Record<string, Brand> = {
@@ -51,10 +52,12 @@ const BRANDS: Record<string, Brand> = {
     footer_text: 'Thiago Nigro — O Primo Rico · São Paulo, SP',
   },
   portfel: {
-    name: 'Portfel', primary: '#F05A28', secondary: '#1A1A1A',
-    cta: '#F05A28', cta_text: '#ffffff', logo: '',
-    email_bg: '#f4f4f5',
-    footer_text: 'Portfel · São Paulo, SP',
+    name: 'Portfel', primary: '#F05A28', secondary: '#111111',
+    cta: '#F05A28', cta_text: '#ffffff',
+    logo: 'https://image.mail.portfel.com.br/lib/fe2f11717d64047b771777/m/1/9c22d171-2ea0-4f6d-81a6-acced45aff9f.png',
+    email_bg: '#f4f5f7',
+    footer_text: 'Portfel Consultoria · Av. Pres. Juscelino Kubitschek, 1600, Itaim Bibi, São Paulo, Brasil.',
+    footer_tagline: 'Investir é coisa séria, mas não precisa ser complicado',
   },
   grao: {
     name: 'Grão', primary: '#f59e0b', secondary: '#2d1b00',
@@ -118,7 +121,29 @@ export async function POST(req: Request) {
   </tr>
 </table>`
 
-    const footerHtml = `<table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:600px;">
+    const footerHtml = brand.footer_tagline
+      ? `<table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:600px;">
+  <tr>
+    <td style="background-color:${brand.secondary}; padding:32px 32px 20px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td valign="top" style="font-family:Arial,Helvetica,sans-serif;">
+            <img src="${brand.logo}" alt="${brand.name}" width="130" height="auto" style="display:block; border:0; margin-bottom:12px;">
+            <p style="margin:0; font-size:13px; color:#ffffff; line-height:1.5;">${brand.footer_tagline}</p>
+          </td>
+        </tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 16px;">
+        <tr><td style="height:1px; background-color:#333333; font-size:0; line-height:0;">&nbsp;</td></tr>
+      </table>
+      <p style="margin:0 0 10px; font-family:Arial,Helvetica,sans-serif; font-size:11px; color:#888888; text-align:center; line-height:1.5;">${brand.footer_text}</p>
+      <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:11px; color:#888888; text-align:center;">
+        <a href="%%unsub_center_url%%" style="color:#888888; text-decoration:underline;">Cancelar inscrição</a>
+      </p>
+    </td>
+  </tr>
+</table>`
+      : `<table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:600px;">
   <tr>
     <td style="background-color:${brand.secondary}; padding:30px 24px; text-align:center; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#888888; line-height:1.6;">
       <p style="margin:0 0 8px 0;">${brand.footer_text}</p>
