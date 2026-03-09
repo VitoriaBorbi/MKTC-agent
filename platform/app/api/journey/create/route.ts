@@ -294,7 +294,11 @@ export async function POST(req: Request) {
         warning: `CB ok. JB criado mas PUT com atividades falhou: ${JSON.stringify(fullData)}`,
         journeyId,
         journeyName: minData.name,
-        debug: { fullPayload: JSON.stringify({ ...journeyPayload, id: journeyId }) },
+        debug: {
+          putUrl: `interaction/v1/interactions/${journeyId}?versionNumber=${versionNumber}`,
+          minData: JSON.stringify(minData),
+          fullPayload: JSON.stringify({ ...journeyPayload, id: journeyId }),
+        },
         emails,
       }, { headers: CORS })
     }
