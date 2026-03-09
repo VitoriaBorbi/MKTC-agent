@@ -229,7 +229,7 @@ export async function POST(req: Request) {
     // 3. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
 
-    // Step A: try truly minimal journey (no trigger, no activities)
+    // Step A: POST minimal journey (no triggers, no activities) — get journeyId
     const minimalPayload = {
       key: (journeyPayload as Record<string, unknown>).key,
       name,
@@ -250,46 +250,13 @@ export async function POST(req: Request) {
     if (!minRes.ok) {
       return Response.json({
         success: true, partial: true,
-        warning: `CB ok. JB (minimal, no trigger): ${JSON.stringify(minData)}`,
-        debug: { step: 'minimal-no-trigger', minimalPayload: JSON.stringify(minimalPayload) },
+        warning: `CB ok. JB (minimal): ${JSON.stringify(minData)}`,
         emails: steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] })),
       }, { headers: CORS })
     }
 
-    // Step B: bare journey with trigger
-    const barePayload = {
-      key: `journey-${crypto.randomUUID()}`,
-      name,
-      description: description || '',
-      workflowApiVersion: 1.0,
-      triggers: (journeyPayload as Record<string, unknown>).triggers,
-      activities: [],
-    }
-
-    const bareRes = await fetch(
-      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(barePayload),
-      }
-    )
-    const bareData = await bareRes.json()
-
-    // If bare journey fails, it's a fundamental issue (token/trigger)
-    if (!bareRes.ok) {
-      const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
-      return Response.json({
-        success: true,
-        partial: true,
-        warning: `CB ok. JB (bare): ${JSON.stringify(bareData)}`,
-        debug: { eventDefinitionKey, barePayload: JSON.stringify(barePayload) },
-        emails,
-      }, { headers: CORS })
-    }
-
-    // Bare worked — now try full journey with activities
-    const journeyId = bareData.id as string
+    // Step B: PUT full payload (triggers + activities) on the created journey
+    const journeyId = minData.id as string
     const fullRes = await fetch(
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions/${journeyId}`,
       {
@@ -306,10 +273,10 @@ export async function POST(req: Request) {
       return Response.json({
         success: true,
         partial: true,
-        warning: `CB ok. JB rascunho criado (sem atividades). PUT com atividades falhou: ${JSON.stringify(fullData)}`,
+        warning: `CB ok. JB criado mas PUT com atividades falhou: ${JSON.stringify(fullData)}`,
         journeyId,
-        journeyName: bareData.name,
-        debug: { activitiesPayload: JSON.stringify((journeyPayload as Record<string, unknown>).activities) },
+        journeyName: minData.name,
+        debug: { fullPayload: JSON.stringify({ ...journeyPayload, id: journeyId }) },
         emails,
       }, { headers: CORS })
     }
