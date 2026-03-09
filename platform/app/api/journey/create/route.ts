@@ -143,14 +143,9 @@ function buildJourneyPayload(
       name: step.name,
       type: 'EMAILV2',
       outcomes: emailOutcomes,
-      arguments: {
-        triggeredSend: {
-          contentId: assetIds[i],
-        },
-      },
+      arguments: { triggeredSend: {} },
       configurationArguments: {
         applicationExtensionKey: 'jb-email-activity',
-        emailEncoding: 'UTF-8',
       },
       metaData: { version: 1, isConfigured: false },
     })
@@ -246,30 +241,7 @@ export async function POST(req: Request) {
 
     const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
 
-    // Try A: single POST with BU token + full payload
-    const fullResA = await fetch(
-      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${buToken}` },
-        body: JSON.stringify(journeyPayload),
-      }
-    )
-    const fullDataA = await fullResA.json()
-
-    if (fullResA.ok) {
-      const jbData = fullDataA
-      return Response.json({
-        success: true,
-        journeyId: jbData.id,
-        journeyKey: jbData.key,
-        journeyName: jbData.name,
-        emails,
-      }, { headers: CORS })
-    }
-
-    // Try B: single POST with enterprise token + full payload
-    const fullResB = await fetch(
+    const jbRes = await fetch(
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
       {
         method: 'POST',
@@ -277,18 +249,17 @@ export async function POST(req: Request) {
         body: JSON.stringify(journeyPayload),
       }
     )
-    const fullDataB = await fullResB.json()
+    const jbResData = await jbRes.json()
 
-    if (!fullResB.ok) {
+    if (!jbRes.ok) {
       return Response.json({
         success: true, partial: true,
-        warning: `CB ok. JB falhou (BU: ${JSON.stringify(fullDataA)} | ENT: ${JSON.stringify(fullDataB)})`,
-        debug: { payload: JSON.stringify(journeyPayload) },
+        warning: `CB ok. JB falhou: ${JSON.stringify(jbResData)}`,
         emails,
       }, { headers: CORS })
     }
 
-    const jbData = fullDataB
+    const jbData = jbResData
 
     return Response.json({
       success: true,
