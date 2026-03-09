@@ -46,28 +46,22 @@ async function getBUToken(subdomain: string, mid: string): Promise<string> {
   return data.access_token as string
 }
 
-async function createEventDefinition(
+async function getEventDefinitionKey(
   subdomain: string,
-  token: string,
-  name: string
+  token: string
 ): Promise<string> {
+  // Reuse an existing APIEvent EventDefinition — creating new ones requires a DE
   const res = await fetch(
-    `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/eventDefinitions`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        name: `${name} — Entry`,
-        type: 'APIEvent',
-        dataExtensionId: null,
-        filterDefinitionId: null,
-        isActive: false,
-      }),
-    }
+    `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/eventDefinitions?type=APIEvent&$pagesize=1`,
+    { headers: { Authorization: `Bearer ${token}` } }
   )
+  if (!res.ok) throw new Error(`EventDef list falhou (${res.status})`)
   const data = await res.json()
-  if (!res.ok) throw new Error(`EventDef falhou (${res.status}): ${JSON.stringify(data).slice(0, 300)}`)
-  return data.eventDefinitionKey as string
+  const items: Array<{ eventDefinitionKey?: string }> = data.items ?? data.definitions ?? []
+  if (items.length === 0) throw new Error('Nenhuma EventDefinition do tipo APIEvent encontrada na conta')
+  const key = items[0].eventDefinitionKey
+  if (!key) throw new Error('EventDefinition sem eventDefinitionKey')
+  return key
 }
 
 async function createEmailAsset(
@@ -219,8 +213,8 @@ export async function POST(req: Request) {
       assetIds.push(id)
     }
 
-    // 2. Create EventDefinition (required for APIEvent trigger)
-    const eventDefinitionKey = await createEventDefinition(subdomain, token, name)
+    // 2. Get existing EventDefinition key (required for APIEvent trigger)
+    const eventDefinitionKey = await getEventDefinitionKey(subdomain, token)
 
     // 3. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
