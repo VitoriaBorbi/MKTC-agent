@@ -108,11 +108,9 @@ function buildJourneyPayload(
       arguments: {},
       configurationArguments: {
         applicationExtensionKey: 'jb-email-activity',
-        triggeredSendDefinitionObjectID: '',
         emailEncoding: 'UTF-8',
         contentId: assetIds[i],
       },
-      metaData: { version: 1 },
     })
 
     if (!isLast && nextDelay && nextDelay.delay > 0) {
@@ -138,10 +136,11 @@ function buildJourneyPayload(
     workflowApiVersion: 1.0,
     triggers: [
       {
+        key: 'entry-1',
+        name: 'Entrada API',
         type: 'APIEvent',
         metaData: {
           eventDefinitionKey: `APIEvent-${crypto.randomUUID()}`,
-          configurationArguments: {},
         },
         outcomes: activities.length > 0 ? [{ next: firstKey }] : [],
       },
