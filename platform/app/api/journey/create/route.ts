@@ -41,7 +41,22 @@ async function getBUToken(subdomain: string, mid: string): Promise<string> {
       account_id: mid,
     }),
   })
-  if (!res.ok) throw new Error(`Auth SFMC falhou (${res.status})`)
+  if (!res.ok) throw new Error(`Auth SFMC BU falhou (${res.status})`)
+  const data = await res.json()
+  return data.access_token as string
+}
+
+async function getEnterpriseToken(subdomain: string): Promise<string> {
+  const res = await fetch(`https://${subdomain}.auth.marketingcloudapis.com/v2/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      grant_type: 'client_credentials',
+      client_id: process.env.SFMC_CLIENT_ID,
+      client_secret: process.env.SFMC_CLIENT_SECRET,
+    }),
+  })
+  if (!res.ok) throw new Error(`Auth SFMC enterprise falhou (${res.status})`)
   const data = await res.json()
   return data.access_token as string
 }
@@ -211,20 +226,22 @@ export async function POST(req: Request) {
     const mid = MID_MAP[bu]
     if (!mid) return Response.json({ success: false, error: `MID não configurado para BU: ${bu}` }, { status: 400, headers: CORS })
 
-    const token = await getBUToken(subdomain, mid)
+    // BU token for Content Builder; enterprise token for Journey Builder (JB operates at enterprise level)
+    const buToken = await getBUToken(subdomain, mid)
+    const jbToken = await getEnterpriseToken(subdomain)
     const categoryId = CB_CATEGORY[bu]
 
-    // 1. Create email assets in Content Builder
+    // 1. Create email assets in Content Builder (BU token)
     const assetIds: number[] = []
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
       const assetName = `${name} — Email ${String(i + 1).padStart(2, '0')} — ${step.name} [${Date.now()}]`
-      const id = await createEmailAsset(subdomain, token, assetName, step.html, step.subject, step.preheader, categoryId)
+      const id = await createEmailAsset(subdomain, buToken, assetName, step.html, step.subject, step.preheader, categoryId)
       assetIds.push(id)
     }
 
-    // 2. Get existing EventDefinition key (required for APIEvent trigger)
-    const eventDefinitionKey = await getEventDefinitionKey(subdomain, token)
+    // 2. Get existing EventDefinition key (enterprise token)
+    const eventDefinitionKey = await getEventDefinitionKey(subdomain, jbToken)
 
     // 3. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
@@ -242,7 +259,7 @@ export async function POST(req: Request) {
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
         body: JSON.stringify(minimalPayload),
       }
     )
@@ -262,7 +279,7 @@ export async function POST(req: Request) {
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions/${journeyId}?versionNumber=${versionNumber}`,
       {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
         body: JSON.stringify({ ...journeyPayload, id: journeyId }),
       }
     )
