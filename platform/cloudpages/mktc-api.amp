@@ -1,9 +1,10 @@
 %%[
-SET @action = RequestParameter('action')
-SET @bu     = RequestParameter('bu')
-SET @nl     = Char(10)
-SET @cr     = Char(13)
-SET @result = ''
+SET @action        = RequestParameter('action')
+SET @bu            = RequestParameter('bu')
+SET @nl            = Char(10)
+SET @cr            = Char(13)
+SET @result        = ''
+SET @ANTHROPIC_KEY = 'YOUR_ANTHROPIC_KEY_HERE'
 
 IF Empty(@bu) THEN
   SET @bu = 'finclass'
@@ -47,6 +48,101 @@ ELSEIF @action == 'get_stats' THEN
     ',"aprovado":',@nAprov,
     ',"agendado":',@nAgend,
     ',"enviado":',@nEnv,'}}')
+
+/* ---- GET DATAVIEWS ---- */
+ELSEIF @action == 'get_dataviews' THEN
+
+  SET @dvDays = RequestParameter('days')
+  IF Empty(@dvDays) THEN SET @dvDays = 30 ENDIF
+
+  SET @dvCutoff = DateAdd(Now(), Subtract(0, @dvDays), 'D')
+
+  SET @dvRows = LookupRows('MKTC_Dashboard_Daily', 'BU', @bu)
+  SET @dvCnt  = RowCount(@dvRows)
+
+  SET @dvSent   = 0
+  SET @dvDeliv  = 0
+  SET @dvOpens  = 0
+  SET @dvClicks = 0
+  SET @dvBounce = 0
+  SET @dvUnsub  = 0
+
+  FOR @di = 1 TO @dvCnt DO
+    SET @dRow  = Row(@dvRows, @di)
+    SET @dDate = Field(@dRow, 'Date')
+    IF DateDiff(@dvCutoff, @dDate, 'D') >= 0 THEN
+      SET @dvSent   = Add(@dvSent,   Field(@dRow, 'Sent'))
+      SET @dvDeliv  = Add(@dvDeliv,  Field(@dRow, 'Delivered'))
+      SET @dvOpens  = Add(@dvOpens,  Field(@dRow, 'UniqueOpens'))
+      SET @dvClicks = Add(@dvClicks, Field(@dRow, 'UniqueClicks'))
+      SET @dvBounce = Add(@dvBounce, Field(@dRow, 'Bounces'))
+      SET @dvUnsub  = Add(@dvUnsub,  Field(@dRow, 'Unsubscribes'))
+    ENDIF
+  NEXT @di
+
+  SET @result = Concat(
+    '{"success":true,"data":{',
+    '"sends":',         @dvSent,
+    ',"delivered":',    @dvDeliv,
+    ',"opens":',        @dvOpens,
+    ',"clicks":',       @dvClicks,
+    ',"bounces":',      @dvBounce,
+    ',"unsubscribes":', @dvUnsub,
+    '},"debug":{"rowCount":', @dvCnt, ',"bu":"', @bu, '"}}')
+
+/* ---- ANALYZE JOURNEY ---- */
+ELSEIF @action == 'analyze_journey' THEN
+
+  SET @jName     = RequestParameter('name')
+  SET @jBriefing = RequestParameter('briefing')
+  SET @jImage    = RequestParameter('image')
+
+  SET @jSys = 'Você é um especialista em jornadas de email marketing. Analise o mapa de jornada e o briefing. Retorne APENAS um JSON minificado válido, sem markdown, sem texto extra.'
+
+  SET @jTxt = Concat(
+    'Jornada: ', @jName, '\nBU/Marca: ', @bu,
+    '\n\nBriefing:\n', @jBriefing,
+    '\n\nRetorne APENAS este JSON (sem markdown, sem explicação):',
+    '{"name":"...","description":"...","entryEvent":"...",',
+    '"steps":[{"id":1,"name":"...","delay":0,"delayUnit":"days",',
+    '"subject":"...","preheader":"...","copyText":"copy completa do email","template":"full-hero"}]}',
+    '\nTemplates disponíveis: full-hero, text-first, side-image, multi-block, minimal, announcement',
+    '\nRegras: delay=0 no primeiro step; delays seguintes em dias desde o email anterior.',
+    '\nGere a copy completa de cada email no campo copyText.')
+
+  SET @jTxtE = Replace(Replace(Replace(Replace(@jTxt,'\','\\'),'"','\"'),Char(10),'\n'),Char(13),'\r')
+  SET @jSysE = Replace(Replace(@jSys,'\','\\'),'"','\"')
+
+  IF NOT Empty(@jImage) THEN
+    SET @jPayload = Concat(
+      '{"model":"claude-haiku-4-5-20251001","max_tokens":4000,',
+      '"system":"', @jSysE, '",',
+      '"messages":[{"role":"user","content":[',
+      '{"type":"image","source":{"type":"base64","media_type":"image/png","data":"', @jImage, '"}},',
+      '{"type":"text","text":"', @jTxtE, '"}',
+      ']}]}')
+  ELSE
+    SET @jPayload = Concat(
+      '{"model":"claude-haiku-4-5-20251001","max_tokens":4000,',
+      '"system":"', @jSysE, '",',
+      '"messages":[{"role":"user","content":"', @jTxtE, '"}]}')
+  ENDIF
+
+  SET @jHdrNames  = 'x-api-key,anthropic-version'
+  SET @jHdrValues = Concat(@ANTHROPIC_KEY, ',2023-06-01')
+
+  SET @jResp = HTTPPost2(
+    'https://api.anthropic.com/v1/messages',
+    'application/json',
+    @jPayload,
+    @jHdrNames, @jHdrValues,
+    @jStatus)
+
+  IF @jStatus == 200 THEN
+    SET @result = Concat('{"success":true,"raw":', @jResp, '}')
+  ELSE
+    SET @result = Concat('{"success":false,"error":"Anthropic HTTP ', @jStatus, '"}')
+  ENDIF
 
 /* ---- LIST EMAILS ---- */
 ELSEIF @action == 'list_emails' THEN
@@ -202,7 +298,7 @@ ELSEIF @action == 'delete_email' THEN
     SET @result = '{"success":true}'
   ENDIF
 
-/* ---- GENERATE HTML (sem SSJS) ---- */
+/* ---- GENERATE HTML ---- */
 ELSEIF @action == 'generate_html' THEN
 
   SET @result = '{"success":false,"error":"Geracao de HTML por IA nao disponivel neste ambiente"}'
