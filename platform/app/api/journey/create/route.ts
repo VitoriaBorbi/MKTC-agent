@@ -246,42 +246,13 @@ export async function POST(req: Request) {
     // 3. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
 
-    // Step A: POST minimal journey (no triggers, no activities) — get journeyId
-    const minimalPayload = {
-      key: (journeyPayload as Record<string, unknown>).key,
-      name,
-      description: description || '',
-      workflowApiVersion: 1.0,
-      triggers: [],
-      activities: [],
-    }
-    const minRes = await fetch(
+    // Single POST with full payload (triggers + activities)
+    const fullRes = await fetch(
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
-        body: JSON.stringify(minimalPayload),
-      }
-    )
-    const minData = await minRes.json()
-    if (!minRes.ok) {
-      return Response.json({
-        success: true, partial: true,
-        warning: `CB ok. JB (minimal): ${JSON.stringify(minData)}`,
-        emails: steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] })),
-      }, { headers: CORS })
-    }
-
-    // Step B: PUT full payload (triggers + activities) on the created journey
-    const journeyId = minData.id as string
-    const journeyKey = minData.key as string
-    const versionNumber = (minData.version ?? minData.versionNumber ?? 1) as number
-    const fullRes = await fetch(
-      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions?key=${encodeURIComponent(journeyKey)}&versionNumber=${versionNumber}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
-        body: JSON.stringify({ ...journeyPayload, id: journeyId, key: journeyKey }),
+        body: JSON.stringify(journeyPayload),
       }
     )
     const fullData = await fullRes.json()
@@ -292,14 +263,8 @@ export async function POST(req: Request) {
       return Response.json({
         success: true,
         partial: true,
-        warning: `CB ok. JB criado mas PUT com atividades falhou: ${JSON.stringify(fullData)}`,
-        journeyId,
-        journeyName: minData.name,
-        debug: {
-          putUrl: `interaction/v1/interactions?key=${journeyKey}&versionNumber=${versionNumber}`,
-          minData: JSON.stringify(minData),
-          fullPayload: JSON.stringify({ ...journeyPayload, id: journeyId }),
-        },
+        warning: `CB ok. JB falhou: ${JSON.stringify(fullData)}`,
+        debug: { payload: JSON.stringify(journeyPayload) },
         emails,
       }, { headers: CORS })
     }
