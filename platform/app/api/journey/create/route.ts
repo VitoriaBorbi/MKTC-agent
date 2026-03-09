@@ -169,12 +169,22 @@ function buildJourneyPayload(
         key: 'entry-1',
         name: 'Entrada API',
         type: 'APIEvent',
+        configurationArguments: {
+          eventDefinitionKey,
+          transactional: false,
+        },
         metaData: {
           eventDefinitionKey,
         },
         outcomes: activities.length > 0 ? [outcome(firstKey)] : [],
       },
     ],
+    defaults: {
+      email: [],
+      properties: {
+        analyticsTracking: { enabled: false },
+      },
+    },
     activities,
   }
 }
@@ -246,7 +256,7 @@ export async function POST(req: Request) {
         success: true,
         partial: true,
         warning: `CB ok. JB (bare): ${JSON.stringify(bareData)}`,
-        debug: { barePayload: JSON.stringify(barePayload) },
+        debug: { eventDefinitionKey, barePayload: JSON.stringify(barePayload) },
         emails,
       }, { headers: CORS })
     }
