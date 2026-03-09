@@ -274,13 +274,14 @@ export async function POST(req: Request) {
 
     // Step B: PUT full payload (triggers + activities) on the created journey
     const journeyId = minData.id as string
+    const journeyKey = minData.key as string
     const versionNumber = (minData.version ?? minData.versionNumber ?? 1) as number
     const fullRes = await fetch(
-      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions/${journeyId}?versionNumber=${versionNumber}`,
+      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions?key=${encodeURIComponent(journeyKey)}&versionNumber=${versionNumber}`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
-        body: JSON.stringify({ ...journeyPayload, id: journeyId }),
+        body: JSON.stringify({ ...journeyPayload, id: journeyId, key: journeyKey }),
       }
     )
     const fullData = await fullRes.json()
@@ -295,7 +296,7 @@ export async function POST(req: Request) {
         journeyId,
         journeyName: minData.name,
         debug: {
-          putUrl: `interaction/v1/interactions/${journeyId}?versionNumber=${versionNumber}`,
+          putUrl: `interaction/v1/interactions?key=${journeyKey}&versionNumber=${versionNumber}`,
           minData: JSON.stringify(minData),
           fullPayload: JSON.stringify({ ...journeyPayload, id: journeyId }),
         },
