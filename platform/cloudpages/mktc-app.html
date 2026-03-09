@@ -1122,55 +1122,91 @@
             </div>
           </div>
 
-          <!-- Timeline -->
-          <div class="flex items-start gap-0 overflow-x-auto pb-4 mb-6">
+          <!-- Steps lista vertical -->
+          <div class="space-y-3 mb-6">
             <template x-for="(step, idx) in journey.structure && journey.structure.steps || []" :key="step.id">
-              <div class="flex items-center gap-0 shrink-0">
-                <!-- Step card -->
-                <div class="w-56 card p-4 relative group">
-                  <div class="flex items-center justify-between mb-3">
+              <div class="card p-4 relative group">
+                <!-- Header do step -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
                     <span class="text-xs font-bold text-zinc-400" x-text="'Email ' + (idx + 1)"></span>
-                    <div class="flex items-center gap-1">
-                      <template x-if="idx > 0">
-                        <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded"
-                          x-text="step.delay + (step.delayUnit === 'days' ? 'd' : 'h') + ' após anterior'"></span>
-                      </template>
-                      <template x-if="idx === 0">
-                        <span class="text-[10px] bg-emerald-900/40 text-emerald-400 px-1.5 py-0.5 rounded">Entrada</span>
-                      </template>
-                      <button @click="removeJourneyStep(idx)" class="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all text-xs w-4 h-4 flex items-center justify-center">✕</button>
-                    </div>
-                  </div>
-                  <input x-model="step.name" class="input text-xs mb-2 font-medium" placeholder="Nome do email">
-                  <input x-model="step.subject" class="input text-xs mb-2 text-zinc-400" placeholder="Assunto…">
-                  <div class="flex gap-1.5">
-                    <select x-model="step.template" class="input text-xs flex-1">
-                      <option value="full-hero">Hero</option>
-                      <option value="text-first">Copy longa</option>
-                      <option value="side-image">Img lateral</option>
-                      <option value="multi-block">Multi-bloco</option>
-                      <option value="minimal">Minimal</option>
-                      <option value="announcement">Anúncio</option>
-                    </select>
+                    <template x-if="idx === 0">
+                      <span class="text-[10px] bg-emerald-900/40 text-emerald-400 px-1.5 py-0.5 rounded">Entrada</span>
+                    </template>
                     <template x-if="idx > 0">
-                      <input type="number" x-model="step.delay" min="0" class="input text-xs w-14" placeholder="dias">
+                      <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded"
+                        x-text="step.delay + (step.delayUnit === 'days' ? 'd' : 'h') + ' após anterior'"></span>
                     </template>
                   </div>
+                  <button @click="removeJourneyStep(idx)" class="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all text-xs">✕</button>
                 </div>
-                <!-- Arrow -->
-                <template x-if="idx < (journey.structure.steps.length - 1)">
-                  <div class="flex items-center px-1 text-zinc-600">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </div>
-                </template>
+                <!-- Campos principais -->
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                  <input x-model="step.name" class="input text-xs font-medium" placeholder="Nome do email">
+                  <input x-model="step.subject" class="input text-xs" placeholder="Assunto…">
+                </div>
+                <div class="flex gap-2 mb-3">
+                  <input x-model="step.preheader" class="input text-xs flex-1" placeholder="Preheader…">
+                  <select x-model="step.template" class="input text-xs w-36">
+                    <option value="full-hero">Hero</option>
+                    <option value="text-first">Copy longa</option>
+                    <option value="side-image">Img lateral</option>
+                    <option value="multi-block">Multi-bloco</option>
+                    <option value="minimal">Minimal</option>
+                    <option value="announcement">Anúncio</option>
+                  </select>
+                  <template x-if="idx > 0">
+                    <div class="flex items-center gap-1">
+                      <input type="number" x-model="step.delay" min="0" class="input text-xs w-14" placeholder="dias">
+                      <select x-model="step.delayUnit" class="input text-xs w-20">
+                        <option value="days">dias</option>
+                        <option value="hours">horas</option>
+                      </select>
+                    </div>
+                  </template>
+                </div>
+                <!-- Copy textarea -->
+                <div class="mb-3">
+                  <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Copy do email</label>
+                  <textarea x-model="step.copyText" class="input text-xs w-full font-mono leading-relaxed" rows="6"
+                    placeholder="Cole ou edite a copy completa do email aqui…"></textarea>
+                </div>
+                <!-- Preview button -->
+                <button @click="previewStepHtml(idx)"
+                  class="btn btn-ghost text-xs border border-zinc-700 hover:border-zinc-500">
+                  <svg class="w-3 h-3 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Preview HTML
+                </button>
               </div>
             </template>
             <!-- Add step -->
-            <div class="flex items-center pl-1 shrink-0">
-              <button @click="addJourneyStep()"
-                class="w-10 h-10 rounded-full border-2 border-dashed border-zinc-700 hover:border-zinc-500 text-zinc-600 hover:text-white transition-colors flex items-center justify-center">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
+            <button @click="addJourneyStep()"
+              class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-800 hover:border-zinc-600 text-zinc-600 hover:text-zinc-400 transition-colors text-sm flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Adicionar email
+            </button>
+          </div>
+
+          <!-- Modal preview HTML -->
+          <div x-show="journey.previewOpen" x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            @click.self="journey.previewOpen = false">
+            <div class="bg-zinc-900 border border-zinc-700 rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+              <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+                <span class="text-sm font-medium" x-text="journey.previewStepName || 'Preview'"></span>
+                <button @click="journey.previewOpen = false" class="text-zinc-500 hover:text-white text-xs">✕ Fechar</button>
+              </div>
+              <div class="flex-1 overflow-auto">
+                <template x-if="journey.previewLoading">
+                  <div class="flex items-center justify-center h-48 text-zinc-500 text-sm">
+                    <div class="w-5 h-5 border-2 border-zinc-600 border-t-white rounded-full animate-spin mr-2"></div>
+                    Gerando preview…
+                  </div>
+                </template>
+                <template x-if="!journey.previewLoading && journey.previewHtml">
+                  <iframe :srcdoc="journey.previewHtml" class="w-full h-[70vh] border-0 rounded-b-xl bg-white"></iframe>
+                </template>
+              </div>
             </div>
           </div>
 
@@ -1546,6 +1582,8 @@ function mktcApp() {
       structure: null,
       creating: false, creatingStep: -1, creatingError: null,
       result: null,
+      previewOpen: false, previewLoading: false,
+      previewHtml: null, previewStepName: '',
     },
 
     // ========== INIT ==========
@@ -2127,7 +2165,40 @@ function mktcApp() {
         structure: null,
         creating: false, creatingStep: -1, creatingError: null,
         result: null,
+        previewOpen: false, previewLoading: false,
+        previewHtml: null, previewStepName: '',
       };
+    },
+
+    async previewStepHtml(idx) {
+      const step = this.journey.structure.steps[idx];
+      if (!step) return;
+      this.journey.previewStepName = step.name;
+      this.journey.previewHtml = null;
+      this.journey.previewLoading = true;
+      this.journey.previewOpen = true;
+      try {
+        const resp = await fetch('https://platform-indol-five.vercel.app/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bu: this.bu,
+            copyText: step.copyText || '',
+            assunto: step.subject,
+            preheader: step.preheader || '',
+            templateId: step.template || 'full-hero',
+            emailNome: step.name,
+          }),
+        });
+        const json = await resp.json();
+        if (!json.success) throw new Error(json.error || 'Erro ao gerar HTML');
+        this.journey.previewHtml = json.html;
+      } catch(e) {
+        this.journey.previewOpen = false;
+        this.showToast('Erro no preview: ' + e.message, 'error');
+      } finally {
+        this.journey.previewLoading = false;
+      }
     },
 
     onJourneyImage(event) {

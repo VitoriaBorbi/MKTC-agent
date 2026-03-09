@@ -132,6 +132,7 @@ function buildJourneyPayload(
   }
 
   return {
+    key: `journey-${crypto.randomUUID()}`,
     name,
     description: description || '',
     workflowApiVersion: 1.0,
