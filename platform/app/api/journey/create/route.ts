@@ -146,12 +146,10 @@ function buildJourneyPayload(
       arguments: {
         triggeredSend: {
           contentId: assetIds[i],
-          emailId: null,
         },
       },
       configurationArguments: {
         applicationExtensionKey: 'jb-email-activity',
-        triggeredSendDefinitionObjectID: '00000000-0000-0000-0000-000000000000',
         emailEncoding: 'UTF-8',
       },
       metaData: { version: 1, isConfigured: false },
@@ -246,13 +244,35 @@ export async function POST(req: Request) {
     // 3. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
 
-    // Single POST with full payload (triggers + activities)
-    const fullRes = await fetch(
+    // Step A: POST minimal journey to get journeyId
+    const journeyKey = (journeyPayload as Record<string, unknown>).key as string
+    const minRes = await fetch(
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
-        body: JSON.stringify(journeyPayload),
+        body: JSON.stringify({ key: journeyKey, name, description: description || '', workflowApiVersion: 1.0, triggers: [], activities: [] }),
+      }
+    )
+    const minData = await minRes.json()
+    if (!minRes.ok) {
+      return Response.json({
+        success: true, partial: true,
+        warning: `CB ok. JB (minimal): ${JSON.stringify(minData)}`,
+        emails: steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] })),
+      }, { headers: CORS })
+    }
+
+    // Step B: wait 3s for SFMC to propagate, then PUT full payload
+    const journeyId = minData.id as string
+    await new Promise(r => setTimeout(r, 3000))
+
+    const fullRes = await fetch(
+      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions/${journeyId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
+        body: JSON.stringify({ ...journeyPayload, id: journeyId, key: journeyKey }),
       }
     )
     const fullData = await fullRes.json()
@@ -261,10 +281,10 @@ export async function POST(req: Request) {
 
     if (!fullRes.ok) {
       return Response.json({
-        success: true,
-        partial: true,
-        warning: `CB ok. JB falhou: ${JSON.stringify(fullData)}`,
-        debug: { payload: JSON.stringify(journeyPayload) },
+        success: true, partial: true,
+        warning: `CB ok. JB criado (vazio). PUT falhou: ${JSON.stringify(fullData)}`,
+        journeyId,
+        debug: { payload: JSON.stringify({ ...journeyPayload, id: journeyId }) },
         emails,
       }, { headers: CORS })
     }
