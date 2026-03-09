@@ -79,6 +79,10 @@ async function createEmailAsset(
   return data.id as number
 }
 
+function outcome(next: string) {
+  return { next, arguments: {}, metaData: {} }
+}
+
 function buildJourneyPayload(
   name: string,
   description: string,
@@ -96,21 +100,27 @@ function buildJourneyPayload(
     const waitKey = `wait-${i + 1}`
     const nextEmailKey = `email-activity-${i + 2}`
 
-    const emailNext = isLast ? [] : nextDelay && nextDelay.delay > 0
-      ? [{ next: waitKey }]
-      : [{ next: nextEmailKey }]
+    const emailOutcomes = isLast ? [] : nextDelay && nextDelay.delay > 0
+      ? [outcome(waitKey)]
+      : [outcome(nextEmailKey)]
 
     activities.push({
       key: emailKey,
       name: step.name,
       type: 'EMAILV2',
-      outcomes: emailNext,
-      arguments: {},
+      outcomes: emailOutcomes,
+      arguments: {
+        triggeredSend: {
+          contentId: assetIds[i],
+          emailId: null,
+        },
+      },
       configurationArguments: {
         applicationExtensionKey: 'jb-email-activity',
+        triggeredSendDefinitionObjectID: '00000000-0000-0000-0000-000000000000',
         emailEncoding: 'UTF-8',
-        contentId: assetIds[i],
       },
+      metaData: { version: 1, isConfigured: false },
     })
 
     if (!isLast && nextDelay && nextDelay.delay > 0) {
@@ -119,12 +129,13 @@ function buildJourneyPayload(
         key: waitKey,
         name: `Aguardar ${nextDelay.delay} ${unit === 'HOURS' ? 'horas' : 'dias'}`,
         type: 'WAIT',
-        outcomes: [{ next: nextEmailKey }],
+        outcomes: [outcome(nextEmailKey)],
         arguments: {},
         configurationArguments: {
           waitDuration: nextDelay.delay,
           waitUnit: unit === 'HOURS' ? 'HOURS' : 'DAYS',
         },
+        metaData: { version: 1, isConfigured: true },
       })
     }
   }
@@ -142,7 +153,7 @@ function buildJourneyPayload(
         metaData: {
           eventDefinitionKey: `APIEvent-${crypto.randomUUID()}`,
         },
-        outcomes: activities.length > 0 ? [{ next: firstKey }] : [],
+        outcomes: activities.length > 0 ? [outcome(firstKey)] : [],
       },
     ],
     activities,
