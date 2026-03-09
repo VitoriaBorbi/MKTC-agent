@@ -52,8 +52,8 @@ const BRANDS: Record<string, Brand> = {
     footer_text: 'Thiago Nigro — O Primo Rico · São Paulo, SP',
   },
   portfel: {
-    name: 'Portfel', primary: '#F05A28', secondary: '#111111',
-    cta: '#F05A28', cta_text: '#ffffff',
+    name: 'Portfel', primary: '#0176d3', secondary: '#111111',
+    cta: '#0176d3', cta_text: '#ffffff',
     logo: 'https://image.mail.portfel.com.br/lib/fe2f11717d64047b771777/m/1/9c22d171-2ea0-4f6d-81a6-acced45aff9f.png',
     email_bg: '#f4f5f7',
     footer_text: 'Portfel Consultoria · Av. Pres. Juscelino Kubitschek, 1600, Itaim Bibi, São Paulo, Brasil.',
