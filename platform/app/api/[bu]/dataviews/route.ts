@@ -7,6 +7,9 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+// Name of the pre-aggregated tracking DE (must exist in each SFMC BU)
+const DE_NAME = 'MKTC_Dashboard_Daily'
+
 export async function OPTIONS() {
   return new Response(null, { headers: CORS })
 }
@@ -25,7 +28,8 @@ function getMID(bu: BU): string {
   return mid
 }
 
-async function getToken(subdomain: string, mid: string): Promise<string> {
+// Enterprise token (no account_id) — needed to query the shared DE in the parent BU
+async function getEnterpriseToken(subdomain: string): Promise<string> {
   const res = await fetch(
     `https://${subdomain}.auth.marketingcloudapis.com/v2/token`,
     {
@@ -35,13 +39,12 @@ async function getToken(subdomain: string, mid: string): Promise<string> {
         grant_type: 'client_credentials',
         client_id: process.env.SFMC_CLIENT_ID,
         client_secret: process.env.SFMC_CLIENT_SECRET,
-        account_id: mid,
       }),
     }
   )
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Auth SFMC falhou (${res.status}): ${text.slice(0, 200)}`)
+    throw new Error(`Auth SFMC enterprise falhou (${res.status}): ${text.slice(0, 200)}`)
   }
   const data = await res.json()
   return data.access_token as string
@@ -76,14 +79,27 @@ async function soapCall(subdomain: string, action: string, token: string, body: 
   return text
 }
 
-function sumTag(xml: string, tag: string): number {
-  const regex = new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'g')
-  let total = 0
-  let m: RegExpExecArray | null
-  while ((m = regex.exec(xml)) !== null) {
-    total += parseInt(m[1].trim()) || 0
+/** Parse DataExtensionObject rows from SOAP Retrieve response XML.
+ *  Retrieve responses use <Results xsi:type="DataExtensionObject"> (not <Objects>). */
+function extractDERows(xml: string): Record<string, string>[] {
+  const rows: Record<string, string>[] = []
+  // Match both <Results> (Retrieve) and <Objects> (Create/Update) just in case
+  const objectRe = /<(?:Results|Objects)[^>]*xsi:type="DataExtensionObject"[^>]*>([\s\S]*?)<\/(?:Results|Objects)>/g
+  let objMatch: RegExpExecArray | null
+  while ((objMatch = objectRe.exec(xml)) !== null) {
+    const row: Record<string, string> = {}
+    const propRe = /<Property>\s*<Name>([^<]+)<\/Name>\s*<Value>([^<]*)<\/Value>\s*<\/Property>/g
+    let propMatch: RegExpExecArray | null
+    while ((propMatch = propRe.exec(objMatch[1])) !== null) {
+      row[propMatch[1]] = propMatch[2]
+    }
+    if (Object.keys(row).length > 0) rows.push(row)
   }
-  return total
+  return rows
+}
+
+function sumField(rows: Record<string, string>[], field: string): number {
+  return rows.reduce((acc, r) => acc + (parseFloat(r[field]) || 0), 0)
 }
 
 export async function GET(
@@ -104,7 +120,7 @@ export async function GET(
 
   try {
     const mid = getMID(bu)
-    const token = await getToken(subdomain, mid)
+    const token = await getEnterpriseToken(subdomain)
 
     const since = new Date()
     since.setDate(since.getDate() - days)
@@ -113,36 +129,73 @@ export async function GET(
     const body = `
       <RetrieveRequestMsg xmlns="http://exacttarget.com/wsdl/partnerAPI">
         <RetrieveRequest>
-          <ObjectType>Send</ObjectType>
-          <Properties>ID</Properties>
-          <Properties>NumberSent</Properties>
-          <Properties>NumberDelivered</Properties>
-          <Properties>NumberBounced</Properties>
+          <ObjectType>DataExtensionObject[${DE_NAME}]</ObjectType>
+          <Properties>Date</Properties>
+          <Properties>BU</Properties>
+          <Properties>Sent</Properties>
+          <Properties>Delivered</Properties>
           <Properties>UniqueOpens</Properties>
           <Properties>UniqueClicks</Properties>
-          <Properties>NumberUnsubscribed</Properties>
-          <Filter xsi:type="SimpleFilterPart">
-            <Property>SendDate</Property>
-            <SimpleOperator>greaterThan</SimpleOperator>
-            <DateValue>${sinceStr}</DateValue>
+          <Properties>Bounces</Properties>
+          <Properties>Unsubscribes</Properties>
+          <Filter xsi:type="ComplexFilterPart">
+            <LeftOperand xsi:type="SimpleFilterPart">
+              <Property>Date</Property>
+              <SimpleOperator>greaterThan</SimpleOperator>
+              <DateValue>${sinceStr}</DateValue>
+            </LeftOperand>
+            <LogicalOperator>AND</LogicalOperator>
+            <RightOperand xsi:type="SimpleFilterPart">
+              <Property>BU</Property>
+              <SimpleOperator>equals</SimpleOperator>
+              <Value>${bu}</Value>
+            </RightOperand>
           </Filter>
         </RetrieveRequest>
       </RetrieveRequestMsg>`
 
     const xml = await soapCall(subdomain, 'Retrieve', token, body)
 
-    const sends       = sumTag(xml, 'NumberSent')
-    const delivered   = sumTag(xml, 'NumberDelivered')
-    const opens       = sumTag(xml, 'UniqueOpens')
-    const clicks      = sumTag(xml, 'UniqueClicks')
-    const bounces     = sumTag(xml, 'NumberBounced')
-    const unsubscribes = sumTag(xml, 'NumberUnsubscribed')
+    // DE not set up yet
+    if (xml.includes('Unable to find') || xml.includes('not found') || xml.includes('does not exist')) {
+      return NextResponse.json(
+        {
+          success: true,
+          data: { sends: 0, opens: 0, openRate: 0, clicks: 0, ctr: 0, bounces: 0, unsubscribes: 0 },
+          note: `DE "${DE_NAME}" não encontrada — verifique se é Shared e acessível via enterprise token.`,
+          debug: { xml: xml.slice(0, 500) },
+        },
+        { headers: CORS }
+      )
+    }
+
+    const rows = extractDERows(xml)
+
+    // DE exists but has no rows yet (automation not run yet or BU filter returned nothing)
+    if (rows.length === 0) {
+      return NextResponse.json(
+        {
+          success: true,
+          data: { sends: 0, opens: 0, openRate: 0, clicks: 0, ctr: 0, bounces: 0, unsubscribes: 0 },
+          note: `Sem dados para BU="${bu}" nos últimos ${days}d — rode a automação no SFMC.`,
+          debug: { xml: xml.slice(0, 500) },
+        },
+        { headers: CORS }
+      )
+    }
+
+    const sends        = sumField(rows, 'Sent')
+    const delivered    = sumField(rows, 'Delivered')
+    const opens        = sumField(rows, 'UniqueOpens')
+    const clicks       = sumField(rows, 'UniqueClicks')
+    const bounces      = sumField(rows, 'Bounces')
+    const unsubscribes = sumField(rows, 'Unsubscribes')
 
     const openRate = sends > 0 ? Math.round((opens / sends) * 1000) / 10 : 0
     const ctr      = delivered > 0 ? Math.round((clicks / delivered) * 1000) / 10 : 0
 
     return NextResponse.json(
-      { success: true, data: { sends, opens, openRate, clicks, ctr, bounces, unsubscribes } },
+      { success: true, data: { sends, opens, openRate, clicks, ctr, bounces, unsubscribes }, debug: { rowCount: rows.length } },
       { headers: CORS }
     )
   } catch (err: unknown) {

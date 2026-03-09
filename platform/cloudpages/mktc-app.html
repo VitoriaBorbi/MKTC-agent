@@ -1847,7 +1847,8 @@ function mktcApp() {
       try {
         const resp = await fetch(`https://platform-indol-five.vercel.app/api/${this.bu}/dataviews?days=${this.dataviewDays}`);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
+        const json = await resp.json();
+        const data = json.data || json;
         this.dataviewStats = {
           sends:    data.sends    || 0,
           opens:    data.opens    || 0,

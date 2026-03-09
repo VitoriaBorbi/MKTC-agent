@@ -27,7 +27,8 @@ import {
   CopyIcon,
   Trash2Icon,
   BookmarkIcon,
-  XIcon,
+  SunIcon,
+  MoonIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AgendarModal } from '@/components/platform/agendar-modal'
@@ -85,10 +86,29 @@ export default function EmailDetailPage() {
   }, [email?.id])
 
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop')
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light')
   const [showAgendar, setShowAgendar] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showSavePrompt, setShowSavePrompt] = useState(false)
   const [promptNome, setPromptNome] = useState('')
+
+  function getPreviewHtml(): string {
+    if (colorMode === 'light') return html
+    // Simulate forced dark mode (Gmail/Android behavior):
+    // - dark background container
+    // - text color inverted on elements without explicit inline color
+    // Emails with proper inline styles preserve their layout; only
+    // un-styled elements get overridden (closest to real-world behavior).
+    const darkCSS = `<style>
+:root { color-scheme: dark; }
+html { background-color: #1a1a1a !important; }
+body { background-color: #1a1a1a !important; color: #e0e0e0 !important; }
+p, span, li, td, th, div { color: inherit; }
+a:not([style*="color"]) { color: #6cb4f5 !important; }
+</style>`
+    if (html.includes('</head>')) return html.replace('</head>', `${darkCSS}</head>`)
+    return darkCSS + html
+  }
 
   if (!email) {
     return (
@@ -210,32 +230,60 @@ export default function EmailDetailPage() {
         <TabsContent value="preview" className="flex-1 flex flex-col mt-2 min-h-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground font-medium">Preview do email</span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant={viewport === 'desktop' ? 'secondary' : 'ghost'}
-                size="icon" className="h-7 w-7"
-                onClick={() => setViewport('desktop')}
-              >
-                <MonitorIcon className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                variant={viewport === 'mobile' ? 'secondary' : 'ghost'}
-                size="icon" className="h-7 w-7"
-                onClick={() => setViewport('mobile')}
-              >
-                <SmartphoneIcon className="w-3.5 h-3.5" />
-              </Button>
+            <div className="flex items-center gap-2">
+              {/* Viewport */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={viewport === 'desktop' ? 'secondary' : 'ghost'}
+                  size="icon" className="h-7 w-7"
+                  title="Desktop (600px)"
+                  onClick={() => setViewport('desktop')}
+                >
+                  <MonitorIcon className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant={viewport === 'mobile' ? 'secondary' : 'ghost'}
+                  size="icon" className="h-7 w-7"
+                  title="Mobile (375px)"
+                  onClick={() => setViewport('mobile')}
+                >
+                  <SmartphoneIcon className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+
+              <div className="w-px h-4 bg-border" />
+
+              {/* Color mode */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={colorMode === 'light' ? 'secondary' : 'ghost'}
+                  size="icon" className="h-7 w-7"
+                  title="Light mode"
+                  onClick={() => setColorMode('light')}
+                >
+                  <SunIcon className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant={colorMode === 'dark' ? 'secondary' : 'ghost'}
+                  size="icon" className="h-7 w-7"
+                  title="Dark mode (simulação forçada)"
+                  onClick={() => setColorMode('dark')}
+                >
+                  <MoonIcon className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
-          <div className="flex-1 border border-border rounded-md bg-zinc-100 flex justify-center p-3 overflow-auto min-h-[400px]">
+          <div className={`flex-1 border border-border rounded-md flex justify-center p-3 overflow-auto min-h-[400px] transition-colors ${colorMode === 'dark' ? 'bg-zinc-900' : 'bg-zinc-100'}`}>
             <iframe
-              srcDoc={html}
+              key={`${viewport}-${colorMode}`}
+              srcDoc={getPreviewHtml()}
               sandbox="allow-same-origin allow-popups"
               style={{
                 width: viewport === 'desktop' ? '600px' : '375px',
                 minHeight: '500px',
                 border: 'none',
-                background: 'white',
+                background: colorMode === 'dark' ? '#1a1a1a' : 'white',
                 borderRadius: '4px',
                 flexShrink: 0,
               }}

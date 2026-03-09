@@ -58,14 +58,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
-
   const fetchStats = useCallback(async () => {
     setLoading(true)
     setError(null)
     setNote(null)
     try {
-      const res = await fetch(`/api/${bu}/dataviews?days=${days}`)
+      const res = await fetch(`/api/${bu}/dataviews?days=${days}`, { cache: 'no-store' })
       const json = await res.json()
+      console.log('[dashboard] API response:', JSON.stringify(json))
       if (!res.ok) throw new Error(json.error || 'Erro ao buscar stats')
       setStats(json.data)
       if (json.note) setNote(json.note)
@@ -107,9 +107,12 @@ export default function DashboardPage() {
       {/* Performance Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Performance SFMC
-          </h2>
+          <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Performance SFMC
+            </h2>
+            <p className="text-[10px] text-muted-foreground/50 mt-0.5">Todos os envios do Grupo Primo</p>
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-md border border-border overflow-hidden">
               {DAYS_OPTIONS.map(d => (
