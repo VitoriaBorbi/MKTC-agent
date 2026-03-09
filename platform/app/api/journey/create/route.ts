@@ -179,7 +179,7 @@ export async function POST(req: Request) {
     const assetIds: number[] = []
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
-      const assetName = `${name} — Email ${String(i + 1).padStart(2, '0')} — ${step.name}`
+      const assetName = `${name} — Email ${String(i + 1).padStart(2, '0')} — ${step.name} [${Date.now()}]`
       const id = await createEmailAsset(subdomain, token, assetName, step.html, step.subject, step.preheader, categoryId)
       assetIds.push(id)
     }
