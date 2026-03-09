@@ -229,9 +229,36 @@ export async function POST(req: Request) {
     // 3. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
 
-    // Try bare journey first (no activities) to isolate issue
-    const barePayload = {
+    // Step A: try truly minimal journey (no trigger, no activities)
+    const minimalPayload = {
       key: (journeyPayload as Record<string, unknown>).key,
+      name,
+      description: description || '',
+      workflowApiVersion: 1.0,
+      triggers: [],
+      activities: [],
+    }
+    const minRes = await fetch(
+      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(minimalPayload),
+      }
+    )
+    const minData = await minRes.json()
+    if (!minRes.ok) {
+      return Response.json({
+        success: true, partial: true,
+        warning: `CB ok. JB (minimal, no trigger): ${JSON.stringify(minData)}`,
+        debug: { step: 'minimal-no-trigger', minimalPayload: JSON.stringify(minimalPayload) },
+        emails: steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] })),
+      }, { headers: CORS })
+    }
+
+    // Step B: bare journey with trigger
+    const barePayload = {
+      key: `journey-${crypto.randomUUID()}`,
       name,
       description: description || '',
       workflowApiVersion: 1.0,
