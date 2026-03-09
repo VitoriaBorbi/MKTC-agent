@@ -197,27 +197,65 @@ export async function POST(req: Request) {
     // 2. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds)
 
-    const jbRes = await fetch(
+    // Try bare journey first (no activities) to isolate issue
+    const barePayload = {
+      key: (journeyPayload as Record<string, unknown>).key,
+      name,
+      description: description || '',
+      workflowApiVersion: 1.0,
+      triggers: (journeyPayload as Record<string, unknown>).triggers,
+      activities: [],
+    }
+
+    const bareRes = await fetch(
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(journeyPayload),
+        body: JSON.stringify(barePayload),
       }
     )
-    const jbData = await jbRes.json()
+    const bareData = await bareRes.json()
 
-    const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
-
-    if (!jbRes.ok) {
-      // Emails were created — partial success
+    // If bare journey fails, it's a fundamental issue (token/trigger)
+    if (!bareRes.ok) {
+      const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
       return Response.json({
         success: true,
         partial: true,
-        warning: `Emails criados no Content Builder, mas Journey Builder retornou erro: ${JSON.stringify(jbData).slice(0, 300)}`,
+        warning: `CB ok. JB (bare): ${JSON.stringify(bareData)}`,
+        debug: { barePayload: JSON.stringify(barePayload) },
         emails,
       }, { headers: CORS })
     }
+
+    // Bare worked — now try full journey with activities
+    const journeyId = bareData.id as string
+    const fullRes = await fetch(
+      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions/${journeyId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...journeyPayload, id: journeyId }),
+      }
+    )
+    const fullData = await fullRes.json()
+
+    const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
+
+    if (!fullRes.ok) {
+      return Response.json({
+        success: true,
+        partial: true,
+        warning: `CB ok. JB rascunho criado (sem atividades). PUT com atividades falhou: ${JSON.stringify(fullData)}`,
+        journeyId,
+        journeyName: bareData.name,
+        debug: { activitiesPayload: JSON.stringify((journeyPayload as Record<string, unknown>).activities) },
+        emails,
+      }, { headers: CORS })
+    }
+
+    const jbData = fullData
 
     return Response.json({
       success: true,
