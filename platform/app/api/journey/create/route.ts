@@ -244,52 +244,51 @@ export async function POST(req: Request) {
     // 3. Create Journey Builder journey draft
     const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
 
-    // Step A: POST minimal journey to get journeyId
-    const journeyKey = (journeyPayload as Record<string, unknown>).key as string
-    const minRes = await fetch(
+    const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
+
+    // Try A: single POST with BU token + full payload
+    const fullResA = await fetch(
       `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
-        body: JSON.stringify({ key: journeyKey, name, description: description || '', workflowApiVersion: 1.0, triggers: [], activities: [] }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${buToken}` },
+        body: JSON.stringify(journeyPayload),
       }
     )
-    const minData = await minRes.json()
-    if (!minRes.ok) {
+    const fullDataA = await fullResA.json()
+
+    if (fullResA.ok) {
+      const jbData = fullDataA
       return Response.json({
-        success: true, partial: true,
-        warning: `CB ok. JB (minimal): ${JSON.stringify(minData)}`,
-        emails: steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] })),
-      }, { headers: CORS })
-    }
-
-    // Step B: wait 3s for SFMC to propagate, then PUT full payload
-    const journeyId = minData.id as string
-    await new Promise(r => setTimeout(r, 3000))
-
-    const fullRes = await fetch(
-      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions/${journeyId}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
-        body: JSON.stringify({ ...journeyPayload, id: journeyId, key: journeyKey }),
-      }
-    )
-    const fullData = await fullRes.json()
-
-    const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
-
-    if (!fullRes.ok) {
-      return Response.json({
-        success: true, partial: true,
-        warning: `CB ok. JB criado (vazio). PUT falhou: ${JSON.stringify(fullData)}`,
-        journeyId,
-        debug: { payload: JSON.stringify({ ...journeyPayload, id: journeyId }) },
+        success: true,
+        journeyId: jbData.id,
+        journeyKey: jbData.key,
+        journeyName: jbData.name,
         emails,
       }, { headers: CORS })
     }
 
-    const jbData = fullData
+    // Try B: single POST with enterprise token + full payload
+    const fullResB = await fetch(
+      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
+        body: JSON.stringify(journeyPayload),
+      }
+    )
+    const fullDataB = await fullResB.json()
+
+    if (!fullResB.ok) {
+      return Response.json({
+        success: true, partial: true,
+        warning: `CB ok. JB falhou (BU: ${JSON.stringify(fullDataA)} | ENT: ${JSON.stringify(fullDataB)})`,
+        debug: { payload: JSON.stringify(journeyPayload) },
+        emails,
+      }, { headers: CORS })
+    }
+
+    const jbData = fullDataB
 
     return Response.json({
       success: true,
