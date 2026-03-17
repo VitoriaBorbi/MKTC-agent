@@ -1,3 +1,4 @@
+%%[ VAR @bu SET @bu = RequestParameter("bu") IF EMPTY(@bu) THEN SET @bu = "finclass" ENDIF ]%%
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,47 +6,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MKTC Platform</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  [x-cloak] { display: none !important; }
-  .alpine-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #71717a; font-size: 0.875rem; font-family: 'Inter', sans-serif; }
-  body { font-family: 'Inter', sans-serif; background: #09090b; color: #fafafa; }
-  .sidebar-link { display:flex; align-items:center; gap:0.625rem; padding:0.5rem 0.75rem; border-radius:0.5rem; font-size:0.875rem; color:#a1a1aa; transition:color 0.15s,background 0.15s; cursor:pointer; width:100%; background:transparent; border:none; text-align:left; }
-  .sidebar-link:hover { color:#fafafa; background:#27272a; }
-  .sidebar-link.active { background:#27272a; color:#fafafa; }
-  .card { background: #18181b; border: 1px solid #27272a; border-radius: 0.75rem; }
-  .input { background: #18181b; border: 1px solid #27272a; color: #fafafa; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; width: 100%; outline: none; }
-  .input:focus { border-color: #3f3f46; box-shadow: 0 0 0 2px rgba(255,255,255,0.05); }
-  .btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; }
-  .btn-primary { background: #fafafa; color: #09090b; }
-  .btn-primary:hover { background: #e4e4e7; }
-  .btn-outline { background: transparent; color: #fafafa; border: 1px solid #27272a; }
-  .btn-outline:hover { background: #18181b; }
-  .btn-ghost { background: transparent; color: #a1a1aa; }
-  .btn-ghost:hover { background: #18181b; color: #fafafa; }
-  .btn-success { background: #059669; color: #fff; }
-  .btn-success:hover { background: #047857; }
-  .btn-danger { background: #dc2626; color: #fff; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .pill { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
-  textarea.code { font-family: 'Fira Code', 'Cascadia Code', monospace; font-size: 0.75rem; background: #0d0d0e; border: 1px solid #27272a; color: #a1a1aa; resize: vertical; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-  .step-dot { width: 2rem; height: 2rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; }
-  .step-dot.done { background: #18181b; border: 2px solid #10b981; color: #10b981; }
-  .step-dot.active { background: #fafafa; color: #09090b; }
-  .step-dot.pending { background: #18181b; border: 2px solid #3f3f46; color: #71717a; }
-</style>
+<link rel="stylesheet" href="https://cloud.m.grupo-primo.com/mktc_styles">
 <script>
   tailwind.config = {
     darkMode: 'class',
     theme: { extend: { colors: { brand: { DEFAULT: 'var(--brand-color)' } } } }
   }
 </script>
+<!-- Injeta config e dados iniciais via AMPScript -->
+<script>
+window.MKTC = {
+  bu:          "%%=v(@bu)=%%",
+  apiUrl:      "https://cloud.m.grupo-primo.com/AMPScript",
+  initialData: null
+};
+</script>
+<script src="https://cloud.m.grupo-primo.com/mktc-logic"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body x-data="mktcApp()" x-init="init()" class="min-h-screen">
@@ -82,30 +62,9 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- SETUP OVERLAY — show when API_URL not set -->
-<!-- ============================================================ -->
-<div x-show="!API_URL" x-cloak class="fixed inset-0 z-40 bg-zinc-950 flex items-center justify-center p-6">
-  <div class="card p-8 w-full max-w-md">
-    <div class="flex items-center gap-2 mb-6">
-      <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <span class="font-bold text-lg">MKTC Platform</span>
-    </div>
-    <p class="text-zinc-400 text-sm mb-6">Cole a URL do SSJS Code Resource para começar.</p>
-    <div class="space-y-3">
-      <label class="text-xs text-zinc-500 block">URL do Code Resource (mktc-api)</label>
-      <input x-model="setupApiUrl" class="input" placeholder="https://pub.s7.exacttarget.com/…" @keydown.enter="saveApiUrl()">
-      <button @click="saveApiUrl()" class="btn btn-primary w-full justify-center" :disabled="!setupApiUrl.trim()">
-        Conectar
-      </button>
-    </div>
-    <p class="text-xs text-zinc-600 mt-4">A URL será salva no localStorage do navegador.</p>
-  </div>
-</div>
-
-<!-- ============================================================ -->
 <!-- MAIN LAYOUT -->
 <!-- ============================================================ -->
-<div x-show="!!API_URL" x-cloak class="flex flex-col h-screen">
+<div x-cloak class="flex flex-col h-screen">
 
   <!-- TOPBAR -->
   <header class="h-14 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur sticky top-0 z-30 flex items-center px-4 gap-3 shrink-0">
@@ -142,10 +101,6 @@
 
     <!-- Actions (desktop) -->
     <nav class="hidden md:flex items-center gap-2">
-      <button @click="disconnectApi()" class="btn btn-ghost text-xs">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        Desconectar
-      </button>
       <button @click="navigateTo('catalogo')" class="btn btn-ghost">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Catálogo
@@ -309,7 +264,6 @@
           <div class="divide-y divide-zinc-800">
             <template x-for="email in filteredEmails" :key="email.ID">
               <div class="flex items-center hover:bg-zinc-800/50 transition-colors group">
-                <!-- Main clickable area -->
                 <div @click="openEmail(email)" class="flex items-center gap-3 p-4 flex-1 min-w-0 cursor-pointer">
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium truncate" x-text="email.Nome"></p>
@@ -320,24 +274,20 @@
                     <p x-show="email.Send_Date" class="text-xs text-zinc-500 mt-1" x-text="formatDate(email.Send_Date) + (email.Send_Time ? ' · ' + email.Send_Time : '')"></p>
                   </div>
                 </div>
-                <!-- Delete area -->
                 <div class="pr-3 shrink-0">
                   <div x-show="deleteConfirmId === email.ID" class="flex items-center gap-1">
                     <button @click="deleteEmail(email.ID)"
-                      class="h-7 w-7 flex items-center justify-center rounded text-red-400 hover:bg-red-900/30 transition-colors"
-                      title="Confirmar exclusão">
+                      class="h-7 w-7 flex items-center justify-center rounded text-red-400 hover:bg-red-900/30 transition-colors" title="Confirmar exclusão">
                       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                     </button>
                     <button @click="deleteConfirmId = null"
-                      class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-700/40 transition-colors"
-                      title="Cancelar">
+                      class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:bg-zinc-700/40 transition-colors" title="Cancelar">
                       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </div>
                   <button x-show="deleteConfirmId !== email.ID"
                     @click.stop="deleteConfirmId = email.ID"
-                    class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all"
-                    title="Excluir email">
+                    class="h-7 w-7 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all" title="Excluir email">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                   </button>
                 </div>
@@ -351,7 +301,6 @@
       <!-- EMAIL DETAIL VIEW -->
       <!-- ======================================================= -->
       <div x-show="!loading && !loadError && view === 'email-detail'" class="flex flex-col gap-4 h-full">
-        <!-- Header -->
         <div class="flex items-center gap-2 flex-wrap">
           <button @click="navigateTo('fila')" class="btn btn-ghost p-2">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
@@ -392,7 +341,6 @@
           </div>
         </div>
 
-        <!-- Assunto / Preheader -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="text-xs text-zinc-500 mb-1 block">Assunto</label>
@@ -442,7 +390,7 @@
             <iframe
               x-ref="previewFrame"
               :srcdoc="detail.html"
-              sandbox="allow-same-origin allow-popups"
+              sandbox="allow-same-origin allow-popups allow-scripts"
               :style="'width:' + (detail.viewport === 'desktop' ? '600px' : '375px') + '; min-height:500px; border:none; background:white; border-radius:4px; flex-shrink:0; display:block'"
               title="Email preview"
             ></iframe>
@@ -465,7 +413,6 @@
         <div x-show="detail.tab === 'config'" class="flex flex-col gap-4">
           <p class="text-xs text-zinc-500">Configure o disparo antes de agendar. As informações são salvas com o email e pré-preenchidas no modal de agendamento.</p>
 
-          <!-- Data e Horário -->
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Data de envio</label>
@@ -477,7 +424,6 @@
             </div>
           </div>
 
-          <!-- Send Classification -->
           <div>
             <label class="text-xs text-zinc-500 mb-1 block">Sender Profile</label>
             <template x-if="buScheduleConfig.sendClassifications.length > 0">
@@ -505,9 +451,7 @@
               </template>
             </div>
             <div class="flex gap-2">
-              <input x-model="detail.deEnvioInput" class="input flex-1"
-                placeholder="CustomerKey da DE…"
-                @keydown.enter.prevent="addDetailDeEnvio()">
+              <input x-model="detail.deEnvioInput" class="input flex-1" placeholder="CustomerKey da DE…" @keydown.enter.prevent="addDetailDeEnvio()">
               <button @click="addDetailDeEnvio()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
             </div>
           </div>
@@ -524,9 +468,7 @@
               </template>
             </div>
             <div class="flex gap-2">
-              <input x-model="detail.deExclusaoInput" class="input flex-1"
-                placeholder="CustomerKey da DE…"
-                @keydown.enter.prevent="addDetailDeExclusao()">
+              <input x-model="detail.deExclusaoInput" class="input flex-1" placeholder="CustomerKey da DE…" @keydown.enter.prevent="addDetailDeExclusao()">
               <button @click="addDetailDeExclusao()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
             </div>
           </div>
@@ -586,172 +528,114 @@
           </div>
         </div>
 
-        <!-- Step 2: Copy -->
-        <div x-show="wizard.step === 2" class="space-y-4">
-          <h2 class="text-sm font-semibold text-zinc-300">Copy do email</h2>
+        <!-- Step 3: Copy (G.Docs) -->
+        <div x-show="wizard.step === 3" class="space-y-4">
+          <h2 class="text-sm font-semibold text-zinc-300">Copy via Google Docs</h2>
           <div class="space-y-3">
             <div>
-              <label class="text-xs text-zinc-500 mb-1 block">Nome do email</label>
+              <label class="text-xs text-zinc-500 mb-1 block">Nome do email <span class="text-zinc-600">(opcional)</span></label>
               <input x-model="wizard.emailNome" class="input" placeholder="ex: VIT0002 — Email Abertura Vendas">
             </div>
             <div>
-              <label class="text-xs text-zinc-500 mb-1 block">Assunto</label>
-              <input x-model="wizard.assunto" class="input" placeholder="ex: Você está perdendo dinheiro sem saber">
-            </div>
-            <div>
-              <label class="text-xs text-zinc-500 mb-1 block">Pré-cabeçalho <span class="text-zinc-600">(opcional)</span></label>
-              <input x-model="wizard.preheader" class="input" placeholder="Aparece após o assunto na caixa de entrada…">
-            </div>
-            <div>
-              <label class="text-xs text-zinc-500 mb-1 block">Faixa de destaque <span class="text-zinc-600">(opcional — ex: OFERTA ESPECIAL · VÁLIDA ATÉ DOMINGO)</span></label>
-              <input x-model="wizard.customHeader" class="input" placeholder="Texto da faixa colorida logo abaixo do header da marca…">
-            </div>
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="text-xs text-zinc-500">Copy completa <span class="text-zinc-400">*</span></label>
-                <button type="button" @click="$refs.docxInput.click()"
-                  class="btn btn-ghost text-xs py-1 px-2 border border-zinc-700 rounded">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  Importar .docx
-                </button>
-                <input x-ref="docxInput" type="file" accept=".docx" class="hidden" @change="importDocx($event)">
-              </div>
-              <div x-show="wizard.docxLoading" class="text-xs text-zinc-400 mb-1">Extraindo texto e imagens do arquivo…</div>
-              <textarea x-model="wizard.copyText" class="input" rows="10"
-                placeholder="Cole aqui a copy do email. Inclua: título, parágrafos, CTA e quaisquer instruções adicionais."></textarea>
-              <!-- Imagens extraídas do docx -->
-              <div x-show="wizard.docxImages.length > 0" class="rounded-lg border border-zinc-700 bg-zinc-900/50 p-3 mt-2">
-                <p class="text-xs text-zinc-400 mb-2">
-                  <span x-text="wizard.docxImages.length"></span> imagem(ns) extraída(s) — serão enviadas ao SFMC e inseridas no email:
-                </p>
-                <div class="flex flex-wrap gap-2">
-                  <template x-for="(img, idx) in wizard.docxImages" :key="idx">
-                    <div class="relative group">
-                      <img :src="'data:' + img.mediaType + ';base64,' + img.b64"
-                           class="h-16 w-16 object-cover rounded border border-zinc-600">
-                      <button @click="wizard.docxImages.splice(idx, 1)"
-                        class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
-                    </div>
-                  </template>
-                </div>
-              </div>
+              <label class="text-xs text-zinc-500 mb-1 block">Link do Google Docs <span class="text-red-500">*</span></label>
+              <input x-model="wizard.gdocUrl" class="input" placeholder="https://docs.google.com/document/d/...">
+              <p class="text-xs text-zinc-600 mt-1">O documento deve estar com acesso "Qualquer pessoa com link pode visualizar".</p>
             </div>
           </div>
           <div class="flex gap-2 justify-between pt-2">
             <button @click="wizardBack()" class="btn btn-ghost">← Voltar</button>
-            <button @click="wizardNext()" class="btn btn-primary" :disabled="!wizard.copyText.trim()">Próximo →</button>
+            <button @click="wizardNext()" class="btn btn-primary" :disabled="!wizard.gdocUrl.trim()">Próximo →</button>
           </div>
         </div>
 
-        <!-- Step 3: Referência visual -->
-        <div x-show="wizard.step === 3" class="space-y-4">
-          <h2 class="text-sm font-semibold text-zinc-300">Referência visual <span class="text-zinc-500 font-normal">(opcional)</span></h2>
-          <p class="text-xs text-zinc-500">A imagem não será inserida no email. Claude irá extrair o DNA visual dela (paleta, sensação, contraste) e aplicar ao email.</p>
-
-          <div x-show="!wizard.refImagePreview"
-            class="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center cursor-pointer hover:border-zinc-500 transition-colors"
-            @click="$refs.refInput.click()">
-            <svg class="w-8 h-8 mx-auto text-zinc-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <p class="text-sm text-zinc-400">Clique para adicionar imagem de referência</p>
-            <p class="text-xs text-zinc-600 mt-1">PNG, JPG, WEBP — será redimensionada</p>
-          </div>
-
-          <div x-show="wizard.refImagePreview" class="relative">
-            <img :src="wizard.refImagePreview" class="w-full max-h-48 object-cover rounded-lg border border-zinc-700">
-            <button @click="wizard.refImagePreview = null; wizard.refImageB64 = null"
-              class="absolute top-2 right-2 w-7 h-7 rounded-full bg-zinc-900/80 text-white flex items-center justify-center hover:bg-red-900 transition-colors text-xs">
-              ✕
-            </button>
-          </div>
-
-          <input x-ref="refInput" type="file" accept="image/*" class="hidden" @change="handleRefImageUpload($event)">
-
-          <div class="flex gap-2 justify-between pt-2">
-            <button @click="wizardBack()" class="btn btn-ghost">← Voltar</button>
-            <button @click="wizardNext()" class="btn btn-primary">Próximo →</button>
-          </div>
-        </div>
-
-        <!-- Step 4: Template -->
-        <div x-show="wizard.step === 4" class="space-y-4">
+        <!-- Step 2: Template -->
+        <div x-show="wizard.step === 2" class="space-y-4">
           <h2 class="text-sm font-semibold text-zinc-300">Escolha o template</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <template x-for="t in templateList" :key="t.id">
               <div class="card overflow-hidden cursor-pointer transition-all hover:border-zinc-600"
-                :class="wizard.templateId === t.id ? 'border-white' : ''"
-                @click="wizard.templateId = t.id">
-                <div class="h-32 bg-zinc-900 p-3 flex flex-col gap-2">
-                  <template x-if="t.id === 'full-hero'">
-                    <div class="flex flex-col gap-2 h-full">
-                      <div class="flex-1 rounded bg-zinc-700 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                      </div>
-                      <div class="h-2 bg-zinc-600 rounded w-3/4 mx-auto"></div>
-                      <div class="h-1.5 bg-zinc-700 rounded w-1/2 mx-auto"></div>
-                      <div class="h-5 rounded mx-auto w-1/3" :style="'background:' + currentBU.color"></div>
+                :class="wizard.templateId === t.tipo ? 'border-white' : ''"
+                @click="wizard.templateId = t.tipo">
+                <div class="h-28 bg-zinc-950 overflow-hidden">
+                  <template x-if="t.tipo === 'newsletter'">
+                    <div class="w-full h-full flex flex-col">
+                      <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1.5 w-10 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="h-0.5 w-full" :style="'background:' + currentBU.color"></div>
+                      <div class="flex-1 flex flex-col gap-1 px-2.5 pt-1.5"><div class="h-1.5 w-14 rounded opacity-40" :style="'background:' + currentBU.color"></div><div class="h-1 bg-zinc-700 rounded w-full"></div><div class="h-1 bg-zinc-700 rounded w-11/12"></div><div class="h-1 bg-zinc-700 rounded w-4/5"></div></div>
+                      <div class="flex justify-center pb-1.5"><div class="h-4 w-14 rounded" :style="'background:' + currentBU.color + 'cc'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
                     </div>
                   </template>
-                  <template x-if="t.id === 'text-first'">
-                    <div class="flex flex-col gap-1.5 h-full pt-1">
-                      <div class="h-2.5 bg-zinc-600 rounded w-2/3"></div>
-                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
-                      <div class="h-1.5 bg-zinc-700 rounded w-5/6"></div>
-                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
-                      <div class="flex-1"></div>
-                      <div class="h-5 rounded w-1/3" :style="'background:' + currentBU.color"></div>
+                  <template x-if="t.tipo === 'campanha'">
+                    <div class="w-full h-full flex flex-col">
+                      <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1.5 w-10 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="flex-1 flex items-center justify-center" :style="'background:' + currentBU.color + '18'"><div class="w-5 h-5 rounded opacity-25" :style="'background:' + currentBU.color"></div></div>
+                      <div class="px-2 pt-1"><div class="h-1.5 bg-zinc-600 rounded w-3/4 mb-0.5"></div><div class="h-1 bg-zinc-700 rounded w-full"></div></div>
+                      <div class="flex justify-center py-1.5"><div class="h-4 w-14 rounded" :style="'background:' + currentBU.color + 'cc'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
                     </div>
                   </template>
-                  <template x-if="t.id === 'side-image'">
-                    <div class="flex gap-2 h-full">
-                      <div class="w-2/5 bg-zinc-700 rounded flex items-center justify-center">
-                        <svg class="w-4 h-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                      </div>
-                      <div class="flex-1 flex flex-col gap-1.5 py-1">
-                        <div class="h-2 bg-zinc-600 rounded w-full"></div>
-                        <div class="h-1.5 bg-zinc-700 rounded w-5/6"></div>
-                        <div class="flex-1"></div>
-                        <div class="h-5 rounded w-2/3" :style="'background:' + currentBU.color"></div>
-                      </div>
+                  <template x-if="t.tipo === 'simples'">
+                    <div class="w-full h-full flex flex-col">
+                      <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1.5 w-10 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="flex-1 flex flex-col gap-1 px-2.5 pt-1.5"><div class="h-1 bg-zinc-700 rounded w-full"></div><div class="h-1 bg-zinc-700 rounded w-11/12"></div><div class="h-1 bg-zinc-700 rounded w-4/5"></div><div class="h-1 bg-zinc-700 rounded w-full"></div></div>
+                      <div class="flex justify-center pb-1.5"><div class="h-4 w-14 rounded" :style="'background:' + currentBU.color + 'cc'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
                     </div>
                   </template>
-                  <template x-if="t.id === 'multi-block'">
-                    <div class="flex flex-col gap-1.5 h-full">
-                      <template x-for="b in [1,2,3]" :key="b">
-                        <div class="flex-1 rounded border border-zinc-700 p-1 flex items-center gap-1.5">
-                          <div class="w-5 h-5 rounded bg-zinc-700 shrink-0"></div>
-                          <div class="flex-1 flex flex-col gap-1">
-                            <div class="h-1.5 bg-zinc-600 rounded w-3/4"></div>
-                            <div class="h-1 bg-zinc-700 rounded w-full"></div>
-                          </div>
-                        </div>
-                      </template>
+                  <template x-if="t.tipo === 'hero-full'">
+                    <div class="w-full h-full flex flex-col" :style="'background:' + currentBU.dark">
+                      <div class="flex-1 flex flex-col items-center justify-center gap-1.5 px-3"><div class="h-1 w-8 rounded opacity-50" :style="'background:' + currentBU.color"></div><div class="h-2.5 w-3/4 rounded bg-white opacity-20"></div><div class="h-1.5 w-1/2 rounded bg-white opacity-10"></div><div class="h-5 w-16 rounded mt-1" :style="'background:' + currentBU.color + 'dd'"></div></div>
+                      <div class="h-4 flex items-center justify-center"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
                     </div>
                   </template>
-                  <template x-if="t.id === 'minimal'">
-                    <div class="flex flex-col items-center justify-center h-full gap-2">
-                      <div class="h-2.5 bg-zinc-600 rounded w-2/3"></div>
-                      <div class="h-1.5 bg-zinc-700 rounded w-4/5"></div>
-                      <div class="h-1.5 bg-zinc-700 rounded w-3/4"></div>
-                      <div class="h-6 rounded w-2/5" :style="'background:' + currentBU.color"></div>
+                  <template x-if="t.tipo === 'multibloco'">
+                    <div class="w-full h-full flex flex-col" style="background:#f5f5f5">
+                      <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1.5 w-10 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="flex-1 flex flex-col gap-1 px-1.5 py-1"><div class="flex-1 rounded p-1 bg-white" :style="'border-left:2px solid ' + currentBU.color + '66'"><div class="h-1 w-2/3 rounded bg-black opacity-10"></div></div><div class="flex-1 rounded p-1 bg-white" :style="'border-left:2px solid ' + currentBU.color + '66'"><div class="h-1 w-2/3 rounded bg-black opacity-10"></div></div></div>
+                      <div class="flex justify-center pb-1.5"><div class="h-4 w-14 rounded" :style="'background:' + currentBU.color + 'cc'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
                     </div>
                   </template>
-                  <template x-if="t.id === 'announcement'">
-                    <div class="flex flex-col h-full">
-                      <div class="h-1 rounded-t w-full mb-2" :style="'background:' + currentBU.color"></div>
-                      <div class="flex flex-col items-center gap-1.5 flex-1 justify-center">
-                        <div class="h-2.5 bg-zinc-600 rounded w-2/3"></div>
-                        <div class="h-1.5 bg-zinc-700 rounded w-3/4"></div>
-                        <div class="h-5 rounded w-2/5 mt-1" :style="'background:' + currentBU.color"></div>
-                      </div>
+                  <template x-if="t.tipo === 'anuncio'">
+                    <div class="w-full h-full flex flex-col bg-white">
+                      <div class="h-2" :style="'background:' + currentBU.color"></div>
+                      <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1.5 w-10 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="flex-1 flex flex-col items-center justify-center gap-1.5 px-3"><div class="h-2 w-1/2 rounded bg-zinc-700 opacity-25"></div><div class="h-1.5 w-full rounded bg-zinc-700 opacity-10"></div><div class="h-5 w-16 rounded mt-1" :style="'background:' + currentBU.color + 'dd'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
+                    </div>
+                  </template>
+                  <template x-if="t.tipo === 'boas-vindas'">
+                    <div class="w-full h-full flex flex-col bg-white">
+                      <div class="h-7 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-2.5 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="px-2.5 pt-1.5 flex-1"><div class="h-1.5 w-1/2 rounded bg-zinc-700 opacity-25 mb-1"></div><div class="flex items-center gap-1 mb-0.5"><div class="w-2.5 h-2.5 rounded-full shrink-0 border" :style="'border-color:' + currentBU.color"></div><div class="h-1 rounded bg-zinc-700 opacity-10 flex-1"></div></div><div class="flex items-center gap-1 mb-0.5"><div class="w-2.5 h-2.5 rounded-full shrink-0 border" :style="'border-color:' + currentBU.color"></div><div class="h-1 rounded bg-zinc-700 opacity-10 flex-1"></div></div><div class="flex items-center gap-1"><div class="w-2.5 h-2.5 rounded-full shrink-0 border" :style="'border-color:' + currentBU.color"></div><div class="h-1 rounded bg-zinc-700 opacity-10 flex-1"></div></div></div>
+                      <div class="flex justify-center pb-1.5"><div class="h-4 w-14 rounded" :style="'background:' + currentBU.color + 'cc'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
+                    </div>
+                  </template>
+                  <template x-if="t.tipo === 'produto'">
+                    <div class="w-full h-full flex flex-col bg-white">
+                      <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1.5 w-10 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="flex gap-1.5 px-2 pt-1.5 flex-1"><div class="flex-1 rounded flex items-center justify-center opacity-20" :style="'background:' + currentBU.color + '33'"><svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="flex-1 flex flex-col justify-center gap-0.5"><div class="h-1.5 w-full rounded bg-zinc-700 opacity-20"></div><div class="h-1 w-5/6 rounded bg-zinc-700 opacity-10"></div></div></div>
+                      <div class="flex justify-center py-1.5"><div class="h-4 w-14 rounded" :style="'background:' + currentBU.color + 'cc'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
+                    </div>
+                  </template>
+                  <template x-if="t.tipo === 'texto-longo'">
+                    <div class="w-full h-full flex flex-col bg-white">
+                      <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1.5 w-10 rounded opacity-80" :style="'background:' + currentBU.color"></div></div>
+                      <div class="flex-1 flex flex-col gap-0.5 px-2.5 pt-1.5"><div class="h-1.5 w-1/2 rounded bg-zinc-700 opacity-20 mb-0.5"></div><div class="h-1 bg-zinc-700 rounded w-full opacity-10"></div><div class="h-1 bg-zinc-700 rounded w-11/12 opacity-10"></div><div class="h-1 bg-zinc-700 rounded w-full opacity-10"></div><div class="h-1 bg-zinc-700 rounded w-4/5 opacity-10"></div></div>
+                      <div class="px-2.5 pb-1.5"><div class="h-4 w-14 rounded" :style="'background:' + currentBU.color + 'cc'"></div></div>
+                      <div class="h-4 flex items-center justify-center" :style="'background:' + currentBU.dark"><div class="h-1 w-8 rounded opacity-30" :style="'background:' + currentBU.color"></div></div>
                     </div>
                   </template>
                 </div>
                 <div class="p-3 flex items-center gap-2">
                   <div class="flex-1">
-                    <p class="text-xs font-medium" x-text="t.name"></p>
-                    <p class="text-xs text-zinc-500" x-text="t.desc"></p>
+                    <p class="text-xs font-medium" x-text="t.nome"></p>
+                    <p class="text-xs text-zinc-500" x-text="t.descricao"></p>
                   </div>
-                  <div x-show="wizard.templateId === t.id" class="w-4 h-4 rounded-full border-2 border-white flex items-center justify-center shrink-0">
+                  <div x-show="wizard.templateId === t.tipo" class="w-4 h-4 rounded-full border-2 border-white flex items-center justify-center shrink-0">
                     <div class="w-2 h-2 rounded-full bg-white"></div>
                   </div>
                 </div>
@@ -760,26 +644,20 @@
           </div>
           <div class="flex gap-2 justify-between pt-2">
             <button @click="wizardBack()" class="btn btn-ghost">← Voltar</button>
-            <button @click="wizard.step = 5" class="btn btn-primary" :disabled="!wizard.templateId">
-              Próximo →
-            </button>
+            <button @click="wizardNext()" class="btn btn-primary" :disabled="!wizard.templateId">Próximo →</button>
           </div>
         </div>
 
-        <!-- Step 5: Configuração -->
-        <div x-show="wizard.step === 5" class="space-y-4">
+        <!-- Step 4: Configuração -->
+        <div x-show="wizard.step === 4" class="space-y-4">
           <div>
             <h2 class="text-sm font-semibold text-zinc-300" x-text="wizard.tipo === 'campanha' ? 'Configuração do disparo na campanha' : 'Configuração do disparo'"></h2>
             <p class="text-xs text-zinc-500 mt-1">Configure as DEs específicas deste email. Serão salvas e pré-preenchidas ao agendar.</p>
           </div>
-
-          <!-- Nome da campanha (só para tipo=campanha) -->
           <div x-show="wizard.tipo === 'campanha'">
             <label class="text-xs text-zinc-500 mb-1 block">Nome da campanha</label>
             <input x-model="wizard.campanhaNome" class="input" placeholder="ex: Campanha Abertura Vendas 2025">
           </div>
-
-          <!-- Data e hora (opcional) -->
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Data de envio <span class="text-zinc-600">(opcional)</span></label>
@@ -790,8 +668,6 @@
               <input x-model="wizard.sendTime" type="time" class="input">
             </div>
           </div>
-
-          <!-- DEs de Envio -->
           <div>
             <label class="text-xs text-zinc-500 mb-1 block">DEs de Envio <span class="text-red-500">*</span></label>
             <div class="flex flex-wrap gap-1.5 mb-2" x-show="wizard.desEnvio.length > 0">
@@ -803,15 +679,11 @@
               </template>
             </div>
             <div class="flex gap-2">
-              <input x-model="wizard.deEnvioInput" class="input flex-1"
-                placeholder="CustomerKey da DE de envio…"
-                @keydown.enter.prevent="addWizardDeEnvio()">
+              <input x-model="wizard.deEnvioInput" class="input flex-1" placeholder="CustomerKey da DE de envio…" @keydown.enter.prevent="addWizardDeEnvio()">
               <button @click="addWizardDeEnvio()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
             </div>
             <p class="text-xs text-zinc-600 mt-1">Para campanhas: cada email pode ter DEs diferentes</p>
           </div>
-
-          <!-- DEs de Exclusão -->
           <div>
             <label class="text-xs text-zinc-500 mb-1 block">DEs de Exclusão <span class="text-zinc-600">(opcional)</span></label>
             <div class="flex flex-wrap gap-1.5 mb-2" x-show="wizard.desExclusao.length > 0">
@@ -823,71 +695,31 @@
               </template>
             </div>
             <div class="flex gap-2">
-              <input x-model="wizard.deExclusaoInput" class="input flex-1"
-                placeholder="CustomerKey da DE de exclusão…"
-                @keydown.enter.prevent="addWizardDeExclusao()">
+              <input x-model="wizard.deExclusaoInput" class="input flex-1" placeholder="CustomerKey da DE de exclusão…" @keydown.enter.prevent="addWizardDeExclusao()">
               <button @click="addWizardDeExclusao()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
             </div>
           </div>
+          <!-- Erro de geração inline -->
+          <div x-show="wizard.genError" class="rounded-lg border border-red-900 bg-red-950/30 p-3">
+            <p class="text-xs text-red-400" x-text="wizard.genError"></p>
+          </div>
 
           <div class="flex gap-2 justify-between pt-2">
-            <button @click="wizard.step = 4" class="btn btn-ghost">← Voltar</button>
-            <div class="flex gap-2">
-              <button @click="wizard.step = 6; wizard.manualMode = true" class="btn btn-outline text-sm">
-                Colar HTML
-              </button>
-              <button @click="generateEmail()" class="btn btn-primary">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                Gerar com IA
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 6: Gerando / Resultado / Manual -->
-        <div x-show="wizard.step === 6" class="space-y-4">
-          <!-- Generating state -->
-          <div x-show="wizard.generating" class="card p-8 flex flex-col items-center gap-4">
-            <div class="w-10 h-10 border-2 border-zinc-700 border-t-white rounded-full animate-spin"></div>
-            <p class="text-sm font-medium" x-text="wizard.imagesUploading ? 'Enviando imagens ao SFMC…' : 'Gerando HTML com Claude…'"></p>
-            <p class="text-xs text-zinc-500 text-center">Isso pode levar até 60 segundos.</p>
-            <div x-show="wizard.docxImages.length > 0" class="w-full mt-2">
-              <p class="text-xs text-zinc-500 mb-2 text-center" x-text="wizard.imagesUploading ? 'Fazendo upload de ' + wizard.docxImages.length + ' imagem(ns)…' : 'Imagens do documento incluídas no email'"></p>
-              <div class="flex flex-wrap gap-1 justify-center">
-                <template x-for="(img, i) in wizard.docxImages.slice(0,4)" :key="i">
-                  <img :src="'data:' + img.mediaType + ';base64,' + img.b64" class="h-12 w-12 object-cover rounded border border-zinc-700 opacity-70">
-                </template>
-              </div>
-            </div>
-            <div x-show="wizard.refImagePreview && !wizard.docxImages.length" class="w-full mt-2">
-              <p class="text-xs text-zinc-500 mb-2 text-center">Usando como referência visual:</p>
-              <img :src="wizard.refImagePreview" class="w-full max-h-36 object-cover rounded-lg border border-zinc-700 opacity-60">
-            </div>
-          </div>
-
-          <!-- Manual paste mode -->
-          <div x-show="!wizard.generating && wizard.manualMode" class="space-y-3">
-            <h2 class="text-sm font-semibold text-zinc-300">Colar HTML do email</h2>
-            <p class="text-xs text-zinc-500">Gere o HTML usando o agente de email (Claude Code) e cole abaixo.</p>
-            <textarea x-model="wizard.manualHtml" class="input font-mono text-xs" rows="12"
-              placeholder="&lt;!DOCTYPE html&gt;..."></textarea>
-            <div class="flex gap-2 justify-between">
-              <button @click="wizard.step = 5; wizard.manualMode = false" class="btn btn-ghost">← Voltar</button>
-              <button @click="saveManualEmail()" class="btn btn-primary" :disabled="!wizard.manualHtml.trim()">
-                Salvar Email
-              </button>
-            </div>
-          </div>
-
-          <!-- Error state -->
-          <div x-show="!wizard.generating && !wizard.manualMode && wizard.genError" class="card p-6 border-red-900">
-            <p class="text-sm text-red-400 mb-1" x-text="wizard.genError"></p>
-            <div class="flex gap-2 mt-4">
-              <button @click="wizard.step = 5" class="btn btn-ghost text-xs">← Voltar</button>
-              <button @click="wizard.manualMode = true; wizard.genError = null" class="btn btn-primary text-xs">
-                Colar HTML manualmente
-              </button>
-            </div>
+            <button @click="wizardBack()" class="btn btn-ghost" :disabled="wizard.generating">← Voltar</button>
+            <button @click="generateFromGdoc()" class="btn btn-primary" :disabled="wizard.generating">
+              <template x-if="wizard.generating">
+                <div class="flex items-center gap-2">
+                  <div class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Gerando…</span>
+                </div>
+              </template>
+              <template x-if="!wizard.generating">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Gerar Email</span>
+                </div>
+              </template>
+            </button>
           </div>
         </div>
       </div>
@@ -903,83 +735,223 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <template x-for="t in templateList" :key="t.id">
             <div class="card overflow-hidden hover:border-zinc-600 transition-colors cursor-pointer"
-              @click="wizard.templateId = t.id; navigateTo('nova-solicitacao'); wizard.step = 4">
-              <!-- Template mockup -->
-              <div class="h-40 bg-zinc-900 p-3 flex flex-col gap-2" :class="'template-' + t.id">
-                <template x-if="t.id === 'full-hero'">
-                  <div class="flex flex-col gap-2 h-full">
-                    <div class="flex-1 rounded bg-zinc-700 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              @click="wizard.templateId = t.tipo; navigateTo('nova-solicitacao'); wizard.step = 2">
+              <div class="h-40 bg-zinc-950 overflow-hidden">
+
+                <!-- newsletter -->
+                <template x-if="t.tipo === 'newsletter'">
+                  <div class="w-full h-full flex flex-col">
+                    <div class="h-6 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-2 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div>
                     </div>
-                    <div class="h-2 bg-zinc-600 rounded w-3/4 mx-auto"></div>
-                    <div class="h-1.5 bg-zinc-700 rounded w-1/2 mx-auto"></div>
-                    <div class="h-6 rounded mx-auto w-1/3" :style="'background:' + currentBU.color"></div>
-                  </div>
-                </template>
-                <template x-if="t.id === 'text-first'">
-                  <div class="flex flex-col gap-1.5 h-full pt-2">
-                    <div class="h-3 bg-zinc-600 rounded w-2/3"></div>
-                    <div class="h-2 bg-zinc-700 rounded w-full"></div>
-                    <div class="h-2 bg-zinc-700 rounded w-5/6"></div>
-                    <div class="h-2 bg-zinc-700 rounded w-full"></div>
-                    <div class="h-2 bg-zinc-700 rounded w-4/5"></div>
-                    <div class="flex-1"></div>
-                    <div class="h-6 rounded w-1/3" :style="'background:' + currentBU.color"></div>
-                  </div>
-                </template>
-                <template x-if="t.id === 'side-image'">
-                  <div class="flex gap-2 h-full">
-                    <div class="w-2/5 bg-zinc-700 rounded flex items-center justify-center">
-                      <svg class="w-5 h-5 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    </div>
-                    <div class="flex-1 flex flex-col gap-1.5 py-1">
-                      <div class="h-2.5 bg-zinc-600 rounded w-full"></div>
-                      <div class="h-1.5 bg-zinc-700 rounded w-5/6"></div>
+                    <div class="h-0.5 w-full" :style="'background:' + currentBU.color"></div>
+                    <div class="flex-1 flex flex-col gap-1.5 px-3 pt-2">
+                      <div class="h-1.5 w-16 rounded opacity-40" :style="'background:' + currentBU.color"></div>
                       <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
-                      <div class="flex-1"></div>
-                      <div class="h-5 rounded w-2/3" :style="'background:' + currentBU.color"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-11/12"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-4/5"></div>
+                    </div>
+                    <div class="flex justify-center pb-2">
+                      <div class="h-5 w-16 rounded" :style="'background:' + currentBU.color + 'cc'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
                     </div>
                   </div>
                 </template>
-                <template x-if="t.id === 'multi-block'">
-                  <div class="flex flex-col gap-2 h-full">
-                    <template x-for="b in [1,2,3]" :key="b">
-                      <div class="flex-1 rounded border border-zinc-700 p-1.5 flex items-center gap-1.5">
-                        <div class="w-6 h-6 rounded bg-zinc-700 shrink-0"></div>
-                        <div class="flex-1 flex flex-col gap-1">
-                          <div class="h-1.5 bg-zinc-600 rounded w-3/4"></div>
-                          <div class="h-1 bg-zinc-700 rounded w-full"></div>
-                        </div>
+
+                <!-- campanha -->
+                <template x-if="t.tipo === 'campanha'">
+                  <div class="w-full h-full flex flex-col">
+                    <div class="h-6 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-2 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div>
+                    </div>
+                    <div class="flex-1 flex items-center justify-center opacity-20" :style="'background:' + currentBU.color + '22'">
+                      <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <div class="px-3 pt-1.5">
+                      <div class="h-2 bg-zinc-600 rounded w-3/4 mb-1"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full mb-0.5"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-5/6"></div>
+                    </div>
+                    <div class="flex justify-center py-2">
+                      <div class="h-5 w-16 rounded" :style="'background:' + currentBU.color + 'cc'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- simples -->
+                <template x-if="t.tipo === 'simples'">
+                  <div class="w-full h-full flex flex-col">
+                    <div class="h-6 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-2 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div>
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1.5 px-3 pt-2 pb-1">
+                      <div class="h-1.5 bg-zinc-600 rounded w-2/3"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-11/12"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-4/5"></div>
+                      <div class="h-1.5 bg-zinc-700 rounded w-full"></div>
+                    </div>
+                    <div class="flex justify-center pb-2">
+                      <div class="h-5 w-16 rounded" :style="'background:' + currentBU.color + 'cc'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- hero-full -->
+                <template x-if="t.tipo === 'hero-full'">
+                  <div class="w-full h-full flex flex-col" :style="'background:' + currentBU.dark">
+                    <div class="flex-1 flex flex-col items-center justify-center gap-2 px-4">
+                      <div class="h-1.5 w-10 rounded opacity-50" :style="'background:' + currentBU.color"></div>
+                      <div class="h-3 w-3/4 rounded bg-white opacity-20"></div>
+                      <div class="h-2 w-1/2 rounded bg-white opacity-10"></div>
+                      <div class="h-6 w-20 rounded mt-1" :style="'background:' + currentBU.color + 'dd'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center opacity-50" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- multibloco -->
+                <template x-if="t.tipo === 'multibloco'">
+                  <div class="w-full h-full flex flex-col" style="background:#f5f5f5">
+                    <div class="h-6 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-2 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div>
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1.5 px-2 py-1.5">
+                      <div class="flex-1 rounded p-1.5 bg-white" :style="'border-left:2px solid ' + currentBU.color + '66'">
+                        <div class="h-1.5 w-2/3 rounded bg-black opacity-10 mb-1"></div>
+                        <div class="h-1 w-full rounded bg-black opacity-5"></div>
                       </div>
-                    </template>
-                  </div>
-                </template>
-                <template x-if="t.id === 'minimal'">
-                  <div class="flex flex-col items-center justify-center h-full gap-3">
-                    <div class="h-3 bg-zinc-600 rounded w-2/3"></div>
-                    <div class="h-2 bg-zinc-700 rounded w-4/5"></div>
-                    <div class="h-2 bg-zinc-700 rounded w-3/4"></div>
-                    <div class="h-7 rounded w-2/5" :style="'background:' + currentBU.color"></div>
-                  </div>
-                </template>
-                <template x-if="t.id === 'announcement'">
-                  <div class="flex flex-col h-full">
-                    <div class="h-1 rounded-t w-full mb-3" :style="'background:' + currentBU.color"></div>
-                    <div class="flex flex-col items-center gap-2 flex-1 justify-center">
-                      <div class="h-3 bg-zinc-600 rounded w-2/3"></div>
-                      <div class="h-2 bg-zinc-700 rounded w-3/4"></div>
-                      <div class="h-2 bg-zinc-700 rounded w-4/5"></div>
-                      <div class="h-6 rounded w-2/5 mt-1" :style="'background:' + currentBU.color"></div>
+                      <div class="flex-1 rounded p-1.5 bg-white" :style="'border-left:2px solid ' + currentBU.color + '66'">
+                        <div class="h-1.5 w-2/3 rounded bg-black opacity-10 mb-1"></div>
+                        <div class="h-1 w-full rounded bg-black opacity-5"></div>
+                      </div>
+                    </div>
+                    <div class="flex justify-center pb-1.5">
+                      <div class="h-5 w-16 rounded" :style="'background:' + currentBU.color + 'cc'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
                     </div>
                   </div>
                 </template>
+
+                <!-- anuncio -->
+                <template x-if="t.tipo === 'anuncio'">
+                  <div class="w-full h-full flex flex-col bg-white">
+                    <div class="h-2" :style="'background:' + currentBU.color"></div>
+                    <div class="h-6 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-2 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center justify-center gap-2 px-4">
+                      <div class="h-2.5 w-1/2 rounded bg-zinc-800 opacity-20"></div>
+                      <div class="h-1.5 w-full rounded bg-zinc-700 opacity-10"></div>
+                      <div class="h-1.5 w-4/5 rounded bg-zinc-700 opacity-10"></div>
+                      <div class="h-6 w-20 rounded mt-1" :style="'background:' + currentBU.color + 'dd'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- boas-vindas -->
+                <template x-if="t.tipo === 'boas-vindas'">
+                  <div class="w-full h-full flex flex-col bg-white">
+                    <div class="h-9 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-3 w-14 rounded opacity-80" :style="'background:' + currentBU.color"></div>
+                    </div>
+                    <div class="px-3 pt-2 flex-1">
+                      <div class="h-2 w-1/2 rounded bg-zinc-700 opacity-25 mb-1.5"></div>
+                      <div class="h-1.5 w-full rounded bg-zinc-700 opacity-10 mb-1"></div>
+                      <div class="flex items-center gap-1.5 mb-1">
+                        <div class="w-3 h-3 rounded-full shrink-0 border" :style="'border-color:' + currentBU.color + ';background:' + currentBU.color + '22'"></div>
+                        <div class="h-1.5 rounded bg-zinc-700 opacity-10" style="width:65%"></div>
+                      </div>
+                      <div class="flex items-center gap-1.5 mb-1">
+                        <div class="w-3 h-3 rounded-full shrink-0 border" :style="'border-color:' + currentBU.color + ';background:' + currentBU.color + '22'"></div>
+                        <div class="h-1.5 rounded bg-zinc-700 opacity-10" style="width:75%"></div>
+                      </div>
+                      <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 rounded-full shrink-0 border" :style="'border-color:' + currentBU.color + ';background:' + currentBU.color + '22'"></div>
+                        <div class="h-1.5 rounded bg-zinc-700 opacity-10" style="width:55%"></div>
+                      </div>
+                    </div>
+                    <div class="flex justify-center pb-1.5">
+                      <div class="h-5 w-16 rounded" :style="'background:' + currentBU.color + 'cc'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- produto -->
+                <template x-if="t.tipo === 'produto'">
+                  <div class="w-full h-full flex flex-col bg-white">
+                    <div class="h-6 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-2 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div>
+                    </div>
+                    <div class="flex gap-2 px-2 pt-2 flex-1">
+                      <div class="flex-1 rounded flex items-center justify-center opacity-20" :style="'background:' + currentBU.color + '33'">
+                        <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      </div>
+                      <div class="flex-1 flex flex-col justify-center gap-1">
+                        <div class="h-2 w-full rounded bg-zinc-700 opacity-20"></div>
+                        <div class="h-1.5 w-5/6 rounded bg-zinc-700 opacity-10"></div>
+                        <div class="h-1.5 w-full rounded bg-zinc-700 opacity-10"></div>
+                      </div>
+                    </div>
+                    <div class="flex justify-center py-1.5">
+                      <div class="h-5 w-16 rounded" :style="'background:' + currentBU.color + 'cc'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- texto-longo -->
+                <template x-if="t.tipo === 'texto-longo'">
+                  <div class="w-full h-full flex flex-col bg-white">
+                    <div class="h-6 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-2 w-12 rounded opacity-80" :style="'background:' + currentBU.color"></div>
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1 px-3 pt-2">
+                      <div class="h-2 w-1/2 rounded bg-zinc-700 opacity-20 mb-1"></div>
+                      <div class="h-1 w-full rounded bg-zinc-700 opacity-10"></div>
+                      <div class="h-1 w-11/12 rounded bg-zinc-700 opacity-10"></div>
+                      <div class="h-1 w-full rounded bg-zinc-700 opacity-10"></div>
+                      <div class="h-1 w-4/5 rounded bg-zinc-700 opacity-10"></div>
+                      <div class="h-1 w-full rounded bg-zinc-700 opacity-10"></div>
+                      <div class="h-1 w-11/12 rounded bg-zinc-700 opacity-10 mt-1"></div>
+                      <div class="h-1 w-4/5 rounded bg-zinc-700 opacity-10"></div>
+                    </div>
+                    <div class="px-3 pb-2">
+                      <div class="h-5 w-16 rounded" :style="'background:' + currentBU.color + 'cc'"></div>
+                    </div>
+                    <div class="h-5 flex items-center justify-center" :style="'background:' + currentBU.dark">
+                      <div class="h-1 w-10 rounded opacity-30" :style="'background:' + currentBU.color"></div>
+                    </div>
+                  </div>
+                </template>
+
               </div>
               <div class="p-4">
-                <p class="text-sm font-medium" x-text="t.name"></p>
-                <p class="text-xs text-zinc-500 mt-0.5" x-text="t.desc"></p>
-                <button class="btn btn-outline text-xs mt-3">
-                  Usar este template →
-                </button>
+                <p class="text-sm font-medium" x-text="t.nome"></p>
+                <p class="text-xs text-zinc-500 mt-0.5" x-text="t.descricao"></p>
+                <button class="btn btn-outline text-xs mt-3">Usar este template →</button>
               </div>
             </div>
           </template>
@@ -996,13 +968,11 @@
             <p class="text-xs text-zinc-500 mt-0.5">Prompts salvos para reutilizar em novas gerações</p>
           </div>
         </div>
-
         <div x-show="prompts.filter(p => p.bu === bu).length === 0" class="text-center py-16 text-zinc-500 text-sm">
           <svg class="w-8 h-8 mx-auto opacity-30 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           <p>Nenhum prompt salvo ainda.</p>
           <p class="text-xs mt-1">Salve prompts a partir de emails na fila usando o ícone de marcador.</p>
         </div>
-
         <div class="space-y-3">
           <template x-for="p in prompts.filter(p => p.bu === bu)" :key="p.id">
             <div class="card p-4">
@@ -1048,21 +1018,16 @@
             <h1 class="text-lg font-semibold">Nova Jornada</h1>
             <p class="text-xs text-zinc-500 mt-0.5">Suba o mapa do Miro e o briefing — a IA cria os emails e a jornada no SFMC</p>
           </div>
-
           <div class="max-w-2xl space-y-4">
-            <!-- Nome -->
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Nome da jornada <span class="text-red-500">*</span></label>
               <input x-model="journey.name" class="input" placeholder="ex: Onboarding Premium, Reativação Q2…">
             </div>
-
-            <!-- Miro upload -->
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Mapa da jornada (Miro screenshot)</label>
               <div class="relative rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-500 transition-colors cursor-pointer overflow-hidden"
                 @click="$refs.journeyImg.click()">
-                <input type="file" x-ref="journeyImg" accept="image/*" class="hidden"
-                  @change="onJourneyImage($event)">
+                <input type="file" x-ref="journeyImg" accept="image/*" class="hidden" @change="onJourneyImage($event)">
                 <template x-if="!journey.imagePreview">
                   <div class="flex flex-col items-center justify-center py-10 gap-2 text-zinc-500">
                     <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -1079,21 +1044,13 @@
                 </template>
               </div>
             </div>
-
-            <!-- Briefing -->
             <div>
               <label class="text-xs text-zinc-500 mb-1 block">Briefing <span class="text-zinc-600">(objetivos, público, tom, contexto)</span></label>
               <textarea x-model="journey.briefing" class="input" rows="5"
-                placeholder="Ex: Jornada de onboarding para novos assinantes do plano Premium. Objetivo: engajamento nos primeiros 30 dias. Tom: educativo e motivacional. Gatilho: primeira assinatura."></textarea>
+                placeholder="Ex: Jornada de onboarding para novos assinantes do plano Premium. Objetivo: engajamento nos primeiros 30 dias."></textarea>
             </div>
-
-            <!-- Erro -->
             <div x-show="journey.analyzeError" class="rounded-lg bg-red-950/30 border border-red-900 px-3 py-2 text-sm text-red-400" x-text="journey.analyzeError"></div>
-
-            <!-- CTA -->
-            <button @click="analyzeJourney()"
-              :disabled="journey.analyzing || !journey.name"
-              class="btn btn-primary w-full justify-center">
+            <button @click="analyzeJourney()" :disabled="journey.analyzing || !journey.name" class="btn btn-primary w-full justify-center">
               <template x-if="journey.analyzing">
                 <div class="flex items-center gap-2">
                   <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -1125,12 +1082,9 @@
               </button>
             </div>
           </div>
-
-          <!-- Steps lista vertical -->
           <div class="space-y-3 mb-6">
             <template x-for="(step, idx) in journey.structure && journey.structure.steps || []" :key="step.id">
               <div class="card p-4 relative group">
-                <!-- Header do step -->
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
                     <span class="text-xs font-bold text-zinc-400" x-text="'Email ' + (idx + 1)"></span>
@@ -1144,7 +1098,6 @@
                   </div>
                   <button @click="removeJourneyStep(idx)" class="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all text-xs">✕</button>
                 </div>
-                <!-- Campos principais -->
                 <div class="grid grid-cols-2 gap-2 mb-2">
                   <input x-model="step.name" class="input text-xs font-medium" placeholder="Nome do email">
                   <input x-model="step.subject" class="input text-xs" placeholder="Assunto…">
@@ -1169,20 +1122,17 @@
                     </div>
                   </template>
                 </div>
-                <!-- Faixa de destaque -->
                 <div class="mb-2">
                   <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Faixa de destaque <span class="normal-case font-normal text-zinc-700">(opcional)</span></label>
                   <input x-model="step.customHeader" class="input text-xs" placeholder="Ex: OFERTA ESPECIAL · VÁLIDA ATÉ DOMINGO">
                 </div>
-                <!-- Copy textarea -->
                 <div class="mb-3">
                   <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Copy do email</label>
                   <textarea x-model="step.copyText" class="input text-xs w-full font-mono leading-relaxed" rows="6"
                     placeholder="Cole ou edite a copy completa do email aqui…"></textarea>
                 </div>
-                <!-- Images -->
                 <div class="mb-3">
-                  <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Imagens <span class="normal-case font-normal text-zinc-700">(opcional — serão inseridas no email)</span></label>
+                  <label class="text-[10px] text-zinc-600 uppercase tracking-wider block mb-1">Imagens <span class="normal-case font-normal text-zinc-700">(opcional)</span></label>
                   <div class="flex flex-wrap gap-2 mb-2" x-show="step.imageUrls && step.imageUrls.length > 0">
                     <template x-for="(url, ui) in step.imageUrls || []" :key="ui">
                       <div class="relative group">
@@ -1199,15 +1149,12 @@
                     <input type="file" accept="image/*" multiple class="hidden" @change="uploadStepImages(idx, $event)">
                   </label>
                 </div>
-                <!-- Preview button -->
-                <button @click="previewStepHtml(idx)"
-                  class="btn btn-ghost text-xs border border-zinc-700 hover:border-zinc-500">
+                <button @click="previewStepHtml(idx)" class="btn btn-ghost text-xs border border-zinc-700 hover:border-zinc-500">
                   <svg class="w-3 h-3 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   Preview HTML
                 </button>
               </div>
             </template>
-            <!-- Add step -->
             <button @click="addJourneyStep()"
               class="w-full py-3 rounded-lg border-2 border-dashed border-zinc-800 hover:border-zinc-600 text-zinc-600 hover:text-zinc-400 transition-colors text-sm flex items-center justify-center gap-2">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1232,7 +1179,7 @@
                   </div>
                 </template>
                 <template x-if="!journey.previewLoading && journey.previewHtml">
-                  <iframe :srcdoc="journey.previewHtml" class="w-full h-[70vh] border-0 rounded-b-xl bg-white"></iframe>
+                  <iframe :srcdoc="journey.previewHtml" sandbox="allow-same-origin allow-popups allow-scripts" class="w-full h-[70vh] border-0 rounded-b-xl bg-white"></iframe>
                 </template>
               </div>
             </div>
@@ -1250,7 +1197,6 @@
               <input :value="journey.structure && journey.structure.entryEvent" class="input text-zinc-400 text-xs" readonly>
             </div>
           </div>
-
           <div x-show="journey.creatingError" class="mt-4 rounded-lg bg-red-950/30 border border-red-900 px-3 py-2 text-sm text-red-400" x-text="journey.creatingError"></div>
         </div>
 
@@ -1299,11 +1245,9 @@
                 <p class="text-xs text-zinc-500" x-text="journey.structure && journey.structure.name"></p>
               </div>
             </div>
-            <!-- Warning partial -->
             <template x-if="journey.result && journey.result.partial">
               <div class="mb-4 rounded-lg bg-amber-950/30 border border-amber-800 px-3 py-2 text-xs text-amber-400" x-text="journey.result.warning"></div>
             </template>
-            <!-- JB info -->
             <template x-if="journey.result && journey.result.journeyId">
               <div class="mb-4 rounded-lg bg-zinc-900 border border-zinc-700 px-4 py-3 flex items-center justify-between">
                 <div>
@@ -1313,7 +1257,6 @@
                 <span class="text-xs text-emerald-400">rascunho criado ✓</span>
               </div>
             </template>
-            <!-- Emails -->
             <div class="card divide-y divide-zinc-800 mb-4">
               <template x-for="(email, i) in journey.result && journey.result.emails || []" :key="i">
                 <div class="flex items-center justify-between px-4 py-3">
@@ -1359,7 +1302,7 @@
     </button>
   </nav>
 
-</div><!-- end x-show API_URL -->
+</div><!-- end main layout -->
 
 <!-- ============================================================ -->
 <!-- SCHEDULE MODAL -->
@@ -1372,8 +1315,6 @@
     </div>
     <div class="p-5 space-y-4">
       <p class="text-xs text-zinc-400 font-medium" x-text="selectedEmail && selectedEmail.Nome"></p>
-
-      <!-- Data e Horário -->
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-zinc-500 mb-1 block">Data de envio</label>
@@ -1384,8 +1325,6 @@
           <input x-model="schedule.sendTime" type="time" class="input">
         </div>
       </div>
-
-      <!-- Send Classification -->
       <div>
         <label class="text-xs text-zinc-500 mb-1 block">Sender Profile <span class="text-red-500">*</span></label>
         <template x-if="buScheduleConfig.sendClassifications.length > 0">
@@ -1400,8 +1339,6 @@
           <input x-model="schedule.sendClassKey" class="input" placeholder="CustomerKey da Send Classification">
         </template>
       </div>
-
-      <!-- Pasta de Tracking -->
       <div>
         <label class="text-xs text-zinc-500 mb-1 block">Pasta de Tracking <span class="text-zinc-600">(opcional)</span></label>
         <template x-if="buScheduleConfig.trackingFolders.length > 0">
@@ -1416,11 +1353,8 @@
           <input x-model="schedule.categoryId" class="input" placeholder="CategoryID da pasta">
         </template>
       </div>
-
-      <!-- DEs de Envio -->
       <div>
         <label class="text-xs text-zinc-500 mb-1 block">DEs de Envio</label>
-        <!-- Tags -->
         <div class="flex flex-wrap gap-1.5 mb-2" x-show="schedule.desEnvio.length > 0">
           <template x-for="(de, idx) in schedule.desEnvio" :key="de">
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
@@ -1430,17 +1364,12 @@
           </template>
         </div>
         <div class="flex gap-2">
-          <input x-model="schedule.deEnvioInput" class="input flex-1"
-            placeholder="ex: tb_assinantes_recentes"
-            @keydown.enter.prevent="addDeEnvio()">
+          <input x-model="schedule.deEnvioInput" class="input flex-1" placeholder="ex: tb_assinantes_recentes" @keydown.enter.prevent="addDeEnvio()">
           <button @click="addDeEnvio()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
         </div>
       </div>
-
-      <!-- DEs de Exclusão -->
       <div>
         <label class="text-xs text-zinc-500 mb-1 block">DEs de Exclusão <span class="text-zinc-600">(opcional)</span></label>
-        <!-- Tags -->
         <div class="flex flex-wrap gap-1.5 mb-2" x-show="schedule.desExclusao.length > 0">
           <template x-for="(de, idx) in schedule.desExclusao" :key="de">
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300 border border-zinc-700">
@@ -1450,24 +1379,17 @@
           </template>
         </div>
         <div class="flex gap-2">
-          <input x-model="schedule.deExclusaoInput" class="input flex-1"
-            placeholder="ex: Tb_CP_Email"
-            @keydown.enter.prevent="addDeExclusao()">
+          <input x-model="schedule.deExclusaoInput" class="input flex-1" placeholder="ex: Tb_CP_Email" @keydown.enter.prevent="addDeExclusao()">
           <button @click="addDeExclusao()" class="btn btn-outline shrink-0 text-xs px-3">+ Add</button>
         </div>
       </div>
-
-      <!-- Observações -->
       <div>
         <label class="text-xs text-zinc-500 mb-1 block">Observações</label>
         <textarea x-model="schedule.obs" class="input" rows="2" placeholder="Notas adicionais…"></textarea>
       </div>
-
-      <!-- Log de progresso -->
       <div x-show="schedule.log" class="rounded-lg bg-zinc-900 border border-zinc-800 px-3 py-2">
         <p class="text-xs font-mono text-zinc-400" x-text="schedule.log"></p>
       </div>
-
       <div class="flex gap-2 pt-2">
         <button @click="detail.showAgendar = false" class="btn btn-outline flex-1 justify-center" :disabled="schedule.submitting">Cancelar</button>
         <button @click="confirmSchedule()" class="btn btn-success flex-1 justify-center"
@@ -1484,7 +1406,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- DELETE CONFIRM MODAL (email detail) -->
+<!-- DELETE CONFIRM MODAL -->
 <!-- ============================================================ -->
 <div x-show="deleteConfirmDetail" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
   <div class="card w-full max-w-sm">
@@ -1539,1054 +1461,6 @@
     </div>
   </div>
 </div>
-
-<!-- ============================================================ -->
-<!-- APP SCRIPT -->
-<!-- ============================================================ -->
-<script>
-function mktcApp() {
-  return {
-    // ========== CONFIG ==========
-    API_URL: '',
-    setupApiUrl: '',
-
-    // ========== STATE ==========
-    view:          'dashboard',
-    bu:            'finclass',
-    emails:        [],
-    stats:         {total: 0, rascunho: 0, em_aprovacao: 0, aprovado: 0, agendado: 0, enviado: 0},
-    dataviewStats: {sends: 0, opens: 0, openRate: 0, clicks: 0, ctr: 0, bounces: 0},
-    dataviewDays:  30,
-    dataviewLoading: false,
-    dataviewError:   null,
-    sendClassificationsList: [],
-    selectedEmail:   null,
-    loading:         false,
-    loadError:       null,
-    filaSearch:      '',
-    filaFilter:      'all',
-    deleteConfirmId:     null,
-    deleteConfirmDetail: false,
-    prompts:         [],
-    savePromptModal: false,
-    savePromptNome:  '',
-    toast:           {show: false, message: '', type: 'success'},
-
-    detail: {
-      html: '', assunto: '', preheader: '',
-      viewport: 'desktop', saving: false,
-      showAgendar: false, tab: 'preview',
-      desEnvio: [], desExclusao: [],
-      deEnvioInput: '', deExclusaoInput: '',
-      sendDate: '', sendTime: '', sendClassKey: '',
-    },
-
-    schedule: {
-      sendDate: '', sendTime: '',
-      sendClassKey: '',
-      desEnvio: [], desExclusao: [],
-      deEnvioInput: '', deExclusaoInput: '',
-      categoryId: '',
-      obs: '',
-      submitting: false, log: ''
-    },
-
-    wizard: {
-      step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '', customHeader: '',
-      emailNome: '', templateId: 'full-hero', campanhaNome: '',
-      refImageFile: null, refImagePreview: null, refImageB64: null,
-      docxLoading: false, manualMode: false, manualHtml: '',
-      generating: false, genError: null, generatedHtml: '',
-      docxImages: [], docxImageUrls: [], imagesUploading: false,
-      desEnvio: [], desExclusao: [], deEnvioInput: '', deExclusaoInput: '',
-      sendDate: '', sendTime: '',
-    },
-
-    journey: {
-      view: 'upload',
-      name: '', briefing: '', entryDE: '',
-      imageB64: null, imagePreview: null,
-      analyzing: false, analyzeError: null,
-      structure: null,
-      creating: false, creatingStep: -1, creatingError: null,
-      result: null,
-      previewOpen: false, previewLoading: false,
-      previewHtml: null, previewStepName: '',
-      imagesUploading: false,
-    },
-
-    // ========== INIT ==========
-    init() {
-      const savedUrl = localStorage.getItem('mktc_api_url');
-      if (savedUrl) this.API_URL = savedUrl;
-      const savedBU = localStorage.getItem('mktc_bu');
-      if (savedBU) this.bu = savedBU;
-      this.loadPromptsFromStorage();
-      if (this.API_URL) {
-        this.loadDashboard();
-        this.loadDataviews();
-        this.loadSendClassifications();
-      }
-    },
-
-    saveApiUrl() {
-      const url = this.setupApiUrl.trim();
-      if (!url) return;
-      this.API_URL = url;
-      localStorage.setItem('mktc_api_url', url);
-      this.loadDashboard();
-    },
-
-    disconnectApi() {
-      if (!confirm('Desconectar da API? O localStorage será limpo.')) return;
-      localStorage.removeItem('mktc_api_url');
-      localStorage.removeItem('mktc_bu');
-      this.API_URL = '';
-      this.setupApiUrl = '';
-    },
-
-    // ========== NAVIGATION ==========
-    async navigateTo(newView) {
-      this.view = newView;
-      if (newView === 'dashboard') await this.loadDashboard();
-      else if (newView === 'fila') await this.loadEmails();
-      else if (newView === 'nova-solicitacao') this.resetWizard();
-      else if (newView === 'jornada') this.resetJourney();
-      // 'prompts' and 'catalogo' use in-memory data only
-    },
-
-    async changeBU(newBU) {
-      this.bu = newBU;
-      localStorage.setItem('mktc_bu', newBU);
-      this.emails = [];
-      this.stats = {total: 0, rascunho: 0, em_aprovacao: 0, aprovado: 0, agendado: 0, enviado: 0};
-      this.dataviewStats = {sends: 0, opens: 0, openRate: 0, clicks: 0, ctr: 0, bounces: 0};
-      this.sendClassificationsList = [];
-      if (this.view === 'dashboard' || this.view === 'fila') await this.loadDashboard();
-      this.loadDataviews();
-      this.loadSendClassifications();
-    },
-
-    retryLoad() {
-      this.loadError = null;
-      if (this.view === 'dashboard') this.loadDashboard();
-      else this.loadEmails();
-    },
-
-    // ========== API ==========
-    async apiCall(action, data = {}) {
-      if (!this.API_URL) throw new Error('API URL não configurada');
-
-      // Flatten nested {email: {...}} into flat params
-      const flat = {action, bu: this.bu};
-      for (const [k, v] of Object.entries(data)) {
-        if (k === 'email' && v && typeof v === 'object') Object.assign(flat, v);
-        else flat[k] = v ?? '';
-      }
-
-      // save_email: roteia pelo Vercel (proxy seguro, sem limite de URL do browser)
-      // demais ações: GET direto ao SFMC
-      let response;
-      if (action === 'save_email') {
-        delete flat.HTML_Content;
-        response = await fetch('https://platform-indol-five.vercel.app/api/save', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({sfmcUrl: this.API_URL, ...flat}),
-        });
-      } else {
-        response = await fetch(`${this.API_URL}?${new URLSearchParams(flat)}`);
-      }
-
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const text = await response.text();
-      let json;
-      try {
-        json = JSON.parse(text.trim());
-      } catch(e1) {
-        const match = text.match(/\{[\s\S]*?\}/);
-        if (!match) throw new Error('Sem JSON na resposta: ' + text.substring(0, 120));
-        try { json = JSON.parse(match[0]); }
-        catch(e2) { throw new Error('JSON inválido: ' + text.substring(0, 120)); }
-      }
-      if (json.error || json.success === false) throw new Error(json.error || 'Erro na API');
-      return json;
-    },
-
-    // ========== DATA ==========
-    async loadDashboard() {
-      this.loading = true; this.loadError = null;
-      try {
-        const [statsRes, emailsRes] = await Promise.all([
-          this.apiCall('get_stats'),
-          this.apiCall('list_emails')
-        ]);
-        this.stats  = statsRes.data  || this.stats;
-        this.emails = (emailsRes.data || []).filter(e => e.Status !== 'deletado');
-      } catch(e) { this.loadError = e.message; }
-      finally    { this.loading = false; }
-    },
-
-    async loadEmails() {
-      this.loading = true; this.loadError = null;
-      try {
-        const res = await this.apiCall('list_emails');
-        this.emails = (res.data || []).filter(e => e.Status !== 'deletado');
-      } catch(e) { this.loadError = e.message; }
-      finally    { this.loading = false; }
-    },
-
-    // ========== EMAIL DETAIL ==========
-    async openEmail(email) {
-      this.selectedEmail    = email;
-      this.detail.html        = '';
-      this.detail.assunto     = email.Assunto   || '';
-      this.detail.preheader   = email.Preheader || '';
-      this.detail.tab         = 'preview';
-      this.detail.showAgendar = false;
-      this.detail.desEnvio    = email.DE_Envio    ? email.DE_Envio.split(',').map(s => s.trim()).filter(Boolean) : [];
-      this.detail.desExclusao = email.DE_Exclusao ? email.DE_Exclusao.split(',').map(s => s.trim()).filter(Boolean) : [];
-      this.detail.sendDate    = email.Send_Date || '';
-      this.detail.sendTime    = email.Send_Time || '';
-      this.detail.sendClassKey = '';
-      this.view = 'email-detail';
-      // Busca metadados; HTML_Content vive no localStorage (SFMC não aceita grandes payloads)
-      try {
-        const res = await this.apiCall('get_email', {id: email.ID});
-        if (res.data) {
-          this.selectedEmail = {...this.selectedEmail, ...res.data};
-          // Usa localStorage como fonte primária para HTML (SFMC armazena só metadados)
-          const localHtml = localStorage.getItem('mktc_html_' + email.ID);
-          this.detail.html = localHtml || res.data.HTML_Content || '';
-        }
-      } catch(e) {
-        const localHtml = localStorage.getItem('mktc_html_' + email.ID);
-        if (localHtml) this.detail.html = localHtml;
-      }
-    },
-
-    async saveDetail() {
-      this.detail.saving = true;
-      try {
-        await this.apiCall('save_email', {
-          email: {
-            ...this.selectedEmail,
-            Assunto:      this.detail.assunto,
-            Preheader:    this.detail.preheader,
-            HTML_Content: this.detail.html,
-          }
-        });
-        this.selectedEmail.Assunto      = this.detail.assunto;
-        this.selectedEmail.Preheader    = this.detail.preheader;
-        this.selectedEmail.HTML_Content = this.detail.html;
-        this.showToast('Salvo com sucesso!', 'success');
-      } catch(e) { this.showToast('Erro: ' + e.message, 'error'); }
-      finally    { this.detail.saving = false; }
-    },
-
-    async approveEmail() {
-      try {
-        await this.saveDetail();
-        await this.apiCall('save_email', {
-          email: {...this.selectedEmail, Status: 'em_aprovacao'}
-        });
-        this.selectedEmail.Status = 'em_aprovacao';
-        this.openScheduleModal();
-      } catch(e) { this.showToast('Erro: ' + e.message, 'error'); }
-    },
-
-    openScheduleModal() {
-      this.schedule = {
-        sendDate:    this.detail.sendDate    || '',
-        sendTime:    this.detail.sendTime    || '',
-        sendClassKey: this.detail.sendClassKey || '',
-        desEnvio:    [...this.detail.desEnvio],
-        desExclusao: [...this.detail.desExclusao],
-        deEnvioInput: '', deExclusaoInput: '',
-        categoryId: '', obs: '', submitting: false, log: ''
-      };
-      this.detail.showAgendar = true;
-    },
-
-    async confirmSchedule() {
-      this.schedule.submitting = true;
-      this.schedule.log = 'Enviando para SFMC…';
-      const html = this.detail.html || localStorage.getItem('mktc_html_' + (this.selectedEmail && this.selectedEmail.ID)) || '';
-      if (!html) {
-        this.showToast('HTML não encontrado. Salve o email antes de agendar.', 'error');
-        this.schedule.submitting = false;
-        this.schedule.log = '';
-        return;
-      }
-      try {
-        const resp = await fetch('https://platform-indol-five.vercel.app/api/schedule', {
-          method:  'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            bu:                 this.bu,
-            nome:               this.selectedEmail.Nome || '',
-            assunto:            this.detail.assunto || this.selectedEmail.Assunto || '',
-            html:               html,
-            sendClassificationId: this.schedule.sendClassKey,
-            desEnvio:           this.schedule.desEnvio,
-            desExclusao:        this.schedule.desExclusao,
-            sendDate:           this.schedule.sendDate,
-            sendTime:           this.schedule.sendTime,
-            trackingFolderId:   this.schedule.categoryId || undefined,
-          })
-        });
-        const result = await resp.json();
-        if (!resp.ok || result.error) throw new Error(result.error || 'HTTP ' + resp.status);
-
-        // Update status in SFMC
-        await this.apiCall('save_email', {
-          email: {
-            ...this.selectedEmail,
-            Status:      'agendado',
-            Send_Date:   this.schedule.sendDate,
-            Send_Time:   this.schedule.sendTime,
-            DE_Envio:    this.schedule.desEnvio.join(','),
-            DE_Exclusao: this.schedule.desExclusao.join(','),
-            Obs:         (this.schedule.obs ? this.schedule.obs + '\n' : '') +
-                         '[SFMC] Email:' + (result.emailId||'') + ' ESD:' + (result.esdId||''),
-          }
-        });
-
-        this.selectedEmail.Status = 'agendado';
-        this.detail.showAgendar   = false;
-        this.schedule = {
-          sendDate: '', sendTime: '', sendClassKey: '',
-          desEnvio: [], desExclusao: [],
-          deEnvioInput: '', deExclusaoInput: '',
-          categoryId: '', obs: '', submitting: false, log: ''
-        };
-        this.showToast('Agendado! Email Studio ID: ' + (result.emailId || '?'), 'success');
-        await this.navigateTo('fila');
-      } catch(e) {
-        this.schedule.log = '';
-        this.showToast('Erro: ' + e.message, 'error');
-      } finally {
-        this.schedule.submitting = false;
-      }
-    },
-
-    copyHTML() {
-      navigator.clipboard.writeText(this.detail.html)
-        .then(() => this.showToast('HTML copiado!', 'success'))
-        .catch(() => this.showToast('Erro ao copiar', 'error'));
-    },
-
-    async deleteEmail(id) {
-      const email = this.emails.find(e => e.ID === id);
-      if (!email) { this.deleteConfirmId = null; return; }
-      try {
-        await this.apiCall('save_email', { email: { ...email, Status: 'deletado' } });
-        localStorage.removeItem('mktc_html_' + id);
-        this.emails = this.emails.filter(e => e.ID !== id);
-        this.deleteConfirmId = null;
-        this.showToast('Email removido.', 'success');
-      } catch(e) {
-        this.deleteConfirmId = null;
-        this.showToast('Erro ao excluir: ' + e.message, 'error');
-      }
-    },
-
-    addDeEnvio() {
-      const v = this.schedule.deEnvioInput.trim();
-      if (v && !this.schedule.desEnvio.includes(v)) this.schedule.desEnvio.push(v);
-      this.schedule.deEnvioInput = '';
-    },
-
-    addDeExclusao() {
-      const v = this.schedule.deExclusaoInput.trim();
-      if (v && !this.schedule.desExclusao.includes(v)) this.schedule.desExclusao.push(v);
-      this.schedule.deExclusaoInput = '';
-    },
-
-    addWizardDeEnvio() {
-      const v = this.wizard.deEnvioInput.trim();
-      if (v && !this.wizard.desEnvio.includes(v)) this.wizard.desEnvio.push(v);
-      this.wizard.deEnvioInput = '';
-    },
-
-    addWizardDeExclusao() {
-      const v = this.wizard.deExclusaoInput.trim();
-      if (v && !this.wizard.desExclusao.includes(v)) this.wizard.desExclusao.push(v);
-      this.wizard.deExclusaoInput = '';
-    },
-
-    addDetailDeEnvio() {
-      const v = this.detail.deEnvioInput.trim();
-      if (v && !this.detail.desEnvio.includes(v)) this.detail.desEnvio.push(v);
-      this.detail.deEnvioInput = '';
-    },
-
-    addDetailDeExclusao() {
-      const v = this.detail.deExclusaoInput.trim();
-      if (v && !this.detail.desExclusao.includes(v)) this.detail.desExclusao.push(v);
-      this.detail.deExclusaoInput = '';
-    },
-
-    async saveConfig() {
-      try {
-        await this.apiCall('save_email', {
-          email: {
-            ...this.selectedEmail,
-            Send_Date:   this.detail.sendDate,
-            Send_Time:   this.detail.sendTime,
-            DE_Envio:    this.detail.desEnvio.join(','),
-            DE_Exclusao: this.detail.desExclusao.join(','),
-          }
-        });
-        this.selectedEmail.Send_Date   = this.detail.sendDate;
-        this.selectedEmail.Send_Time   = this.detail.sendTime;
-        this.selectedEmail.DE_Envio    = this.detail.desEnvio.join(',');
-        this.selectedEmail.DE_Exclusao = this.detail.desExclusao.join(',');
-        this.showToast('Configuração salva!', 'success');
-      } catch(e) { this.showToast('Erro: ' + e.message, 'error'); }
-    },
-
-    // ========== WIZARD ==========
-    resetWizard() {
-      this.wizard = {
-        step: 1, tipo: 'avulso', copyText: '', assunto: '', preheader: '', customHeader: '',
-        emailNome: '', templateId: 'full-hero', campanhaNome: '',
-        refImageFile: null, refImagePreview: null, refImageB64: null,
-        docxLoading: false, manualMode: false, manualHtml: '',
-        generating: false, genError: null, generatedHtml: '',
-        docxImages: [], docxImageUrls: [], imagesUploading: false,
-        desEnvio: [], desExclusao: [], deEnvioInput: '', deExclusaoInput: '',
-        sendDate: '', sendTime: '',
-      };
-    },
-
-    wizardNext() { if (this.wizard.step < 5) this.wizard.step++; },
-    wizardBack() { if (this.wizard.step > 1) this.wizard.step--; },
-
-    async importDocx(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      this.wizard.docxLoading = true;
-      this.wizard.docxImages  = [];
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const extractedImages = [];
-        // Extract HTML with images (base64 data URIs)
-        const result = await mammoth.convertToHtml({arrayBuffer}, {
-          convertImage: mammoth.images.imgElement(function(image) {
-            return image.read('base64').then(function(b64) {
-              extractedImages.push({ b64, mediaType: image.contentType, filename: 'img_' + extractedImages.length });
-              return { src: 'data:' + image.contentType + ';base64,' + b64 };
-            });
-          })
-        });
-        this.wizard.docxImages = extractedImages;
-        // Extract plain text from resulting HTML
-        const tmp = document.createElement('div');
-        tmp.innerHTML = result.value;
-        this.wizard.copyText = (tmp.innerText || tmp.textContent || '').trim();
-        const nImgs = extractedImages.length;
-        this.showToast('Extraído' + (nImgs ? ' · ' + nImgs + ' imagem(ns) encontrada(s)' : ''), 'success');
-      } catch(e) {
-        this.showToast('Erro ao ler .docx: ' + e.message, 'error');
-      } finally {
-        this.wizard.docxLoading = false;
-        event.target.value = '';
-      }
-    },
-
-    async uploadDocxImages() {
-      const urls = [];
-      for (const img of this.wizard.docxImages) {
-        try {
-          const resp = await fetch('https://platform-indol-five.vercel.app/api/upload-image', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ imageB64: img.b64, mediaType: img.mediaType, filename: img.filename }),
-          });
-          const data = await resp.json();
-          if (data.url) {
-            urls.push(data.url);
-          } else {
-            this.showToast('Upload img falhou: ' + (data.error || resp.status), 'error');
-          }
-        } catch(e) {
-          this.showToast('Upload img erro de rede: ' + e.message, 'error');
-        }
-      }
-      return urls;
-    },
-
-    async saveManualEmail() {
-      const emailName = this.wizard.emailNome || this.wizard.assunto || 'Email ' + new Date().toLocaleDateString('pt-BR');
-      try {
-        const saveResult = await this.apiCall('save_email', {
-          email: {
-            Nome:         emailName,
-            Status:       'rascunho',
-            Assunto:      this.wizard.assunto,
-            Preheader:    this.wizard.preheader,
-            HTML_Content: this.wizard.manualHtml,
-            Template_ID:  this.wizard.templateId,
-            Send_Date:    this.wizard.sendDate  || '',
-            Send_Time:    this.wizard.sendTime  || '',
-            DE_Envio:     this.wizard.desEnvio.join(','),
-            DE_Exclusao:  this.wizard.desExclusao.join(','),
-            Obs:          this.wizard.campanhaNome ? 'Campanha: ' + this.wizard.campanhaNome : '',
-          }
-        });
-        await this.loadEmails();
-        const saved = this.emails.find(e => e.ID === saveResult.id);
-        if (saved) this.openEmail(saved);
-        else this.navigateTo('fila');
-      } catch(e) {
-        this.showToast('Erro ao salvar: ' + e.message, 'error');
-      }
-    },
-
-    async handleRefImageUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      try {
-        const resized = await this.resizeImage(file, 800, 800);
-        this.wizard.refImagePreview = resized;
-        this.wizard.refImageB64    = resized;
-      } catch(e) {
-        this.showToast('Erro ao processar imagem', 'error');
-      }
-    },
-
-    resizeImage(file, maxW, maxH) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = reject;
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onerror = reject;
-          img.onload = () => {
-            let w = img.width, h = img.height;
-            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-            if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
-            const canvas = document.createElement('canvas');
-            canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    },
-
-    async generateEmail() {
-      this.wizard.step       = 6;
-      this.wizard.generating = true;
-      this.wizard.genError   = null;
-
-      try {
-        const emailName = this.wizard.emailNome
-          || this.wizard.assunto
-          || 'Email ' + new Date().toLocaleDateString('pt-BR');
-
-        // Upload docx images to SFMC first (if any)
-        let imageUrls = [];
-        if (this.wizard.docxImages.length > 0) {
-          this.wizard.imagesUploading = true;
-          imageUrls = await this.uploadDocxImages();
-          this.wizard.docxImageUrls   = imageUrls;
-          this.wizard.imagesUploading = false;
-        }
-
-        const genResp = await fetch('https://platform-indol-five.vercel.app/api/generate', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            bu:          this.bu,
-            copyText:    this.wizard.copyText,
-            assunto:     this.wizard.assunto,
-            preheader:   this.wizard.preheader,
-            templateId:  this.wizard.templateId,
-            sfmcUrl:     this.API_URL,
-            emailNome:   emailName,
-            refImageB64: this.wizard.refImageB64 || null,
-            imageUrls,
-            customHeader: this.wizard.customHeader || '',
-          })
-        });
-        if (!genResp.ok) throw new Error('HTTP ' + genResp.status);
-        const result = await genResp.json();
-        if (!result.success) throw new Error(result.error || 'Erro na geração');
-
-        if (result.id && result.html) {
-          try { localStorage.setItem('mktc_html_' + result.id, result.html); } catch(_) {}
-          // Save DEs and schedule config alongside the generated email
-          if (this.wizard.desEnvio.length > 0 || this.wizard.sendDate) {
-            await this.apiCall('save_email', {
-              email: {
-                ID:          result.id,
-                DE_Envio:    this.wizard.desEnvio.join(','),
-                DE_Exclusao: this.wizard.desExclusao.join(','),
-                Send_Date:   this.wizard.sendDate  || '',
-                Send_Time:   this.wizard.sendTime  || '',
-                Obs:         this.wizard.campanhaNome ? 'Campanha: ' + this.wizard.campanhaNome : '',
-              }
-            }).catch(() => { /* non-fatal */ });
-          }
-        }
-
-        await this.loadEmails();
-        this.wizard.generating = false;
-
-        const emailObj = this.emails.find(e => e.ID === result.id)
-          || {ID: result.id, Nome: emailName, Status: 'rascunho',
-              Assunto: this.wizard.assunto, Preheader: this.wizard.preheader,
-              Template_ID: this.wizard.templateId,
-              DE_Envio: this.wizard.desEnvio.join(','),
-              DE_Exclusao: this.wizard.desExclusao.join(','),
-              Send_Date: this.wizard.sendDate, Send_Time: this.wizard.sendTime};
-
-        await this.openEmail(emailObj);
-        this.detail.html = result.html;
-      } catch(e) {
-        this.wizard.imagesUploading = false;
-        this.wizard.generating      = false;
-        this.wizard.genError        = e.message;
-      }
-    },
-
-    // ========== DATAVIEWS ==========
-    async loadDataviews() {
-      if (!this.API_URL) return;
-      this.dataviewLoading = true;
-      this.dataviewError   = null;
-      try {
-        const json = await this.apiCall('get_dataviews', {days: this.dataviewDays});
-        const d = json.data || {};
-        const sends     = d.sends     || 0;
-        const delivered = d.delivered || 0;
-        const opens     = d.opens     || 0;
-        const clicks    = d.clicks    || 0;
-        this.dataviewStats = {
-          sends,
-          opens,
-          openRate: sends     > 0 ? Math.round((opens  / sends)     * 1000) / 10 : 0,
-          clicks,
-          ctr:      delivered > 0 ? Math.round((clicks / delivered) * 1000) / 10 : 0,
-          bounces:  d.bounces || 0,
-        };
-      } catch(e) {
-        this.dataviewError = e.message;
-      } finally {
-        this.dataviewLoading = false;
-      }
-    },
-
-    setDataviewDays(days) {
-      this.dataviewDays = days;
-      this.loadDataviews();
-    },
-
-    // ========== JOURNEY ==========
-    resetJourney() {
-      this.journey = {
-        view: 'upload', name: '', briefing: '', entryDE: '',
-        imageB64: null, imagePreview: null,
-        analyzing: false, analyzeError: null,
-        structure: null,
-        creating: false, creatingStep: -1, creatingError: null,
-        result: null,
-        previewOpen: false, previewLoading: false,
-        previewHtml: null, previewStepName: '',
-        imagesUploading: false,
-      };
-    },
-
-    async uploadStepImages(idx, event) {
-      const files = [...event.target.files];
-      if (!files.length) return;
-      this.journey.imagesUploading = true;
-      try {
-        for (const file of files) {
-          const b64 = await new Promise(resolve => {
-            const r = new FileReader();
-            r.onload = e => resolve(e.target.result.split(',')[1]);
-            r.readAsDataURL(file);
-          });
-          const resp = await fetch('https://platform-indol-five.vercel.app/api/upload-image', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ imageB64: b64, mediaType: file.type, filename: file.name }),
-          });
-          const json = await resp.json();
-          if (json.url) {
-            if (!this.journey.structure.steps[idx].imageUrls) this.journey.structure.steps[idx].imageUrls = [];
-            this.journey.structure.steps[idx].imageUrls.push(json.url);
-          } else {
-            this.showToast('Erro ao subir imagem: ' + (json.error || 'falhou'), 'error');
-          }
-        }
-      } catch(e) {
-        this.showToast('Erro ao subir imagem: ' + e.message, 'error');
-      } finally {
-        this.journey.imagesUploading = false;
-        event.target.value = '';
-      }
-    },
-
-    async previewStepHtml(idx) {
-      const step = this.journey.structure.steps[idx];
-      if (!step) return;
-      this.journey.previewStepName = step.name;
-      this.journey.previewHtml = null;
-      this.journey.previewLoading = true;
-      this.journey.previewOpen = true;
-      try {
-        const resp = await fetch('https://platform-indol-five.vercel.app/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bu: this.bu,
-            copyText: step.copyText || '',
-            assunto: step.subject,
-            preheader: step.preheader || '',
-            templateId: step.template || 'full-hero',
-            emailNome: step.name,
-            customHeader: step.customHeader || '',
-            imageUrls: step.imageUrls || [],
-          }),
-        });
-        const json = await resp.json();
-        if (!json.success) throw new Error(json.error || 'Erro ao gerar HTML');
-        this.journey.previewHtml = json.html;
-      } catch(e) {
-        this.journey.previewOpen = false;
-        this.showToast('Erro no preview: ' + e.message, 'error');
-      } finally {
-        this.journey.previewLoading = false;
-      }
-    },
-
-    onJourneyImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const MAX = 640;
-          const scale = Math.min(MAX / img.width, MAX / img.height, 1);
-          const canvas = document.createElement('canvas');
-          canvas.width  = Math.round(img.width  * scale);
-          canvas.height = Math.round(img.height * scale);
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
-          this.journey.imagePreview = dataUrl;
-          this.journey.imageB64 = dataUrl.split(',')[1] || '';
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    },
-
-    async analyzeJourney() {
-      if (!this.journey.name.trim()) { this.journey.analyzeError = 'Dê um nome à jornada'; return; }
-      this.journey.analyzing = true;
-      this.journey.analyzeError = null;
-      try {
-        const resp = await fetch('https://platform-indol-five.vercel.app/api/journey/analyze', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            bu:       this.bu,
-            name:     this.journey.name,
-            briefing: this.journey.briefing,
-            image:    this.journey.imageB64 || '',
-          }),
-        });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const json = await resp.json();
-        if (!json.success) throw new Error(json.error || 'Erro na API');
-        const structure = json.data;
-        if (!structure || !structure.steps) throw new Error('Estrutura inválida retornada pela IA');
-        this.journey.structure = structure;
-        this.journey.view = 'preview';
-      } catch(e) {
-        this.journey.analyzeError = e.message;
-      } finally {
-        this.journey.analyzing = false;
-      }
-    },
-
-    addJourneyStep() {
-      const steps = this.journey.structure.steps;
-      steps.push({
-        id: Date.now(), name: 'Novo email', delay: 3, delayUnit: 'days',
-        subject: '', preheader: '', customHeader: '', copyText: '', template: 'full-hero', imageUrls: [],
-      });
-    },
-
-    removeJourneyStep(idx) {
-      this.journey.structure.steps.splice(idx, 1);
-    },
-
-    async createJourney() {
-      this.journey.view = 'creating';
-      this.journey.creating = true;
-      this.journey.creatingStep = -1;
-      this.journey.creatingError = null;
-      try {
-        const steps = this.journey.structure.steps;
-        const stepsWithHtml = [];
-
-        // Gera HTML para cada step
-        for (let i = 0; i < steps.length; i++) {
-          this.journey.creatingStep = i;
-          const step = steps[i];
-          const resp = await fetch('https://platform-indol-five.vercel.app/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bu: this.bu,
-              copyText: step.copyText || '',
-              assunto: step.subject,
-              preheader: step.preheader || '',
-              templateId: step.template || 'full-hero',
-              emailNome: step.name,
-              customHeader: step.customHeader || '',
-              imageUrls: step.imageUrls || [],
-            }),
-          });
-          if (!resp.ok) throw new Error(`Erro gerando email ${i + 1}: HTTP ${resp.status}`);
-          const json = await resp.json();
-          if (!json.success) throw new Error(`Erro gerando email ${i + 1}: ${json.error}`);
-          stepsWithHtml.push({ ...step, html: json.html });
-        }
-
-        // Cria no SFMC (CB + JB)
-        this.journey.creatingStep = steps.length;
-        const createResp = await fetch('https://platform-indol-five.vercel.app/api/journey/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bu: this.bu,
-            name: this.journey.structure.name,
-            description: this.journey.structure.description,
-            entryEvent: this.journey.structure.entryEvent,
-            steps: stepsWithHtml,
-          }),
-        });
-        const createJson = await createResp.json();
-        if (!createJson.success) throw new Error(createJson.error || 'Erro ao criar jornada');
-
-        this.journey.result = createJson;
-        this.journey.view = 'done';
-      } catch(e) {
-        this.journey.creatingError = e.message;
-        this.journey.view = 'preview';
-      } finally {
-        this.journey.creating = false;
-      }
-    },
-
-    async loadSendClassifications() {
-      if (!this.API_URL) return;
-      try {
-        const resp = await fetch(`https://platform-indol-five.vercel.app/api/${this.bu}/send-classifications`);
-        if (!resp.ok) return;
-        const data = await resp.json();
-        if (Array.isArray(data) && data.length > 0) {
-          this.sendClassificationsList = data.map(sc => ({ name: sc.label, key: sc.id }));
-        }
-      } catch(_) { /* non-fatal: fallback to static */ }
-    },
-
-    // ========== DELETE FROM DETAIL ==========
-    async deleteFromDetail() {
-      if (!this.selectedEmail) return;
-      try {
-        await this.apiCall('save_email', {
-          email: { ...this.selectedEmail, Status: 'deletado' }
-        });
-        localStorage.removeItem('mktc_html_' + this.selectedEmail.ID);
-        this.emails = this.emails.filter(e => e.ID !== this.selectedEmail.ID);
-        this.deleteConfirmDetail = false;
-        this.showToast('Email removido.', 'success');
-        await this.navigateTo('fila');
-      } catch(e) {
-        this.deleteConfirmDetail = false;
-        this.showToast('Erro ao excluir: ' + e.message, 'error');
-      }
-    },
-
-    // ========== PROMPTS ==========
-    loadPromptsFromStorage() {
-      try {
-        const raw = localStorage.getItem('mktc_prompts');
-        this.prompts = raw ? JSON.parse(raw) : [];
-      } catch(_) { this.prompts = []; }
-    },
-
-    savePromptsToStorage() {
-      try {
-        localStorage.setItem('mktc_prompts', JSON.stringify(this.prompts));
-      } catch(_) {}
-    },
-
-    openSavePromptModal() {
-      if (!this.selectedEmail) return;
-      this.savePromptNome = this.selectedEmail.Nome || '';
-      this.savePromptModal = true;
-    },
-
-    confirmSavePrompt() {
-      if (!this.savePromptNome.trim() || !this.selectedEmail) return;
-      const prompt = {
-        id: Date.now().toString(),
-        bu: this.bu,
-        nome: this.savePromptNome.trim(),
-        conteudo: this.selectedEmail.Copy_Text || this.detail.assunto || this.selectedEmail.Nome || '',
-        template_id: this.selectedEmail.Template_ID || '',
-        tags: [this.selectedEmail.Status || ''].filter(Boolean),
-        created_at: new Date().toISOString(),
-      };
-      this.prompts = [prompt, ...this.prompts];
-      this.savePromptsToStorage();
-      this.savePromptModal = false;
-      this.savePromptNome  = '';
-      this.showToast('Prompt salvo na biblioteca!', 'success');
-    },
-
-    deletePrompt(id) {
-      this.prompts = this.prompts.filter(p => p.id !== id);
-      this.savePromptsToStorage();
-      this.showToast('Prompt removido.', 'success');
-    },
-
-    // ========== COMPUTED ==========
-    get filteredEmails() {
-      return this.emails.filter(e => {
-        const matchesStatus = this.filaFilter === 'all' || e.Status === this.filaFilter;
-        const search = this.filaSearch.toLowerCase();
-        const matchesSearch = !search ||
-          (e.Nome    || '').toLowerCase().includes(search) ||
-          (e.Assunto || '').toLowerCase().includes(search);
-        return matchesStatus && matchesSearch;
-      });
-    },
-
-    get kpiCards() {
-      return [
-        {label: 'Envios',           value: this.dataviewStats.sends,                            sub: 'últimos ' + this.dataviewDays + 'd'},
-        {label: 'Aberturas',        value: this.dataviewStats.opens,                            sub: 'únicas'},
-        {label: 'Taxa de abertura', value: (this.dataviewStats.openRate || 0).toFixed(1) + '%', sub: ''},
-        {label: 'Cliques',          value: this.dataviewStats.clicks,                           sub: 'únicos'},
-        {label: 'CTR',              value: (this.dataviewStats.ctr || 0).toFixed(2) + '%',      sub: ''},
-        {label: 'Bounces',          value: this.dataviewStats.bounces,                          sub: ''},
-      ];
-    },
-
-    get todayStr() {
-      return new Date().toISOString().split('T')[0];
-    },
-
-    get templateList() {
-      return [
-        {id: 'full-hero',    name: 'Hero Completo',  desc: 'Imagem hero full-width, headline grande, CTA único'},
-        {id: 'text-first',   name: 'Copy Longa',     desc: 'Tipografia forte, mínimo de imagens, CTA no final'},
-        {id: 'side-image',   name: 'Imagem Lateral', desc: 'Grid 2 colunas com imagem à esquerda'},
-        {id: 'multi-block',  name: 'Multi-bloco',    desc: 'Múltiplos blocos com separadores visuais'},
-        {id: 'minimal',      name: 'Minimal',        desc: 'Espaço em branco, tipografia limpa, mensagem única'},
-        {id: 'announcement', name: 'Anúncio',        desc: 'Borda colorida no topo, conteúdo centralizado'},
-      ];
-    },
-
-    get wizardSteps() { return ['Tipo', 'Copy', 'Referência', 'Template', 'Config']; },
-
-    get buList() {
-      return [
-        {id: 'finclass',      name: 'Finclass',      color: '#00e7f9'},
-        {id: 'bruno-perini',  name: 'Bruno Perini',  color: '#b2ec05'},
-        {id: 'faculdade-hub', name: 'Faculdade Hub', color: '#6366f1'},
-        {id: 'thiago-nigro',  name: 'Thiago Nigro',  color: '#ff4900'},
-        {id: 'portfel',       name: 'Portfel',        color: '#F05A28'},
-        {id: 'grao',          name: 'Grão',           color: '#f59e0b'},
-      ];
-    },
-
-    get currentBU() {
-      return this.buList.find(b => b.id === this.bu) || this.buList[0];
-    },
-
-    get buScheduleConfig() {
-      const staticCfg = {
-        'finclass': {
-          sendClassifications: [
-            { name: 'Equipe Finclass', key: '84' },
-          ],
-          trackingFolders: [
-            { name: 'Email Avulso',  id: '275176' },
-            { name: 'Campanha',      id: '275626' },
-            { name: 'Outros',        id: '275234' },
-          ],
-        },
-        'bruno-perini':  { sendClassifications: [], trackingFolders: [] },
-        'faculdade-hub': { sendClassifications: [], trackingFolders: [] },
-        'thiago-nigro':  { sendClassifications: [], trackingFolders: [] },
-        'portfel':       { sendClassifications: [], trackingFolders: [] },
-        'grao':          { sendClassifications: [], trackingFolders: [] },
-      };
-      const base = staticCfg[this.bu] || { sendClassifications: [], trackingFolders: [] };
-      return {
-        sendClassifications: this.sendClassificationsList.length > 0
-          ? this.sendClassificationsList
-          : base.sendClassifications,
-        trackingFolders: base.trackingFolders,
-      };
-    },
-
-    get filaFilters() {
-      return [
-        {value: 'all',          label: 'Todos'},
-        {value: 'rascunho',     label: 'Rascunho'},
-        {value: 'em_aprovacao', label: 'Em Aprovação'},
-        {value: 'aprovado',     label: 'Aprovado'},
-        {value: 'agendado',     label: 'Agendado'},
-        {value: 'enviado',      label: 'Enviado'},
-      ];
-    },
-
-    // ========== HELPERS ==========
-    statusLabel(status) {
-      const m = {rascunho: 'Rascunho', em_aprovacao: 'Em Aprovação',
-                 aprovado: 'Aprovado', agendado: 'Agendado', enviado: 'Enviado'};
-      return m[status] || status || '—';
-    },
-
-    statusClass(status) {
-      const m = {
-        rascunho:     'bg-zinc-800 text-zinc-400',
-        em_aprovacao: 'bg-yellow-950 text-yellow-400 border border-yellow-800',
-        aprovado:     'bg-blue-950 text-blue-400 border border-blue-800',
-        agendado:     'bg-emerald-950 text-emerald-400 border border-emerald-800',
-        enviado:      'bg-zinc-800 text-zinc-500',
-      };
-      return m[status] || 'bg-zinc-800 text-zinc-400';
-    },
-
-    formatDate(dateStr) {
-      if (!dateStr) return '—';
-      try {
-        return new Date(dateStr).toLocaleDateString('pt-BR');
-      } catch(e) { return dateStr; }
-    },
-
-    showToast(message, type = 'success') {
-      this.toast = {show: true, message, type};
-      setTimeout(() => { this.toast.show = false; }, 3000);
-    },
-  };
-}
-</script>
 
 </body>
 </html>

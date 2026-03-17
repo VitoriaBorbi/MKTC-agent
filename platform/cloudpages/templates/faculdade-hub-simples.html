@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>{{ASSUNTO}}</title>
+  <!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#FFFFFF;" bgcolor="#FFFFFF">
+
+  <div style="font-size:0;line-height:0;"><custom name="opencounter" type="tracking"/></div>
+
+  <!-- PREHEADER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+    <tr><td style="font-size:0;width:0;height:0;display:none;color:#e8e8e8;line-height:0;">
+      <span style="font-size:0;width:0;height:0;display:none;color:#e8e8e8;line-height:0;">%%=AttributeValue("_Preheader")=%%</span>
+    </td></tr>
+  </table>
+
+  <!-- VIEW IN BROWSER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+    <tr><td align="right" style="padding:10px 15px;">
+      <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#7e7e7e;">Caso n&atilde;o consiga visualizar, <a href="%%view_email_url%%" style="color:#7e7e7e;text-decoration:underline;">clique aqui</a>.</span>
+    </td></tr>
+  </table>
+
+  <!-- HEADER: dark bg + Hub logo -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#0f1014;" bgcolor="#0f1014">
+    <tr><td align="center" style="padding:28px 40px;">
+      <img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/4127a0f5-8fef-456f-b13e-760099d30ccc.png" alt="Faculdade Hub" width="150" height="auto" style="display:block;border:0;" border="0" />
+    </td></tr>
+  </table>
+
+  <!-- OPTIONAL BANNER IMAGE -->
+  {{IF_BANNER_START}}
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+    <tr><td align="center" style="padding:0;">
+      <img src="{{BANNER_URL}}" alt="{{BANNER_ALT}}" width="600" height="auto" style="display:block;border:0;width:100%;max-width:600px;" border="0" />
+    </td></tr>
+  </table>
+  {{IF_BANNER_END}}
+
+  <!-- BODY CONTENT -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td style="padding:32px 40px 8px;">
+      {{CORPO_HTML}}
+    </td></tr>
+  </table>
+
+  <!-- OPTIONAL CTA -->
+  {{IF_CTA_START}}
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td align="center" style="padding:16px 40px 40px;">
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr><td align="center" bgcolor="#000000" style="background-color:#000000;border-radius:4px;mso-padding-alt:14px 32px;">
+          <a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;">{{CTA_TEXTO}}</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+  {{IF_CTA_END}}
+
+  <!-- SOCIAL ICONS -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr><td align="center" style="padding:20px 15px 10px;">
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding:0 8px;"><a href="https://www.linkedin.com/school/faculdadehub/" style="text-decoration:none;"><img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/8757d30d-95e7-4e18-90f7-3aa6a291f8c7.png" alt="LinkedIn" width="25" height="25" style="display:block;border:0;" border="0" /></a></td>
+          <td style="padding:0 8px;"><a href="https://www.instagram.com/faculdadehub/" style="text-decoration:none;"><img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/840a5d53-33a4-4ae3-aab3-340e416a7c4a.png" alt="Instagram" width="25" height="25" style="display:block;border:0;" border="0" /></a></td>
+          <td style="padding:0 8px;"><a href="https://faculdadehub.com.br/" style="text-decoration:none;"><img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/f69c22d4-6a07-4a10-a925-ee0eb71f89e4.png" alt="Faculdade Hub" width="25" height="25" style="display:block;border:0;" border="0" /></a></td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+
+  <!-- DARK FOOTER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#0f1014;" bgcolor="#0f1014">
+    <tr><td align="center" style="padding:24px 20px 16px;">
+      <img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/4127a0f5-8fef-456f-b13e-760099d30ccc.png" alt="Faculdade Hub" width="120" height="auto" style="display:block;border:0;margin:0 auto 16px;" border="0" />
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding:4px 8px;"><a href="https://faculdadehub.com.br/" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#D5D5D5;text-decoration:none;">Faculdade Hub</a></td>
+          <td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#dfe1d9;">|</td>
+          <td style="padding:4px 8px;"><a href="https://sp.oprimorico.com.br/privacy.html" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#D5D5D5;text-decoration:none;">Pol&iacute;tica de Privacidade</a></td>
+          <td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#dfe1d9;">|</td>
+          <td style="padding:4px 8px;"><a href="%%=CloudPagesURL(31,'email',emailaddr,'jobID',jobid,'emailName',emailname_)=%%" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#D5D5D5;text-decoration:none;">Cancelar Inscri&ccedil;&atilde;o</a></td>
+        </tr>
+      </table>
+      <p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#818181;text-align:center;">%%Member_Busname%% %%Member_Addr%%, %%Member_City%%, %%Member_State%%, %%Member_PostalCode%% %%Member_Country%%</p>
+    </td></tr>
+  </table>
+
+</body>
+</html>

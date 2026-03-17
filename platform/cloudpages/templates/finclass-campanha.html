@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>{{ASSUNTO}}</title>
+  <!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#FFFFFF;" bgcolor="#FFFFFF">
+
+  <div style="font-size:0;line-height:0;"><custom name="opencounter" type="tracking"/><custom name="usermatch" type="tracking"/></div>
+
+  <!-- PREHEADER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+    <tr><td style="font-size:0;width:0;height:0;display:none;color:#FFFFFF;line-height:0;">
+      <span style="font-size:0;width:0;height:0;display:none;color:#FFFFFF;line-height:0;">%%=AttributeValue("_Preheader")=%%</span>
+    </td></tr>
+  </table>
+
+  <!-- VIEW IN BROWSER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+    <tr><td align="right" style="padding:10px 15px;">
+      <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#7e7e7e;">Caso n&atilde;o consiga visualizar, <a href="%%view_email_url%%" style="color:#7e7e7e;text-decoration:underline;">clique aqui</a>.</span>
+    </td></tr>
+  </table>
+
+  <!-- HEADER: white bg + logo + cyan underline -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td align="center" style="padding:15px;">
+      <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png" alt="Finclass" width="180" height="auto" style="display:block;border:0;width:180px;" border="0" />
+      <table cellpadding="0" cellspacing="0" border="0" width="180" align="center" style="margin-top:10px;">
+        <tr><td style="border-bottom:2px solid #01bbe9;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+      </table>
+    </td></tr>
+  </table>
+
+  <!-- OPTIONAL HERO IMAGE -->
+  {{IF_BANNER_START}}
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+    <tr><td align="center" style="padding:0;">
+      <img src="{{BANNER_URL}}" alt="{{BANNER_ALT}}" width="600" height="auto" style="display:block;border:0;width:100%;max-width:600px;" border="0" />
+    </td></tr>
+  </table>
+  {{IF_BANNER_END}}
+
+  <!-- OPTIONAL HEADLINE -->
+  {{IF_TITULO_START}}
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td style="padding:28px 40px 8px;">
+      <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:bold;color:#000000;line-height:36px;">{{TITULO}}</h1>
+    </td></tr>
+  </table>
+  {{IF_TITULO_END}}
+
+  <!-- BODY CONTENT -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td style="padding:24px 40px 8px;">
+      {{CORPO_HTML}}
+    </td></tr>
+  </table>
+
+  <!-- OPTIONAL CTA -->
+  {{IF_CTA_START}}
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td align="center" style="padding:16px 40px 40px;">
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr><td align="center" bgcolor="#00e7f9" style="background-color:#00e7f9;border-radius:4px;mso-padding-alt:14px 32px;">
+          <a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#000000;text-decoration:none;mso-hide:all;">{{CTA_TEXTO}}</a>
+          <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{CTA_URL}}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="8%" fillcolor="#00e7f9" stroke="f"><w:anchorlock/><center style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#000000;">{{CTA_TEXTO}}</center></v:roundrect><![endif]-->
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+  {{IF_CTA_END}}
+
+  <!-- SOCIAL FOOTER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td align="center" style="padding:20px 15px 10px;">
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding:0 8px;"><a href="https://www.instagram.com/finclass_grupoprimo/" style="text-decoration:none;"><img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/a3e829ef-bf3f-4862-b6e4-0241fe9aa5e0.png" alt="Instagram" width="25" height="25" style="display:block;border:0;" border="0" /></a></td>
+          <td style="padding:0 8px;"><a href="https://www.youtube.com/@Finclass" style="text-decoration:none;"><img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/b5c20e96-3fba-4250-a410-91c7f3b85553.png" alt="YouTube" width="25" height="25" style="display:block;border:0;" border="0" /></a></td>
+          <td style="padding:0 8px;"><a href="https://www.linkedin.com/company/finclass/" style="text-decoration:none;"><img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/721e1e52-8ba6-4ab1-93c5-2081c39f1e97.png" alt="LinkedIn" width="25" height="25" style="display:block;border:0;" border="0" /></a></td>
+          <td style="padding:0 8px;"><a href="https://www.tiktok.com/@finclass_br" style="text-decoration:none;"><img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/dfc57152-cb95-4e55-b0dd-5536373b373f.png" alt="TikTok" width="25" height="25" style="display:block;border:0;" border="0" /></a></td>
+        </tr>
+      </table>
+      <table cellspacing="0" cellpadding="0" border="0" width="240" style="margin-top:12px;">
+        <tr><td style="border-bottom:1px solid #9ba7e0;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+      </table>
+    </td></tr>
+  </table>
+
+  <!-- LEGAL FOOTER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#FFFFFF;" bgcolor="#FFFFFF">
+    <tr><td align="center" style="padding:8px 15px 24px;">
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding:4px 8px;"><a href="" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#cacaca;text-decoration:none;">Termos de uso</a></td>
+          <td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#cacaca;">|</td>
+          <td style="padding:4px 8px;"><a href="" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#cacaca;text-decoration:none;">Pol&iacute;tica e privacidade</a></td>
+          <td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#cacaca;">|</td>
+          <td style="padding:4px 8px;"><a href="%%=CloudPagesURL(35,'email',emailaddr,'jobID',jobid,'emailName',emailname_)=%%" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#cacaca;text-decoration:none;">Cancelar e-mails</a></td>
+        </tr>
+      </table>
+      <p style="margin:8px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#aaaaaa;text-align:center;">%%Member_Busname%% %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%</p>
+    </td></tr>
+  </table>
+
+</body>
+</html>

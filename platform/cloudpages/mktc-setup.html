@@ -1,0 +1,111 @@
+%%[
+SET @q = Chr(34)
+
+/* ── Valores fixos conhecidos ── */
+SET @apiUrl    = "https://cloud.m.grupo-primo.com/AMPScript"
+SET @appUrl    = "https://cloud.m.grupo-primo.com/mktc"
+SET @orKey     = Lookup("MKTC_Config","Value","Key","OPENROUTER_API_KEY")
+
+/* ── Valores SFMC via form (POST) ou existentes ── */
+SET @method    = RequestParameter("_method")
+
+IF @method == "save" THEN
+  SET @cId      = RequestParameter("client_id")
+  SET @cSecret  = RequestParameter("client_secret")
+  SET @subdom   = RequestParameter("subdomain")
+  SET @mid      = RequestParameter("mid")
+  SET @orKeyNew = RequestParameter("or_key")
+
+  /* Upsert todas as chaves */
+  SET @r1 = UpsertDE("MKTC_Config",1,"Key","MKTC_API_URL",        "Value",@apiUrl)
+  SET @r0 = UpsertDE("MKTC_Config",1,"Key","MKTC_APP_URL",        "Value",@appUrl)
+  SET @r2 = UpsertDE("MKTC_Config",1,"Key","SFMC_CLIENT_ID",       "Value",@cId)
+  SET @r3 = UpsertDE("MKTC_Config",1,"Key","SFMC_CLIENT_SECRET",   "Value",@cSecret)
+  SET @r4 = UpsertDE("MKTC_Config",1,"Key","SFMC_SUBDOMAIN",       "Value",@subdom)
+  SET @r5 = UpsertDE("MKTC_Config",1,"Key","SFMC_MID",             "Value",@mid)
+  IF NOT EMPTY(@orKeyNew) THEN
+    SET @r6 = UpsertDE("MKTC_Config",1,"Key","OPENROUTER_API_KEY", "Value",@orKeyNew)
+  ENDIF
+  SET @saved = 1
+ELSE
+  /* Lê valores já salvos para pré-preencher o form */
+  SET @cId     = Lookup("MKTC_Config","Value","Key","SFMC_CLIENT_ID")
+  SET @cSecret = Lookup("MKTC_Config","Value","Key","SFMC_CLIENT_SECRET")
+  SET @subdom  = Lookup("MKTC_Config","Value","Key","SFMC_SUBDOMAIN")
+  SET @mid     = Lookup("MKTC_Config","Value","Key","SFMC_MID")
+  SET @saved   = 0
+ENDIF
+]%%
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MKTC Setup</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#09090b;color:#fafafa;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{background:#18181b;border:1px solid #27272a;border-radius:16px;padding:40px;width:100%;max-width:520px}
+  h1{font-size:20px;font-weight:700;margin-bottom:4px}
+  .sub{font-size:13px;color:#71717a;margin-bottom:32px}
+  label{display:block;font-size:12px;font-weight:600;color:#a1a1aa;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  input{width:100%;background:#09090b;border:1px solid #3f3f46;border-radius:8px;padding:10px 14px;color:#fafafa;font-size:14px;margin-bottom:20px;outline:none}
+  input:focus{border-color:#6366f1}
+  .readonly{background:#0d0d10;color:#52525b;cursor:not-allowed}
+  button{width:100%;background:#6366f1;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+  button:hover{background:#4f46e5}
+  .success{background:#052e16;border:1px solid #166534;border-radius:10px;padding:16px 20px;margin-bottom:24px;color:#86efac;font-size:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .badge{display:inline-block;background:#1e1e2e;border:1px solid #3f3f46;border-radius:6px;padding:2px 8px;font-size:11px;color:#818cf8;font-family:monospace;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="card">
+
+  <h1>⚙️ MKTC Setup</h1>
+  <p class="sub">Configure as credenciais da plataforma. Execute uma única vez.</p>
+
+  %%[ IF @saved == 1 THEN ]%%
+  <div class="success">
+    ✅ Configurações salvas com sucesso!<br><br>
+    <strong>MKTC_API_URL</strong> → <span class="badge">%%=v(@apiUrl)=%%</span>
+  </div>
+  %%[ ENDIF ]%%
+
+  <form method="POST">
+    <input type="hidden" name="_method" value="save">
+
+    <div style="background:#0d1117;border:1px solid #1d4ed8;border-radius:8px;padding:12px 16px;margin-bottom:24px;font-size:13px;color:#93c5fd;">
+      🔗 <strong>API URL</strong> (automático): <span class="badge">%%=v(@apiUrl)=%%</span>
+    </div>
+
+    <label>SFMC Client ID</label>
+    <input type="text" name="client_id" value="%%=v(@cId)=%%" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+
+    <label>SFMC Client Secret</label>
+    <input type="password" name="client_secret" value="%%=v(@cSecret)=%%" placeholder="••••••••••••••••••••••">
+
+    <div class="row">
+      <div>
+        <label>SFMC Subdomain</label>
+        <input type="text" name="subdomain" value="%%=v(@subdom)=%%" placeholder="mc.xxxxxx">
+      </div>
+      <div>
+        <label>SFMC MID (Finclass)</label>
+        <input type="text" name="mid" value="%%=v(@mid)=%%" placeholder="123456789">
+      </div>
+    </div>
+
+    <label>OpenRouter API Key %%[ IF NOT EMPTY(@orKey) THEN ]%%(já salva — deixe em branco para manter)%%[ ENDIF ]%%</label>
+    <input type="password" name="or_key" placeholder="sk-or-...">
+
+    <button type="submit">Salvar Configurações</button>
+  </form>
+
+  <p style="margin-top:20px;font-size:12px;color:#52525b;text-align:center">
+    Após salvar, acesse a plataforma em
+    <a href="%%=v(@apiUrl)=%%?bu=finclass" style="color:#818cf8">mktc-app?bu=finclass</a>
+  </p>
+</div>
+</body>
+</html>

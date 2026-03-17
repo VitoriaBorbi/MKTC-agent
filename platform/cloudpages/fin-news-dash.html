@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fin News — Performance 2026</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy:        #0b1120;
+            --navy-2:      #131e35;
+            --navy-3:      #1a2744;
+            --indigo:      #6366f1;
+            --indigo-l:    #818cf8;
+            --indigo-xl:   #c7d2fe;
+            --slate-4:     #94a3b8;
+            --slate-6:     #475569;
+            --slate-8:     #1e293b;
+            --bg:          #f0f4f8;
+            --card:        #ffffff;
+            --border:      #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--slate-8);
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 60%, #0f2040 100%);
+            padding: 36px 24px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -80px; right: -80px;
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, rgba(99,102,241,.18) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; left: 20%;
+            width: 320px; height: 320px;
+            background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+        .badge-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .badge {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+            border: 1px solid rgba(99,102,241,.4);
+            background: rgba(99,102,241,.12);
+            color: var(--indigo-xl);
+        }
+
+        .header-title {
+            font-size: 30px; font-weight: 800; color: #f8fafc;
+            letter-spacing: -0.5px; line-height: 1.2;
+        }
+        .header-sub {
+            font-size: 14px; color: #4a6080; margin-top: 6px;
+        }
+
+        /* Analyst pills */
+        .analyst-section { margin-top: 28px; }
+        .filter-label {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: #3a5070; margin-bottom: 10px;
+        }
+        .analyst-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px; border-radius: 40px;
+            border: 1.5px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.04);
+            color: #7090b0; font-size: 13px; font-weight: 500;
+            cursor: pointer; text-decoration: none;
+            transition: all .15s ease;
+            white-space: nowrap;
+        }
+        .pill:hover {
+            border-color: rgba(99,102,241,.5);
+            background: rgba(99,102,241,.12);
+            color: var(--indigo-xl);
+        }
+        .pill.active {
+            border-color: var(--indigo);
+            background: rgba(99,102,241,.22);
+            color: #e0e7ff;
+        }
+
+        .avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+        .av-all  { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .av-ep   { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+        .av-em   { background: linear-gradient(135deg, #10b981, #34d399); }
+        .av-fa   { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .av-rf   { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .av-rx   { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+        .av-ti   { background: linear-gradient(135deg, #ec4899, #f472b6); }
+
+        /* ── MAIN ── */
+        .main {
+            max-width: 1100px; margin: -28px auto 0;
+            padding: 0 24px 48px; position: relative; z-index: 1;
+        }
+
+        /* Period card */
+        .controls-card {
+            background: var(--card); border-radius: 16px;
+            padding: 18px 22px; margin-bottom: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.09), 0 1px 3px rgba(0,0,0,.06);
+            display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+        }
+        .ctrl-label {
+            font-size: 12px; font-weight: 700; color: var(--slate-4);
+            letter-spacing: .5px; text-transform: uppercase; white-space: nowrap;
+        }
+        .period-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .ppill {
+            padding: 7px 18px; border-radius: 8px;
+            border: 1.5px solid var(--border); background: #f8fafc;
+            color: var(--slate-6); font-size: 13px; font-weight: 600;
+            cursor: pointer; text-decoration: none; transition: all .15s;
+        }
+        .ppill:hover { border-color: var(--indigo); color: var(--indigo); background: #eef2ff; }
+        .ppill.active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+
+        .count-chip {
+            margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+            background: #f1f5f9; border-radius: 8px; padding: 7px 14px;
+            font-size: 13px; color: var(--slate-6); font-weight: 500;
+        }
+        .count-chip strong { color: var(--slate-8); font-weight: 800; }
+
+        /* Context bar */
+        .ctx-bar {
+            background: #eef6ff; border: 1px solid #bfdbfe;
+            border-radius: 10px; padding: 11px 16px; margin-bottom: 20px;
+            font-size: 13px; color: #1d4ed8;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+
+        /* ── METRICS GRID ── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+            gap: 16px;
+        }
+
+        .mcard {
+            background: var(--card); border-radius: 16px;
+            padding: 22px 20px 18px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.04);
+            position: relative; overflow: hidden;
+            transition: transform .18s, box-shadow .18s;
+        }
+        .mcard:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.1);
+        }
+        .mcard::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .c-indigo::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+        .c-teal::before   { background: linear-gradient(90deg, #0d9488, #14b8a6); }
+        .c-sky::before    { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+        .c-rose::before   { background: linear-gradient(90deg, #e11d48, #fb7185); }
+        .c-amber::before  { background: linear-gradient(90deg, #d97706, #fbbf24); }
+        .c-green::before  { background: linear-gradient(90deg, #059669, #34d399); }
+
+        .mcard-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px; margin-bottom: 14px;
+        }
+        .c-indigo .mcard-icon { background: #eef2ff; }
+        .c-teal   .mcard-icon { background: #f0fdfa; }
+        .c-sky    .mcard-icon { background: #f0f9ff; }
+        .c-rose   .mcard-icon { background: #fff1f2; }
+        .c-amber  .mcard-icon { background: #fffbeb; }
+        .c-green  .mcard-icon { background: #f0fdf4; }
+
+        .mcard-label {
+            font-size: 11px; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--slate-4); margin-bottom: 6px;
+        }
+        .mcard-val {
+            font-size: 34px; font-weight: 800; color: var(--navy);
+            line-height: 1; letter-spacing: -1px;
+        }
+        .mcard-unit { font-size: 20px; color: var(--slate-4); font-weight: 600; }
+        .mcard-sub { font-size: 12px; color: var(--slate-4); margin-top: 6px; }
+
+        /* ── DIVIDER ── */
+        .divider {
+            grid-column: 1 / -1;
+            height: 1px; background: var(--border); margin: 4px 0;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty {
+            background: var(--card); border-radius: 16px;
+            padding: 72px 24px; text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        }
+        .empty-icon { font-size: 52px; margin-bottom: 16px; opacity: .7; }
+        .empty-title { font-size: 19px; font-weight: 700; color: var(--slate-8); margin-bottom: 8px; }
+        .empty-text  { font-size: 14px; color: var(--slate-4); }
+
+        @media (max-width: 600px) {
+            .header { padding: 28px 16px 52px; }
+            .header-title { font-size: 22px; }
+            .main { padding: 0 14px 40px; }
+            .controls-card { flex-direction: column; align-items: flex-start; }
+            .mcard-val { font-size: 28px; }
+            .count-chip { margin-left: 0; }
+        }
+    </style>
+</head>
+
+<body>
+%%[
+SET @analyst = RequestParameter("analyst")
+SET @period  = RequestParameter("period")
+IF EMPTY(@period) THEN SET @period = "7" ENDIF
+
+/* ── Analyst mapping ── */
+SET @analystCode  = ""
+SET @analystName  = ""
+SET @analystInit  = ""
+SET @analystClass = ""
+
+IF @analyst == "eduardo" THEN
+    SET @analystCode  = "NWS_EDUARDO"
+    SET @analystName  = "Eduardo Perez"
+    SET @analystInit  = "EP"
+    SET @analystClass = "av-ep"
+ELSEIF @analyst == "evandro" THEN
+    SET @analystCode  = "NWS_EVANDRO"
+    SET @analystName  = "Evandro Medeiros"
+    SET @analystInit  = "EM"
+    SET @analystClass = "av-em"
+ELSEIF @analyst == "felipe" THEN
+    SET @analystCode  = "NWS_FELIPE"
+    SET @analystName  = "Felipe Arrais"
+    SET @analystInit  = "FA"
+    SET @analystClass = "av-fa"
+ELSEIF @analyst == "ricardo" THEN
+    SET @analystCode  = "NWS_RICARDO"
+    SET @analystName  = "Ricardo Figueiredo"
+    SET @analystInit  = "RF"
+    SET @analystClass = "av-rf"
+ELSEIF @analyst == "rodrigo" THEN
+    SET @analystCode  = "NWS_RODRIGO"
+    SET @analystName  = "Rodrigo Xavier"
+    SET @analystInit  = "RX"
+    SET @analystClass = "av-rx"
+ELSEIF @analyst == "thales" THEN
+    SET @analystCode  = "NWS_THALES"
+    SET @analystName  = "Thales Inada"
+    SET @analystInit  = "TI"
+    SET @analystClass = "av-ti"
+ENDIF
+
+/* ── Period → date range ── */
+IF @period == "1" THEN
+    SET @periodDays  = 1
+    SET @periodLabel = "Hoje"
+ELSEIF @period == "30" THEN
+    SET @periodDays  = 30
+    SET @periodLabel = "Últimos 30 dias"
+ELSEIF @period == "60" THEN
+    SET @periodDays  = 60
+    SET @periodLabel = "Últimos 60 dias"
+ELSEIF @period == "90" THEN
+    SET @periodDays  = 90
+    SET @periodLabel = "Últimos 90 dias"
+ELSE
+    SET @periodDays  = 7
+    SET @periodLabel = "Últimos 7 dias"
+ENDIF
+
+SET @endDate      = NOW()
+SET @startDate    = DateAdd(@endDate, Subtract(0, @periodDays), "D")
+SET @startDateStr = FormatDate(@startDate, "yyyy-MM-dd")
+SET @endDateStr   = FormatDate(@endDate,   "yyyy-MM-dd")
+
+/* ── Aggregation ── */
+SET @sentSum        = 0
+SET @bouncesSum     = 0
+SET @uniqueOpenSum  = 0
+SET @uniqueClickSum = 0
+SET @emailCount     = 0
+
+SET @allCodes = "NWS_EDUARDO,NWS_EVANDRO,NWS_FELIPE,NWS_RICARDO,NWS_RODRIGO,NWS_THALES"
+SET @codesArr = BuildRowsetFromString(@allCodes, ",")
+
+IF NOT EMPTY(@analystCode) THEN
+    /* Single analyst */
+    SET @rows = LookupRows("Tb_FinNews_Dash_2026", "Analyst", @analystCode)
+    FOR @r = 1 TO RowCount(@rows) DO
+        SET @row = Row(@rows, @r)
+        SET @dt  = FormatDate(Field(@row, "SendDate"), "yyyy-MM-dd")
+        IF @dt >= @startDateStr AND @dt <= @endDateStr THEN
+            SET @emailCount     = Add(@emailCount,     1)
+            SET @sentSum        = Add(@sentSum,        Field(@row, "Sent"))
+            SET @bouncesSum     = Add(@bouncesSum,     Field(@row, "Bounces"))
+            SET @uniqueOpenSum  = Add(@uniqueOpenSum,  Field(@row, "Unique_Open"))
+            SET @uniqueClickSum = Add(@uniqueClickSum, Field(@row, "Unique_Click"))
+        ENDIF
+    NEXT @r
+ELSE
+    /* All analysts */
+    FOR @a = 1 TO RowCount(@codesArr) DO
+        SET @code = Trim(Field(Row(@codesArr, @a), 1))
+        SET @rows = LookupRows("Tb_FinNews_Dash_2026", "Analyst", @code)
+        FOR @r = 1 TO RowCount(@rows) DO
+            SET @row = Row(@rows, @r)
+            SET @dt  = FormatDate(Field(@row, "SendDate"), "yyyy-MM-dd")
+            IF @dt >= @startDateStr AND @dt <= @endDateStr THEN
+                SET @emailCount     = Add(@emailCount,     1)
+                SET @sentSum        = Add(@sentSum,        Field(@row, "Sent"))
+                SET @bouncesSum     = Add(@bouncesSum,     Field(@row, "Bounces"))
+                SET @uniqueOpenSum  = Add(@uniqueOpenSum,  Field(@row, "Unique_Open"))
+                SET @uniqueClickSum = Add(@uniqueClickSum, Field(@row, "Unique_Click"))
+            ENDIF
+        NEXT @r
+    NEXT @a
+ENDIF
+
+/* ── Rate calculation ── */
+SET @delivered  = Subtract(@sentSum, @bouncesSum)
+SET @openRate   = "—"
+SET @clickRate  = "—"
+IF @delivered > 0 THEN
+    SET @openRate  = FormatNumber(Multiply(Divide(@uniqueOpenSum,  @delivered), 100), "N2", "pt_BR")
+    SET @clickRate = FormatNumber(Multiply(Divide(@uniqueClickSum, @delivered), 100), "N2", "pt_BR")
+ENDIF
+
+SET @hasData = 0
+IF @emailCount > 0 THEN SET @hasData = 1 ENDIF
+]%%
+
+<!-- ░░ HEADER ░░ -->
+<header class="header">
+    <div class="header-inner">
+
+        <div class="badge-row">
+            <span class="badge">Finclass</span>
+            <span class="badge">Fin News</span>
+            <span class="badge">2026</span>
+        </div>
+
+        <h1 class="header-title">Performance Dashboard</h1>
+        <p class="header-sub">Métricas de envio por analista</p>
+
+        <div class="analyst-section">
+            <div class="filter-label">Analista</div>
+            <div class="analyst-row">
+
+                <!-- All -->
+                <a href="?period=%%=v(@period)=%%" class="pill %%[ IF EMPTY(@analyst) ]%%active%%[ ENDIF ]%%">
+                    <span class="avatar av-all">★</span>
+                    Todos
+                </a>
+
+                %%[ SET @aKeys  = "eduardo,evandro,felipe,ricardo,rodrigo,thales" ]%%
+                %%[ SET @aNames = "Eduardo Perez,Evandro Medeiros,Felipe Arrais,Ricardo Figueiredo,Rodrigo Xavier,Thales Inada" ]%%
+                %%[ SET @aInits = "EP,EM,FA,RF,RX,TI" ]%%
+                %%[ SET @aClass = "av-ep,av-em,av-fa,av-rf,av-rx,av-ti" ]%%
+
+                %%[ SET @keyArr   = BuildRowsetFromString(@aKeys,  ",") ]%%
+                %%[ SET @nameArr  = BuildRowsetFromString(@aNames, ",") ]%%
+                %%[ SET @initArr  = BuildRowsetFromString(@aInits, ",") ]%%
+                %%[ SET @classArr = BuildRowsetFromString(@aClass, ",") ]%%
+
+                %%[ FOR @ai = 1 TO RowCount(@keyArr) DO ]%%
+                    %%[ SET @aKey = Trim(Field(Row(@keyArr,   @ai), 1)) ]%%
+                    %%[ SET @aNm  = Trim(Field(Row(@nameArr,  @ai), 1)) ]%%
+                    %%[ SET @aIn  = Trim(Field(Row(@initArr,  @ai), 1)) ]%%
+                    %%[ SET @aCl  = Trim(Field(Row(@classArr, @ai), 1)) ]%%
+                <a href="?analyst=%%=v(@aKey)=%%&period=%%=v(@period)=%%" class="pill %%[ IF @analyst == @aKey ]%%active%%[ ENDIF ]%%">
+                    <span class="avatar %%=v(@aCl)=%%">%%=v(@aIn)=%%</span>
+                    %%=v(@aNm)=%%
+                </a>
+                %%[ NEXT @ai ]%%
+
+            </div>
+        </div>
+
+    </div>
+</header>
+
+<!-- ░░ MAIN ░░ -->
+<main class="main">
+
+    <!-- Period selector -->
+    <div class="controls-card">
+        <span class="ctrl-label">Período</span>
+        <div class="period-row">
+            %%[ SET @pVals = "1,7,30,60,90" ]%%
+            %%[ SET @pLbls = "Hoje,7 dias,30 dias,60 dias,90 dias" ]%%
+            %%[ SET @pvArr = BuildRowsetFromString(@pVals, ",") ]%%
+            %%[ SET @plArr = BuildRowsetFromString(@pLbls, ",") ]%%
+            %%[ FOR @pi = 1 TO RowCount(@pvArr) DO ]%%
+                %%[ SET @pv = Trim(Field(Row(@pvArr, @pi), 1)) ]%%
+                %%[ SET @pl = Trim(Field(Row(@plArr, @pi), 1)) ]%%
+            <a href="?analyst=%%=v(@analyst)=%%&period=%%=v(@pv)=%%" class="ppill %%[ IF @period == @pv ]%%active%%[ ENDIF ]%%">
+                %%=v(@pl)=%%
+            </a>
+            %%[ NEXT @pi ]%%
+        </div>
+
+        %%[ IF @hasData == 1 THEN ]%%
+        <span class="count-chip">
+            📨 <strong>%%=v(@emailCount)=%%</strong> disparo(s) no período
+        </span>
+        %%[ ENDIF ]%%
+    </div>
+
+    <!-- Context info -->
+    <div class="ctx-bar">
+        ℹ️
+        %%[ IF NOT EMPTY(@analystName) THEN ]%%
+        <strong>%%=v(@analystName)=%%</strong> &nbsp;·&nbsp;
+        %%[ ELSE ]%%
+        <strong>Todos os analistas</strong> &nbsp;·&nbsp;
+        %%[ ENDIF ]%%
+        %%=v(@periodLabel)=%%
+        &nbsp;<span style="opacity:.6;">
+            (%%=v(FormatDate(@startDate,"dd/MM"))=%% → %%=v(FormatDate(@endDate,"dd/MM/yyyy"))=%%)
+        </span>
+    </div>
+
+    <!-- Metrics -->
+    %%[ IF @hasData == 1 THEN ]%%
+    <div class="metrics-grid">
+
+        <div class="mcard c-indigo">
+            <div class="mcard-icon">📧</div>
+            <div class="mcard-label">Envios</div>
+            <div class="mcard-val">%%=v(@sentSum)=%%</div>
+            <div class="mcard-sub">total disparado</div>
+        </div>
+
+        <div class="mcard c-teal">
+            <div class="mcard-icon">✅</div>
+            <div class="mcard-label">Entregues</div>
+            <div class="mcard-val">%%=v(@delivered)=%%</div>
+            <div class="mcard-sub">envios − bounces</div>
+        </div>
+
+        <div class="mcard c-sky">
+            <div class="mcard-icon">👁️</div>
+            <div class="mcard-label">Aberturas Únicas</div>
+            <div class="mcard-val">%%=v(@uniqueOpenSum)=%%</div>
+        </div>
+
+        <div class="mcard c-rose">
+            <div class="mcard-icon">🖱️</div>
+            <div class="mcard-label">Cliques Únicos</div>
+            <div class="mcard-val">%%=v(@uniqueClickSum)=%%</div>
+        </div>
+
+        <div class="mcard c-amber">
+            <div class="mcard-icon">⬅️</div>
+            <div class="mcard-label">Bounces</div>
+            <div class="mcard-val">%%=v(@bouncesSum)=%%</div>
+        </div>
+
+        <div class="mcard c-amber" style="--c: #d97706;">
+            <div class="mcard-icon">📊</div>
+            <div class="mcard-label">Taxa de Abertura</div>
+            <div class="mcard-val">%%=v(@openRate)=%%<span class="mcard-unit">%</span></div>
+            <div class="mcard-sub">sobre entregues</div>
+        </div>
+
+        <div class="mcard c-green">
+            <div class="mcard-icon">📈</div>
+            <div class="mcard-label">Taxa de Clique</div>
+            <div class="mcard-val">%%=v(@clickRate)=%%<span class="mcard-unit">%</span></div>
+            <div class="mcard-sub">sobre entregues</div>
+        </div>
+
+    </div>
+    %%[ ELSE ]%%
+    <div class="empty">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">Nenhum dado encontrado</div>
+        <div class="empty-text">
+            Selecione um analista e período acima para visualizar as métricas
+        </div>
+    </div>
+    %%[ ENDIF ]%%
+
+</main>
+</body>
+</html>

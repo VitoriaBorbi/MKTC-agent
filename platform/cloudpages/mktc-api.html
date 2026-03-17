@@ -1,0 +1,870 @@
+%%[
+SET @action = RequestParameter('action')
+SET @bu     = RequestParameter('bu')
+SET @nl     = Char(10)
+SET @cr     = Char(13)
+SET @result = ''
+
+IF Empty(@bu) THEN
+  SET @bu = 'finclass'
+ENDIF
+
+/* ---- PING ---- */
+IF @action == 'ping' THEN
+
+  SET @result = '{"success":true,"pong":true}'
+
+/* ---- GET STATS ---- */
+ELSEIF @action == 'get_stats' THEN
+
+  SET @statsRows = LookupRows('MKTC_Emails', 'BU', @bu)
+  SET @statsCnt  = RowCount(@statsRows)
+  SET @nRasc  = 0
+  SET @nEmAp  = 0
+  SET @nAprov = 0
+  SET @nAgend = 0
+  SET @nEnv   = 0
+
+  FOR @si = 1 TO @statsCnt DO
+    SET @sRow = Row(@statsRows, @si)
+    SET @sVal = Field(@sRow, 'Status')
+    IF @sVal == 'rascunho'          THEN SET @nRasc  = ADD(@nRasc,1)  ENDIF
+    IF @sVal == 'em_aprovacao'      THEN SET @nEmAp  = ADD(@nEmAp,1)  ENDIF
+    IF @sVal == 'aprovado'          THEN SET @nAprov = ADD(@nAprov,1) ENDIF
+    IF @sVal == 'agendado'          THEN SET @nAgend = ADD(@nAgend,1) ENDIF
+    IF @sVal == 'enviado'           THEN SET @nEnv   = ADD(@nEnv,1)   ENDIF
+  NEXT @si
+
+  SET @result = Concat(
+    '{"success":true,"data":{"total":', @statsCnt,
+    ',"rascunho":',    @nRasc,
+    ',"em_aprovacao":', @nEmAp,
+    ',"aprovado":',    @nAprov,
+    ',"agendado":',    @nAgend,
+    ',"enviado":',     @nEnv, '}}')
+
+/* ---- GET DATAVIEWS ---- */
+ELSEIF @action == 'get_dataviews' THEN
+
+  SET @dvRows = LookupOrderedRows('MKTC_Dashboard_Daily', 1, 'Date DESC', 'BU', @bu)
+
+  IF RowCount(@dvRows) > 0 THEN
+    SET @dvRow = Row(@dvRows, 1)
+    SET @dvSent   = Field(@dvRow, 'Sent')
+    SET @dvDeliv  = Field(@dvRow, 'Delivered')
+    SET @dvOpens  = Field(@dvRow, 'UniqueOpens')
+    SET @dvClicks = Field(@dvRow, 'UniqueClicks')
+    SET @dvBounce = Field(@dvRow, 'Bounces')
+    SET @dvUnsub  = Field(@dvRow, 'Unsubscribes')
+    IF Empty(@dvSent)   THEN SET @dvSent   = 0 ENDIF
+    IF Empty(@dvDeliv)  THEN SET @dvDeliv  = 0 ENDIF
+    IF Empty(@dvOpens)  THEN SET @dvOpens  = 0 ENDIF
+    IF Empty(@dvClicks) THEN SET @dvClicks = 0 ENDIF
+    IF Empty(@dvBounce) THEN SET @dvBounce = 0 ENDIF
+    IF Empty(@dvUnsub)  THEN SET @dvUnsub  = 0 ENDIF
+    SET @result = Concat(
+      '{"success":true,"data":{"sends":',       @dvSent,
+      ',"delivered":',  @dvDeliv,
+      ',"opens":',      @dvOpens,
+      ',"clicks":',     @dvClicks,
+      ',"bounces":',    @dvBounce,
+      ',"unsubscribes":', @dvUnsub, '}}')
+  ELSE
+    SET @result = '{"success":true,"data":{"sends":0,"delivered":0,"opens":0,"clicks":0,"bounces":0,"unsubscribes":0}}'
+  ENDIF
+
+/* ---- LIST EMAILS ---- */
+ELSEIF @action == 'list_emails' THEN
+
+  SET @listRows = LookupRows('MKTC_Emails', 'BU', @bu)
+  SET @listCnt  = RowCount(@listRows)
+  SET @listJson = '{"success":true,"data":['
+  SET @listSep  = ''
+
+  FOR @li = 1 TO @listCnt DO
+    SET @lRow  = Row(@listRows, @li)
+    SET @lNome = Replace(Replace(Field(@lRow,'Nome'),'\','\\'),'"','\"')
+
+    SET @listJson = Concat(@listJson, @listSep,
+      '{"ID":"',     Field(@lRow,'ID'),     '"',
+      ',"BU":"',     @bu,                   '"',
+      ',"Nome":"',   @lNome,                '"',
+      ',"Status":"', Field(@lRow,'Status'), '"',
+      '}')
+    SET @listSep = ','
+  NEXT @li
+
+  SET @result = Concat(@listJson, ']}')
+
+/* ---- GET EMAIL ---- */
+ELSEIF @action == 'get_email' THEN
+
+  SET @geId   = RequestParameter('id')
+  SET @geRows = LookupRows('MKTC_Emails', 'ID', @geId)
+
+  IF RowCount(@geRows) == 0 THEN
+    SET @result = '{"success":false,"error":"Email not found"}'
+  ELSE
+    SET @geRow  = Row(@geRows, 1)
+    SET @geNome = Replace(Replace(Replace(Field(@geRow,'Nome'),'\','\\'),'"','\"'),@nl,'\n')
+    SET @geAssu = Replace(Replace(Replace(Field(@geRow,'Assunto'),'\','\\'),'"','\"'),@nl,'\n')
+    SET @gePre  = Replace(Replace(Replace(Field(@geRow,'Preheader'),'\','\\'),'"','\"'),@nl,'\n')
+    SET @geObs  = Replace(Replace(Replace(Field(@geRow,'Obs'),'\','\\'),'"','\"'),@nl,'\n')
+
+    SET @result = Concat(
+      '{"success":true,"data":{',
+      '"ID":"',           Field(@geRow,'ID'),          '"',
+      ',"BU":"',          @bu,                         '"',
+      ',"Nome":"',        @geNome,                     '"',
+      ',"Status":"',      Field(@geRow,'Status'),      '"',
+      ',"Assunto":"',     @geAssu,                     '"',
+      ',"Preheader":"',   @gePre,                      '"',
+      ',"Template_ID":"', Field(@geRow,'Template_ID'), '"',
+      ',"Obs":"',         @geObs,                      '"',
+      '}}')
+  ENDIF
+
+/* ---- SAVE EMAIL ---- */
+ELSEIF @action == 'save_email' THEN
+
+  SET @svId = RequestParameter('ID')
+  IF Empty(@svId) THEN SET @svId = GUID() ENDIF
+
+  SET @svNome = RequestParameter('Nome')
+  IF Empty(@svNome) THEN SET @svNome = 'Email sem nome' ENDIF
+
+  SET @svSt  = RequestParameter('Status')
+  IF Empty(@svSt) THEN SET @svSt = 'rascunho' ENDIF
+
+  SET @svTid  = RequestParameter('Template_ID')
+  SET @svAssu = RequestParameter('Assunto')
+  SET @svPre  = RequestParameter('Preheader')
+  SET @svObs  = RequestParameter('Obs')
+
+  IF Empty(@svTid) THEN SET @svTid = 'simples' ENDIF
+
+  SET @svNome = Replace(Replace(@svNome, '\', '\\'), '"', '\"')
+  SET @svAssu = Replace(Replace(@svAssu, '\', '\\'), '"', '\"')
+  SET @svPre  = Replace(Replace(@svPre,  '\', '\\'), '"', '\"')
+  SET @svObs  = Replace(Replace(@svObs,  '\', '\\'), '"', '\"')
+
+  SET @cId    = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_ID')
+  SET @cSec   = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_SECRET')
+  SET @cSub   = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_SUBDOMAIN')
+  SET @cMid   = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_MID')
+  SET @tokBody = Concat('{"grant_type":"client_credentials","client_id":"', @cId, '","client_secret":"', @cSec, '","account_id":', @cMid, '}')
+  SET @tokUrl  = Concat('https://', @cSub, '.auth.marketingcloudapis.com/v2/token')
+  SET @tokStat = 0
+  SET @tokResp = HTTPPost2(@tokUrl, 'application/json', @tokBody, 'Content-Type', 'application/json', @tokStat)
+  SET @tokAcPos = IndexOf(@tokResp, '"access_token":"')
+  SET @sfmcTok  = ''
+  IF @tokAcPos > 0 THEN
+    SET @tokIdx  = Add(@tokAcPos, 17)
+    SET @tokPart = Substring(@tokResp, @tokIdx, 2000)
+    SET @tokQPos = IndexOf(@tokPart, '"')
+    IF @tokQPos > 0 THEN
+      SET @sfmcTok = Substring(@tokPart, 1, Subtract(@tokQPos, 1))
+    ENDIF
+  ENDIF
+
+  SET @deUrl  = Concat('https://', @cSub, '.rest.marketingcloudapis.com/hub/v1/dataevents/key:MKTC_Emails/rowset')
+  SET @deBody = Concat(
+    '[{"keys":{"ID":"', @svId, '"},"values":{',
+    '"BU":"',          @bu,      '",',
+    '"Nome":"',        @svNome,  '",',
+    '"Status":"',      @svSt,    '",',
+    '"Assunto":"',     @svAssu,  '",',
+    '"Preheader":"',   @svPre,   '",',
+    '"Template_ID":"', @svTid,   '",',
+    '"Obs":"',         @svObs,   '"',
+    '}}]')
+  SET @deHdrN = 'Authorization,Content-Type'
+  SET @deHdrV = Concat('Bearer ', @sfmcTok, ',application/json')
+  SET @deStat = 0
+  SET @deResp = HTTPPost2(@deUrl, 'application/json', @deBody, @deHdrN, @deHdrV, @deStat)
+
+  SET @result = Concat('{"success":true,"id":"', @svId, '","deStatus":', @deStat, '}')
+
+/* ---- SAVE HTML ---- */
+ELSEIF @action == 'save_html' THEN
+
+  SET @shId   = RequestParameter('id')
+  SET @shHtml = RequestParameter('html')
+
+  IF Empty(@shId) THEN
+    SET @result = '{"success":false,"error":"id required"}'
+  ELSE
+    UpdateDE('MKTC_Emails', 1, 'ID', @shId, 'HTML_Content', @shHtml)
+    SET @result = '{"success":true}'
+  ENDIF
+
+/* ---- LIST TEMPLATES ---- */
+ELSEIF @action == 'list_templates' THEN
+
+  SET @result = '{"success":true,"data":[{"id":"newsletter","nome":"Newsletter","tipo":"newsletter"},{"id":"campanha","nome":"Campanha","tipo":"campanha"},{"id":"simples","nome":"Simples","tipo":"simples"},{"id":"hero-full","nome":"Hero Full","tipo":"hero-full"},{"id":"multibloco","nome":"Multi-Bloco","tipo":"multibloco"},{"id":"anuncio","nome":"An\u00FAncio","tipo":"anuncio"},{"id":"boas-vindas","nome":"Boas-vindas","tipo":"boas-vindas"},{"id":"produto","nome":"Produto","tipo":"produto"},{"id":"texto-longo","nome":"Texto Longo","tipo":"texto-longo"}]}'
+
+/* ---- GENERATE FROM GOOGLE DOC ---- */
+ELSEIF @action == 'generate_from_gdoc' THEN
+
+  SET @docText    = RequestParameter('docText')
+  SET @templateId = RequestParameter('templateId')
+  SET @emailNome  = RequestParameter('nome')
+  SET @gdocBu     = RequestParameter('bu')
+
+  IF Empty(@docText) THEN
+    SET @result = '{"success":false,"error":"docText ausente"}'
+  ELSEIF Empty(@templateId) THEN
+    SET @result = '{"success":false,"error":"templateId ausente"}'
+  ELSE
+
+  IF Empty(@gdocBu) THEN SET @gdocBu = @bu ENDIF
+
+  /* --- 1. Normalizar quebras de linha: CRLF → LF --- */
+  SET @docText = Replace(@docText, Concat(@cr, @nl), @nl)
+
+  /* --- 3. Parsear campos — case-insensitive via UpperCase --- */
+  SET @docUpper   = UpperCase(@docText)
+  SET @lastHdrEnd = 0
+
+  /* ASSUNTO */
+  SET @aPos = IndexOf(@docUpper, 'ASSUNTO:')
+  IF @aPos > 0 THEN
+    SET @aStart = Add(@aPos, 8)
+    SET @aRest  = Substring(@docText, @aStart, 500)
+    SET @aNl    = IndexOf(@aRest, @nl)
+    IF @aNl > 0 THEN
+      SET @fAssunto   = Trim(Substring(@aRest, 1, Subtract(@aNl, 1)))
+      SET @lastHdrEnd = Add(@aPos, Add(8, @aNl))
+    ELSE
+      SET @fAssunto   = Trim(@aRest)
+      SET @lastHdrEnd = Add(@aPos, 8)
+    ENDIF
+  ELSE
+    SET @fAssunto = @emailNome
+  ENDIF
+
+  /* PREHEADER — aceita PREHEADER: ou LINHA FINA: */
+  SET @phPos      = IndexOf(@docUpper, 'PREHEADER:')
+  SET @phLabelLen = 10
+  IF @phPos == 0 THEN
+    SET @phPos      = IndexOf(@docUpper, 'LINHA FINA:')
+    SET @phLabelLen = 11
+  ENDIF
+  IF @phPos == 0 THEN
+    SET @phPos      = IndexOf(@docUpper, 'PRE-HEADER:')
+    SET @phLabelLen = 11
+  ENDIF
+  IF @phPos > 0 THEN
+    SET @phStart = Add(@phPos, @phLabelLen)
+    SET @phRest  = Substring(@docText, @phStart, 300)
+    SET @phNl    = IndexOf(@phRest, @nl)
+    IF @phNl > 0 THEN
+      SET @fPreheader = Trim(Substring(@phRest, 1, Subtract(@phNl, 1)))
+      SET @phEnd      = Add(@phPos, Add(@phLabelLen, @phNl))
+    ELSE
+      SET @fPreheader = Trim(@phRest)
+      SET @phEnd      = Add(@phPos, @phLabelLen)
+    ENDIF
+    IF @phEnd > @lastHdrEnd THEN SET @lastHdrEnd = @phEnd ENDIF
+  ELSE
+    SET @fPreheader = ''
+  ENDIF
+
+  /* TITULO */
+  SET @titPos = IndexOf(@docUpper, 'TITULO:')
+  IF @titPos > 0 THEN
+    SET @titStart = Add(@titPos, 7)
+    SET @titRest  = Substring(@docText, @titStart, 300)
+    SET @titNl    = IndexOf(@titRest, @nl)
+    IF @titNl > 0 THEN
+      SET @fTitulo = Trim(Substring(@titRest, 1, Subtract(@titNl, 1)))
+      SET @tEnd    = Add(@titPos, Add(7, @titNl))
+      IF @tEnd > @lastHdrEnd THEN SET @lastHdrEnd = @tEnd ENDIF
+    ELSE
+      SET @fTitulo = Trim(@titRest)
+    ENDIF
+  ELSE
+    SET @fTitulo = ''
+  ENDIF
+
+  /* EDICAO */
+  SET @edPos = IndexOf(@docUpper, 'EDICAO:')
+  IF @edPos > 0 THEN
+    SET @edStart = Add(@edPos, 7)
+    SET @edRest  = Substring(@docText, @edStart, 200)
+    SET @edNl    = IndexOf(@edRest, @nl)
+    IF @edNl > 0 THEN
+      SET @fEdicao = Trim(Substring(@edRest, 1, Subtract(@edNl, 1)))
+    ELSE
+      SET @fEdicao = Trim(@edRest)
+    ENDIF
+  ELSE
+    SET @fEdicao = ''
+  ENDIF
+
+  /* BANNER_URL */
+  SET @bnPos = IndexOf(@docUpper, 'BANNER_URL:')
+  IF @bnPos > 0 THEN
+    SET @bnStart = Add(@bnPos, 11)
+    SET @bnRest  = Substring(@docText, @bnStart, 500)
+    SET @bnNl    = IndexOf(@bnRest, @nl)
+    IF @bnNl > 0 THEN
+      SET @fBannerUrl = Trim(Substring(@bnRest, 1, Subtract(@bnNl, 1)))
+    ELSE
+      SET @fBannerUrl = Trim(@bnRest)
+    ENDIF
+  ELSE
+    SET @fBannerUrl = ''
+  ENDIF
+
+  /* BANNER_ALT */
+  SET @baPos = IndexOf(@docUpper, 'BANNER_ALT:')
+  IF @baPos > 0 THEN
+    SET @baStart = Add(@baPos, 11)
+    SET @baRest  = Substring(@docText, @baStart, 200)
+    SET @baNl    = IndexOf(@baRest, @nl)
+    IF @baNl > 0 THEN
+      SET @fBannerAlt = Trim(Substring(@baRest, 1, Subtract(@baNl, 1)))
+    ELSE
+      SET @fBannerAlt = Trim(@baRest)
+    ENDIF
+  ELSE
+    SET @fBannerAlt = ''
+  ENDIF
+
+  /* CTA — tenta labels CTA_TEXTO:/CTA_URL: primeiro, depois detecta [TEXTO]\nURL */
+  SET @bracketOpen  = IndexOf(@docText, '[')
+  SET @bracketClose = IndexOf(@docText, ']')
+
+  SET @ctaLabelPos = IndexOf(@docUpper, 'CTA_TEXTO:')
+  IF @ctaLabelPos > 0 THEN
+    SET @ctaStart = Add(@ctaLabelPos, 10)
+    SET @ctaRest  = Substring(@docText, @ctaStart, 200)
+    SET @ctaNl    = IndexOf(@ctaRest, @nl)
+    IF @ctaNl > 0 THEN
+      SET @fCtaTexto = Trim(Substring(@ctaRest, 1, Subtract(@ctaNl, 1)))
+    ELSE
+      SET @fCtaTexto = Trim(@ctaRest)
+    ENDIF
+    SET @ctaPos = @ctaLabelPos
+  ELSEIF @bracketOpen > 0 AND @bracketClose > @bracketOpen THEN
+    SET @fCtaTexto = Trim(Substring(@docText, Add(@bracketOpen, 1), Subtract(@bracketClose, @bracketOpen)))
+    SET @ctaPos    = @bracketOpen
+  ELSE
+    SET @fCtaTexto = ''
+    SET @ctaPos    = 0
+  ENDIF
+
+  SET @cuLabelPos = IndexOf(@docUpper, 'CTA_URL:')
+  IF @cuLabelPos > 0 THEN
+    SET @cuStart = Add(@cuLabelPos, 8)
+    SET @cuRest  = Substring(@docText, @cuStart, 500)
+    SET @cuNl    = IndexOf(@cuRest, @nl)
+    IF @cuNl > 0 THEN
+      SET @fCtaUrl = Trim(Substring(@cuRest, 1, Subtract(@cuNl, 1)))
+    ELSE
+      SET @fCtaUrl = Trim(@cuRest)
+    ENDIF
+  ELSEIF @bracketClose > 0 THEN
+    /* URL está na linha seguinte ao ] */
+    SET @afterBracket = Trim(Substring(@docText, Add(@bracketClose, 1), 600))
+    SET @urlNl = IndexOf(@afterBracket, @nl)
+    IF @urlNl > 0 THEN
+      SET @fCtaUrl = Trim(Substring(@afterBracket, 1, Subtract(@urlNl, 1)))
+    ELSE
+      SET @fCtaUrl = Trim(@afterBracket)
+    ENDIF
+    IF NOT Substring(@fCtaUrl, 1, 4) == 'http' THEN SET @fCtaUrl = '' ENDIF
+  ELSE
+    SET @fCtaUrl = ''
+  ENDIF
+
+  /* CORPO — tenta label CORPO:, senão infere do doc */
+  SET @corpoLabelPos = IndexOf(@docUpper, 'CORPO:')
+  IF @corpoLabelPos > 0 THEN
+    SET @corpoStart = Add(@corpoLabelPos, 6)
+    SET @corpoPos   = @corpoLabelPos
+  ELSE
+    /* Sem label: corpo começa após o último header reconhecido */
+    IF @lastHdrEnd > 0 THEN
+      SET @corpoStart = Add(@lastHdrEnd, 1)
+    ELSE
+      SET @corpoStart = 1
+    ENDIF
+    SET @corpoPos = @corpoStart
+  ENDIF
+  SET @docLen = Length(@docText)
+  IF @corpoStart > @docLen THEN
+    SET @corpoRaw = ''
+  ELSEIF @ctaPos > @corpoStart THEN
+    SET @corpoRaw = Substring(@docText, @corpoStart, Subtract(@ctaPos, @corpoStart))
+  ELSE
+    SET @corpoRaw = Substring(@docText, @corpoStart, Subtract(Add(@docLen, 1), @corpoStart))
+  ENDIF
+  SET @corpoRaw = Trim(@corpoRaw)
+
+  /* --- 4. Converter CORPO em HTML parágrafos --- */
+  /* Marcar parágrafos (dupla quebra de linha) */
+  SET @corpoMark = Replace(@corpoRaw, Concat(@nl, @nl), '|PAR|')
+  /* Quebras simples viram espaço (continuação de parágrafo) */
+  SET @corpoMark = Replace(@corpoMark, @nl, ' ')
+
+  SET @corpoHtml = ''
+  SET @pStyle = 'style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333333;line-height:1.7;"'
+
+  WHILE IndexOf(@corpoMark, '|PAR|') > 0 DO
+    SET @sepPos  = IndexOf(@corpoMark, '|PAR|')
+    SET @paraStr = Trim(Substring(@corpoMark, 1, Subtract(@sepPos, 1)))
+    IF NOT Empty(@paraStr) THEN
+      SET @corpoHtml = Concat(@corpoHtml, '<p ', @pStyle, '>', @paraStr, '</p>')
+    ENDIF
+    SET @corpoMark = Substring(@corpoMark, Add(@sepPos, 5), 99999)
+  WEND
+  /* Último parágrafo */
+  SET @lastPara = Trim(@corpoMark)
+  IF NOT Empty(@lastPara) THEN
+    SET @corpoHtml = Concat(@corpoHtml, '<p ', @pStyle, '>', @lastPara, '</p>')
+  ENDIF
+
+  IF Empty(@corpoHtml) THEN
+    SET @corpoHtml = '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333333;">Corpo do email.</p>'
+  ENDIF
+
+  /* --- 5. BU Branding --- */
+  IF @bu == 'finclass' THEN
+    SET @buPrimary = '#00e7f9'
+    SET @buDark    = '#0a0e27'
+    SET @buLogo    = 'https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png'
+    SET @buFooter  = 'Finclass &mdash; Grupo Primo &middot; S&atilde;o Paulo, SP'
+    SET @buCtaTxt  = '#000000'
+  ELSEIF @bu == 'faculdade-hub' THEN
+    SET @buPrimary = '#7c3aed'
+    SET @buDark    = '#0f1014'
+    SET @buLogo    = 'https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/4127a0f5-8fef-456f-b13e-760099d30ccc.png'
+    SET @buFooter  = 'Faculdade Hub &mdash; Grupo Primo &middot; S&atilde;o Paulo, SP'
+    SET @buCtaTxt  = '#ffffff'
+  ELSEIF @bu == 'portfel' THEN
+    SET @buPrimary = '#003087'
+    SET @buDark    = '#001F5A'
+    SET @buLogo    = 'https://image.mail.portfel.com.br/lib/fe2f11717d64047b771777/m/1/9c22d171-2ea0-4f6d-81a6-acced45aff9f.png'
+    SET @buFooter  = 'Portfel Consultoria &middot; S&atilde;o Paulo, SP'
+    SET @buCtaTxt  = '#ffffff'
+  ELSEIF @bu == 'bruno-perini' THEN
+    SET @buPrimary = '#b2ec05'
+    SET @buDark    = '#0f1014'
+    SET @buLogo    = 'https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/813699e2-15be-49d3-943e-705a97294c2c.png'
+    SET @buFooter  = 'Bruno Perini &mdash; Voc&ecirc; Mais Rico &middot; S&atilde;o Paulo, SP'
+    SET @buCtaTxt  = '#000000'
+  ELSEIF @bu == 'thiago-nigro' THEN
+    SET @buPrimary = '#ff4900'
+    SET @buDark    = '#0f172a'
+    SET @buLogo    = 'https://image.mail.oprimorico.com.br/lib/fe3011717d64047b771776/m/1/9475f340-442b-4e35-9f2b-17fa10f7d0e4.png'
+    SET @buFooter  = 'Thiago Nigro &mdash; O Primo Rico &middot; S&atilde;o Paulo, SP'
+    SET @buCtaTxt  = '#ffffff'
+  ELSE
+    SET @buPrimary = '#f59e0b'
+    SET @buDark    = '#2d1b00'
+    SET @buLogo    = ''
+    SET @buFooter  = 'Gr&atilde;o &middot; S&atilde;o Paulo, SP'
+    SET @buCtaTxt  = '#000000'
+  ENDIF
+
+  /* --- 6. Template HTML inline --- */
+  SET @tHead = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>{{ASSUNTO}}</title></head><body style="margin:0;padding:0;background-color:#f0f0f0;" bgcolor="#f0f0f0"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:0;color:#f0f0f0;">{{PREHEADER}}&zwnj;&nbsp;&zwnj;&nbsp;</div><table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0f0f0" style="background-color:#f0f0f0;"><tr><td align="center" style="padding:20px 0;"><table width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;max-width:600px;">'
+  SET @tLogo = '<tr><td align="center" style="padding:24px 30px;background-color:{{BU_DARK}};" bgcolor="{{BU_DARK}}"><img src="{{BU_LOGO}}" alt="Logo" width="120" height="auto" style="display:block;border:0;max-width:120px;" border="0"/></td></tr>'
+  /* Links estáticos para preview — sem %%tags%% que causam 500 em CloudPage */
+  SET @unsubTag   = '#cancelar'
+  SET @profileTag = '#preferencias'
+  SET @memberInfo = @buFooter
+
+  SET @tFoot = '<tr><td style="background-color:{{BU_DARK}};padding:24px 20px 20px;" bgcolor="{{BU_DARK}}"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center"><p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#aaaaaa;text-align:center;">{{BU_FOOTER}}</p><table cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:4px 8px;"><a href="[[UNSUB]]" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#aaaaaa;text-decoration:none;">Cancelar inscri&ccedil;&atilde;o</a></td><td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#555555;">|</td><td style="padding:4px 8px;"><a href="[[PROFILE]]" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#aaaaaa;text-decoration:none;">Prefer&ecirc;ncias</a></td></tr></table><p style="margin:8px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#888888;text-align:center;">[[MEMBERINFO]]</p></td></tr></table></td></tr></table></td></tr></table></body></html>'
+
+  IF @templateId == 'newsletter' THEN
+    SET @tMid = '<tr><td style="background-color:{{BU_PRIMARY}};height:3px;font-size:3px;line-height:3px;" bgcolor="{{BU_PRIMARY}}">&nbsp;</td></tr>{{IF_BANNER_START}}<tr><td><img src="{{BANNER_URL}}" alt="{{BANNER_ALT}}" width="600" height="auto" style="display:block;border:0;width:100%;max-width:600px;" border="0"/></td></tr>{{IF_BANNER_END}}{{IF_EDICAO_START}}<tr><td style="padding:20px 40px 4px;"><p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:{{BU_PRIMARY}};letter-spacing:2px;text-transform:uppercase;font-weight:bold;">{{EDICAO}}</p></td></tr>{{IF_EDICAO_END}}<tr><td style="padding:24px 40px 16px;">{{CORPO_HTML}}</td></tr>{{IF_CTA_START}}<tr><td align="center" style="padding:8px 40px 36px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:14px 32px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSEIF @templateId == 'campanha' THEN
+    SET @tMid = '{{IF_BANNER_START}}<tr><td><img src="{{BANNER_URL}}" alt="{{BANNER_ALT}}" width="600" height="auto" style="display:block;border:0;width:100%;max-width:600px;" border="0"/></td></tr>{{IF_BANNER_END}}{{IF_TITULO_START}}<tr><td style="padding:28px 40px 4px;"><h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:bold;color:{{BU_PRIMARY}};line-height:34px;">{{TITULO}}</h1></td></tr>{{IF_TITULO_END}}<tr><td style="padding:24px 40px 16px;">{{CORPO_HTML}}</td></tr>{{IF_CTA_START}}<tr><td align="center" style="padding:8px 40px 36px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:14px 32px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSEIF @templateId == 'simples' THEN
+    SET @tMid = '<tr><td style="padding:36px 44px 20px;">{{CORPO_HTML}}</td></tr>{{IF_CTA_START}}<tr><td align="center" style="padding:8px 44px 40px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:14px 32px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSEIF @templateId == 'hero-full' THEN
+    SET @tMid = '<tr><td style="background-color:{{BU_DARK}};padding:48px 40px;" bgcolor="{{BU_DARK}}"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">{{IF_TITULO_START}}<h1 style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:32px;font-weight:bold;color:#ffffff;line-height:40px;text-align:center;">{{TITULO}}</h1>{{IF_TITULO_END}}{{IF_BANNER_START}}<img src="{{BANNER_URL}}" alt="{{BANNER_ALT}}" width="520" height="auto" style="display:block;border:0;max-width:520px;margin:0 auto 24px;" border="0"/>{{IF_BANNER_END}}{{IF_CTA_START}}<table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:14px 32px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table>{{IF_CTA_END}}</td></tr></table></td></tr><tr><td style="padding:32px 44px 32px;">{{CORPO_HTML}}</td></tr>'
+
+  ELSEIF @templateId == 'multibloco' THEN
+    SET @tMid = '<tr><td style="background-color:{{BU_PRIMARY}};height:3px;font-size:3px;line-height:3px;" bgcolor="{{BU_PRIMARY}}">&nbsp;</td></tr>{{IF_BANNER_START}}<tr><td><img src="{{BANNER_URL}}" alt="{{BANNER_ALT}}" width="600" height="auto" style="display:block;border:0;width:100%;max-width:600px;" border="0"/></td></tr>{{IF_BANNER_END}}<tr><td style="padding:28px 0 8px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:0 40px 0 36px;border-left:4px solid {{BU_PRIMARY}};">{{CORPO_HTML}}</td></tr></table></td></tr>{{IF_CTA_START}}<tr><td align="center" style="padding:16px 40px 36px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:14px 32px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSEIF @templateId == 'anuncio' THEN
+    SET @tMid = '<tr><td style="background-color:{{BU_PRIMARY}};height:4px;font-size:4px;line-height:4px;" bgcolor="{{BU_PRIMARY}}">&nbsp;</td></tr><tr><td align="center" style="padding:36px 60px 20px;">{{IF_TITULO_START}}<h1 style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;color:#111111;line-height:32px;text-align:center;">{{TITULO}}</h1>{{IF_TITULO_END}}{{CORPO_HTML}}</td></tr>{{IF_CTA_START}}<tr><td align="center" style="padding:0 60px 40px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:14px 40px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSEIF @templateId == 'boas-vindas' THEN
+    SET @tMid = '{{IF_TITULO_START}}<tr><td align="center" style="padding:32px 40px 20px;background-color:{{BU_DARK}};" bgcolor="{{BU_DARK}}"><p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#ffffff;text-align:center;line-height:30px;">{{TITULO}}</p></td></tr>{{IF_TITULO_END}}<tr><td style="padding:32px 44px 20px;">{{CORPO_HTML}}</td></tr>{{IF_CTA_START}}<tr><td align="center" style="padding:8px 44px 40px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:16px 40px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:16px 40px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSEIF @templateId == 'produto' THEN
+    SET @tMid = '{{IF_BANNER_START}}<tr><td><img src="{{BANNER_URL}}" alt="{{BANNER_ALT}}" width="600" height="auto" style="display:block;border:0;width:100%;max-width:600px;" border="0"/></td></tr>{{IF_BANNER_END}}<tr><td style="padding:32px 44px 12px;border-top:3px solid {{BU_PRIMARY}};">{{IF_TITULO_START}}<h2 style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:{{BU_PRIMARY}};line-height:30px;">{{TITULO}}</h2>{{IF_TITULO_END}}{{CORPO_HTML}}</td></tr>{{IF_CTA_START}}<tr><td align="center" style="padding:8px 44px 40px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="{{BU_PRIMARY}}" style="background-color:{{BU_PRIMARY}};border-radius:4px;mso-padding-alt:14px 32px;"><a href="{{CTA_URL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:{{BU_CTA_TEXT}};text-decoration:none;">{{CTA_TEXTO}}</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSEIF @templateId == 'texto-longo' THEN
+    SET @tMid = '<tr><td style="padding:40px 50px 24px;">{{IF_TITULO_START}}<h2 style="margin:0 0 20px;font-family:Georgia,serif;font-size:20px;font-weight:normal;color:#222222;line-height:28px;border-bottom:2px solid {{BU_PRIMARY}};padding-bottom:12px;">{{TITULO}}</h2>{{IF_TITULO_END}}{{CORPO_HTML}}</td></tr>{{IF_CTA_START}}<tr><td style="padding:0 50px 40px;"><table cellspacing="0" cellpadding="0" border="0"><tr><td style="padding-left:16px;border-left:3px solid {{BU_PRIMARY}};"><a href="{{CTA_URL}}" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:{{BU_PRIMARY}};text-decoration:none;font-weight:bold;">{{CTA_TEXTO}} &rarr;</a></td></tr></table></td></tr>{{IF_CTA_END}}'
+
+  ELSE
+    SET @tMid = ''
+  ENDIF
+
+  IF Empty(@tMid) THEN
+    SET @result = Concat('{"success":false,"error":"Template nao encontrado: ', @templateId, '"}')
+  ELSE
+    SET @tplHtml = Concat(@tHead, @tLogo, @tMid, @tFoot)
+
+    /* --- 7. Substituir BU placeholders --- */
+    SET @tplHtml = Replace(@tplHtml, '{{BU_PRIMARY}}',  @buPrimary)
+    SET @tplHtml = Replace(@tplHtml, '{{BU_DARK}}',     @buDark)
+    SET @tplHtml = Replace(@tplHtml, '{{BU_LOGO}}',     @buLogo)
+    SET @tplHtml = Replace(@tplHtml, '{{BU_FOOTER}}',   @buFooter)
+    SET @tplHtml = Replace(@tplHtml, '{{BU_CTA_TEXT}}', @buCtaTxt)
+
+    /* --- 7b. Substituir placeholders de personalização SFMC --- */
+    SET @tplHtml = Replace(@tplHtml, '[[UNSUB]]',      @unsubTag)
+    SET @tplHtml = Replace(@tplHtml, '[[PROFILE]]',    @profileTag)
+    SET @tplHtml = Replace(@tplHtml, '[[MEMBERINFO]]', @memberInfo)
+
+    /* --- 8. Substituir placeholders de conteúdo --- */
+    SET @tplHtml = Replace(@tplHtml, '{{ASSUNTO}}',   @fAssunto)
+    SET @tplHtml = Replace(@tplHtml, '{{PREHEADER}}', @fPreheader)
+    SET @tplHtml = Replace(@tplHtml, '{{CORPO_HTML}}',@corpoHtml)
+    SET @tplHtml = Replace(@tplHtml, '{{BANNER_ALT}}',@fBannerAlt)
+    SET @tplHtml = Replace(@tplHtml, '{{TITULO}}',    @fTitulo)
+    SET @tplHtml = Replace(@tplHtml, '{{EDICAO}}',    @fEdicao)
+    SET @tplHtml = Replace(@tplHtml, '{{CTA_TEXTO}}', @fCtaTexto)
+    SET @tplHtml = Replace(@tplHtml, '{{CTA_URL}}',   @fCtaUrl)
+
+    /* --- 9. Seções opcionais --- */
+    IF NOT Empty(@fBannerUrl) THEN
+      SET @tplHtml = Replace(@tplHtml, '{{BANNER_URL}}',      @fBannerUrl)
+      SET @tplHtml = Replace(@tplHtml, '{{IF_BANNER_START}}', '')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_BANNER_END}}',   '')
+    ELSE
+      SET @tplHtml = Replace(@tplHtml, '{{IF_BANNER_START}}', '<!-- BANNER_HIDDEN ')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_BANNER_END}}',   ' BANNER_HIDDEN -->')
+    ENDIF
+
+    IF NOT Empty(@fTitulo) THEN
+      SET @tplHtml = Replace(@tplHtml, '{{IF_TITULO_START}}', '')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_TITULO_END}}',   '')
+    ELSE
+      SET @tplHtml = Replace(@tplHtml, '{{IF_TITULO_START}}', '<!-- TITULO_HIDDEN ')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_TITULO_END}}',   ' TITULO_HIDDEN -->')
+    ENDIF
+
+    IF NOT Empty(@fEdicao) THEN
+      SET @tplHtml = Replace(@tplHtml, '{{IF_EDICAO_START}}', '')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_EDICAO_END}}',   '')
+    ELSE
+      SET @tplHtml = Replace(@tplHtml, '{{IF_EDICAO_START}}', '<!-- EDICAO_HIDDEN ')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_EDICAO_END}}',   ' EDICAO_HIDDEN -->')
+    ENDIF
+
+    IF NOT Empty(@fCtaTexto) AND NOT Empty(@fCtaUrl) THEN
+      SET @tplHtml = Replace(@tplHtml, '{{IF_CTA_START}}', '')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_CTA_END}}',   '')
+    ELSE
+      SET @tplHtml = Replace(@tplHtml, '{{IF_CTA_START}}', '<!-- CTA_HIDDEN ')
+      SET @tplHtml = Replace(@tplHtml, '{{IF_CTA_END}}',   ' CTA_HIDDEN -->')
+    ENDIF
+
+    /* --- 10. Definir nome do email --- */
+    IF Empty(@emailNome) THEN
+      SET @emailNome = @fAssunto
+    ENDIF
+
+    /* --- 11. Salvar na DE MKTC_Emails --- */
+    SET @newId = GUID()
+
+    /* Escaping para JSON */
+    SET @eName = Replace(Replace(@emailNome, '\', '\\'), '"', '\"')
+    SET @eAssu = Replace(Replace(@fAssunto,  '\', '\\'), '"', '\"')
+    SET @ePre  = Replace(Replace(@fPreheader,'\', '\\'), '"', '\"')
+
+    /* --- 11a. Tentar salvar na DE (requer credenciais em MKTC_Config) --- */
+    SET @cId2    = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_ID')
+    SET @cSec2   = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_SECRET')
+    SET @cSub2   = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_SUBDOMAIN')
+    SET @cMid2   = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_MID')
+    SET @sfmcTok2 = ''
+
+    IF NOT Empty(@cId2) AND NOT Empty(@cSec2) AND NOT Empty(@cSub2) THEN
+      SET @tokBody2 = Concat('{"grant_type":"client_credentials","client_id":"', @cId2, '","client_secret":"', @cSec2, '","account_id":', @cMid2, '}')
+      SET @tokUrl2  = Concat('https://', @cSub2, '.auth.marketingcloudapis.com/v2/token')
+      SET @tokStat2 = 0
+      SET @tokResp2 = HTTPPost2(@tokUrl2, 'application/json', @tokBody2, 'Content-Type', 'application/json', @tokStat2)
+      SET @tokAcPos = IndexOf(@tokResp2, '"access_token":"')
+      IF @tokAcPos > 0 THEN
+        SET @tokIdx2  = Add(@tokAcPos, 17)
+        SET @tokPart2 = Substring(@tokResp2, @tokIdx2, 2000)
+        SET @tokQPos2 = IndexOf(@tokPart2, '"')
+        IF @tokQPos2 > 0 THEN
+          SET @sfmcTok2 = Substring(@tokPart2, 1, Subtract(@tokQPos2, 1))
+        ENDIF
+      ENDIF
+    ENDIF
+
+    IF NOT Empty(@sfmcTok2) THEN
+      SET @deUrl2  = Concat('https://', @cSub2, '.rest.marketingcloudapis.com/hub/v1/dataevents/key:MKTC_Emails/rowset')
+      SET @deBody2 = Concat(
+        '[{"keys":{"ID":"', @newId, '"},"values":{',
+        '"BU":"',          @gdocBu,    '",',
+        '"Nome":"',        @eName,     '",',
+        '"Status":"rascunho",',
+        '"Assunto":"',     @eAssu,     '",',
+        '"Preheader":"',   @ePre,      '",',
+        '"Template_ID":"', @templateId,'",',
+        '"Obs":"gerado via gdoc"',
+        '}}]')
+      SET @deHdrN2 = 'Authorization,Content-Type'
+      SET @deHdrV2 = Concat('Bearer ', @sfmcTok2, ',application/json')
+      SET @deStat2 = 0
+      SET @deResp2 = HTTPPost2(@deUrl2, 'application/json', @deBody2, @deHdrN2, @deHdrV2, @deStat2)
+    ENDIF
+
+    /* JSON-escapar o HTML para incluir no response */
+    SET @bslash  = Char(92)
+    SET @dquote  = Char(34)
+    SET @htmlEsc = Replace(@tplHtml, @bslash, Concat(@bslash, @bslash))
+    SET @htmlEsc = Replace(@htmlEsc, @dquote, Concat(@bslash, @dquote))
+    SET @htmlEsc = Replace(@htmlEsc, Char(13), '')
+
+    SET @result = Concat('{"success":true,"id":"', @newId, '","assunto":"', @eAssu, '","html":"', @htmlEsc, '"}')
+  ENDIF
+
+  ENDIF /* fecha guarda docText/templateId */
+
+/* ---- SCHEDULE EMAIL ---- */
+ELSEIF @action == 'schedule_email' THEN
+
+  SET @scNome  = RequestParameter('nome')
+  SET @scAssu  = RequestParameter('assunto')
+  SET @scClsId = RequestParameter('sendClassificationId')
+  SET @scDate  = RequestParameter('sendDate')
+  SET @scTime  = RequestParameter('sendTime')
+  SET @scHtml  = RequestParameter('html')
+  SET @scDe1   = RequestParameter('deEnvio1')
+  SET @scDe2   = RequestParameter('deEnvio2')
+  SET @scEx1   = RequestParameter('deExcl1')
+  SET @scEx2   = RequestParameter('deExcl2')
+  SET @scEx3   = RequestParameter('deExcl3')
+
+  SET @cId     = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_ID')
+  SET @cSecret = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_SECRET')
+  SET @subdom  = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_SUBDOMAIN')
+  SET @mid     = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_MID')
+
+  SET @authUrl  = Concat('https://', @subdom, '.auth.marketingcloudapis.com/v2/token')
+  SET @authBody = Concat('{"grant_type":"client_credentials","client_id":"', @cId, '","client_secret":"', @cSecret, '","account_id":', @mid, '}')
+  SET @tkResp   = HTTPPost(@authUrl, 'application/json', @authBody)
+  SET @tkAcPos  = IndexOf(@tkResp, '"access_token":"')
+  SET @token    = ''
+  IF @tkAcPos > 0 THEN
+    SET @tkPos   = Add(@tkAcPos, 16)
+    SET @tkSlice = Substring(@tkResp, @tkPos, 300)
+    SET @tkQPos  = IndexOf(@tkSlice, '"')
+    IF @tkQPos > 0 THEN
+      SET @token = Substring(@tkSlice, 1, Subtract(@tkQPos, 1))
+    ENDIF
+  ENDIF
+
+  SET @soapUrl = Concat('https://', @subdom, '.soap.marketingcloudapis.com/Service.asmx')
+
+  SET @rtvTpl = Concat(
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">',
+    '<soapenv:Header><fueloauth xmlns="http://exacttarget.com">', @token, '</fueloauth></soapenv:Header>',
+    '<soapenv:Body><RetrieveRequestMsg xmlns="http://exacttarget.com/wsdl/partnerAPI">',
+    '<RetrieveRequest><ObjectType>DataExtension</ObjectType><Properties>ObjectID</Properties>',
+    '<Filter xsi:type="SimpleFilterPart"><Property>CustomerKey</Property>',
+    '<SimpleOperator>equals</SimpleOperator><Value>__KEY__</Value></Filter>',
+    '</RetrieveRequest></RetrieveRequestMsg></soapenv:Body></soapenv:Envelope>')
+
+  SET @de1ObjId = ''
+  SET @de2ObjId = ''
+  SET @ex1ObjId = ''
+  SET @ex2ObjId = ''
+  SET @ex3ObjId = ''
+
+  IF NOT Empty(@scDe1) THEN
+    SET @rtvResp  = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', Replace(@rtvTpl, '__KEY__', @scDe1))
+    SET @oidPos   = Add(IndexOf(@rtvResp, '<ObjectID>'), 10)
+    SET @de1ObjId = Substring(@rtvResp, @oidPos, Subtract(IndexOf(Substring(@rtvResp, @oidPos, 50), '<'), 1))
+  ENDIF
+  IF NOT Empty(@scDe2) THEN
+    SET @rtvResp  = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', Replace(@rtvTpl, '__KEY__', @scDe2))
+    SET @oidPos   = Add(IndexOf(@rtvResp, '<ObjectID>'), 10)
+    SET @de2ObjId = Substring(@rtvResp, @oidPos, Subtract(IndexOf(Substring(@rtvResp, @oidPos, 50), '<'), 1))
+  ENDIF
+  IF NOT Empty(@scEx1) THEN
+    SET @rtvResp  = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', Replace(@rtvTpl, '__KEY__', @scEx1))
+    SET @oidPos   = Add(IndexOf(@rtvResp, '<ObjectID>'), 10)
+    SET @ex1ObjId = Substring(@rtvResp, @oidPos, Subtract(IndexOf(Substring(@rtvResp, @oidPos, 50), '<'), 1))
+  ENDIF
+  IF NOT Empty(@scEx2) THEN
+    SET @rtvResp  = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', Replace(@rtvTpl, '__KEY__', @scEx2))
+    SET @oidPos   = Add(IndexOf(@rtvResp, '<ObjectID>'), 10)
+    SET @ex2ObjId = Substring(@rtvResp, @oidPos, Subtract(IndexOf(Substring(@rtvResp, @oidPos, 50), '<'), 1))
+  ENDIF
+  IF NOT Empty(@scEx3) THEN
+    SET @rtvResp  = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', Replace(@rtvTpl, '__KEY__', @scEx3))
+    SET @oidPos   = Add(IndexOf(@rtvResp, '<ObjectID>'), 10)
+    SET @ex3ObjId = Substring(@rtvResp, @oidPos, Subtract(IndexOf(Substring(@rtvResp, @oidPos, 50), '<'), 1))
+  ENDIF
+
+  SET @sdlBlock = ''
+  IF NOT Empty(@de1ObjId) THEN
+    SET @sdlBlock = Concat(@sdlBlock, '<SendDefinitionList><SendDefinitionListType>SourceList</SendDefinitionListType><DataSourceTypeID>CustomObject</DataSourceTypeID><CustomObjectID>', @de1ObjId, '</CustomObjectID></SendDefinitionList>')
+  ENDIF
+  IF NOT Empty(@de2ObjId) THEN
+    SET @sdlBlock = Concat(@sdlBlock, '<SendDefinitionList><SendDefinitionListType>SourceList</SendDefinitionListType><DataSourceTypeID>CustomObject</DataSourceTypeID><CustomObjectID>', @de2ObjId, '</CustomObjectID></SendDefinitionList>')
+  ENDIF
+  IF NOT Empty(@ex1ObjId) THEN
+    SET @sdlBlock = Concat(@sdlBlock, '<SendDefinitionList><SendDefinitionListType>ExclusionList</SendDefinitionListType><DataSourceTypeID>CustomObject</DataSourceTypeID><CustomObjectID>', @ex1ObjId, '</CustomObjectID></SendDefinitionList>')
+  ENDIF
+  IF NOT Empty(@ex2ObjId) THEN
+    SET @sdlBlock = Concat(@sdlBlock, '<SendDefinitionList><SendDefinitionListType>ExclusionList</SendDefinitionListType><DataSourceTypeID>CustomObject</DataSourceTypeID><CustomObjectID>', @ex2ObjId, '</CustomObjectID></SendDefinitionList>')
+  ENDIF
+  IF NOT Empty(@ex3ObjId) THEN
+    SET @sdlBlock = Concat(@sdlBlock, '<SendDefinitionList><SendDefinitionListType>ExclusionList</SendDefinitionListType><DataSourceTypeID>CustomObject</DataSourceTypeID><CustomObjectID>', @ex3ObjId, '</CustomObjectID></SendDefinitionList>')
+  ENDIF
+
+  SET @scHtmlSafe = Replace(@scHtml, ']]>', ']] >')
+  SET @emailEnv = Concat(
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">',
+    '<soapenv:Header><fueloauth xmlns="http://exacttarget.com">', @token, '</fueloauth></soapenv:Header>',
+    '<soapenv:Body><CreateRequest xmlns="http://exacttarget.com/wsdl/partnerAPI">',
+    '<Objects xsi:type="Email">',
+    '<Name>', @scNome, '</Name>',
+    '<EmailType>HTML</EmailType><IsHTMLPaste>true</IsHTMLPaste>',
+    '<Subject>', @scAssu, '</Subject>',
+    '<HTMLBody><![CDATA[', @scHtmlSafe, ']]></HTMLBody>',
+    '</Objects></CreateRequest></soapenv:Body></soapenv:Envelope>')
+  SET @emailResp = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', @emailEnv)
+  SET @eIdPos    = Add(IndexOf(@emailResp, '<NewID>'), 7)
+  SET @emailId   = Substring(@emailResp, @eIdPos, Subtract(IndexOf(Substring(@emailResp, @eIdPos, 20), '<'), 1))
+
+  SET @scHour    = Substring(@scTime, 1, 2)
+  SET @scMin     = Substring(@scTime, 4, 2)
+  SET @scHourUtc = Add(@scHour, 3)
+  IF @scHourUtc >= 24 THEN SET @scHourUtc = Subtract(@scHourUtc, 24) ENDIF
+  IF @scHourUtc < 10 THEN
+    SET @scHourStr = Concat('0', @scHourUtc)
+  ELSE
+    SET @scHourStr = @scHourUtc
+  ENDIF
+  SET @startDT = Concat(@scDate, 'T', @scHourStr, ':', @scMin, ':00')
+
+  SET @esdKey = Concat('MKTC-', FormatDate(Now(), 'yyyyMMddHHmmss'))
+  SET @esdEnv = Concat(
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">',
+    '<soapenv:Header><fueloauth xmlns="http://exacttarget.com">', @token, '</fueloauth></soapenv:Header>',
+    '<soapenv:Body><CreateRequest xmlns="http://exacttarget.com/wsdl/partnerAPI">',
+    '<Objects xsi:type="EmailSendDefinition">',
+    '<Name>', @esdKey, '</Name><CustomerKey>', @esdKey, '</CustomerKey>',
+    '<SendClassification><CustomerKey>', @scClsId, '</CustomerKey></SendClassification>',
+    '<Email><ID>', @emailId, '</ID></Email>',
+    @sdlBlock,
+    '</Objects></CreateRequest></soapenv:Body></soapenv:Envelope>')
+  SET @esdResp  = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', @esdEnv)
+  SET @esdIdPos = Add(IndexOf(@esdResp, '<NewID>'), 7)
+  SET @esdObjId = Substring(@esdResp, @esdIdPos, Subtract(IndexOf(Substring(@esdResp, @esdIdPos, 50), '<'), 1))
+
+  SET @schedEnv = Concat(
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">',
+    '<soapenv:Header><fueloauth xmlns="http://exacttarget.com">', @token, '</fueloauth></soapenv:Header>',
+    '<soapenv:Body><ScheduleRequestMsg xmlns="http://exacttarget.com/wsdl/partnerAPI">',
+    '<Action>start</Action>',
+    '<Schedule xsi:type="ScheduleDefinition"><StartDateTime>', @startDT, '</StartDateTime></Schedule>',
+    '<Interactions xsi:type="EmailSendDefinition"><ObjectID>', @esdObjId, '</ObjectID></Interactions>',
+    '</ScheduleRequestMsg></soapenv:Body></soapenv:Envelope>')
+  SET @schedResp = HTTPPost(@soapUrl, 'text/xml; charset=utf-8', @schedEnv)
+
+  IF IndexOf(@schedResp, 'Fault') > 0 THEN
+    SET @result = Concat('{"error":"SOAP Fault - email:', @emailId, ' esd:', @esdObjId, '"}')
+  ELSEIF IndexOf(@schedResp, 'Error') > 0 THEN
+    SET @result = Concat('{"error":"SOAP Error - email:', @emailId, ' esd:', @esdObjId, '"}')
+  ELSE
+    SET @result = Concat('{"success":true,"emailId":', @emailId, ',"esdId":"', @esdObjId, '"}')
+  ENDIF
+
+/* ---- UPLOAD IMAGE ---- */
+ELSEIF @action == 'upload_image' THEN
+
+  SET @imgB64  = RequestParameter('imageB64')
+  SET @imgName = RequestParameter('filename')
+
+  SET @cId     = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_ID')
+  SET @cSecret = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_CLIENT_SECRET')
+  SET @subdom  = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_SUBDOMAIN')
+  SET @mid     = Lookup('MKTC_Config', 'Value', 'Key', 'SFMC_MID')
+
+  SET @authUrl  = Concat('https://', @subdom, '.auth.marketingcloudapis.com/v2/token')
+  SET @authBody = Concat('{"grant_type":"client_credentials","client_id":"', @cId, '","client_secret":"', @cSecret, '","account_id":', @mid, '}')
+  SET @tkResp   = HTTPPost(@authUrl, 'application/json', @authBody)
+  SET @tkAcPos2 = IndexOf(@tkResp, '"access_token":"')
+  SET @token    = ''
+  IF @tkAcPos2 > 0 THEN
+    SET @tkPos   = Add(@tkAcPos2, 16)
+    SET @tkSlice = Substring(@tkResp, @tkPos, 300)
+    SET @tkQPos2 = IndexOf(@tkSlice, '"')
+    IF @tkQPos2 > 0 THEN
+      SET @token = Substring(@tkSlice, 1, Subtract(@tkQPos2, 1))
+    ENDIF
+  ENDIF
+
+  SET @dotPos = IndexOf(@imgName, '.')
+  IF @dotPos > 0 THEN
+    SET @ext = Lowercase(Substring(@imgName, Add(@dotPos, 1), 5))
+  ELSE
+    SET @ext = 'png'
+  ENDIF
+  IF @ext == 'jpg' THEN
+    SET @assetTypeId = '23'
+    SET @assetName   = 'jpeg'
+  ELSEIF @ext == 'jpeg' THEN
+    SET @assetTypeId = '23'
+    SET @assetName   = 'jpeg'
+  ELSEIF @ext == 'gif' THEN
+    SET @assetTypeId = '31'
+    SET @assetName   = 'gif'
+  ELSE
+    SET @assetTypeId = '28'
+    SET @assetName   = 'png'
+  ENDIF
+
+  SET @cbUrl     = Concat('https://', @subdom, '.rest.marketingcloudapis.com/asset/v1/content/assets')
+  SET @cbPayload = Concat(
+    '{"name":"', @imgName, '",',
+    '"assetType":{"name":"', @assetName, '","id":', @assetTypeId, '},',
+    '"file":"', @imgB64, '",',
+    '"category":{"id":275201}}')
+  SET @cbHdrNames  = 'Authorization'
+  SET @cbHdrValues = Concat('Bearer ', @token)
+  SET @cbStatus    = 0
+  SET @cbResp      = HTTPPost2(@cbUrl, 'application/json', @cbPayload, @cbHdrNames, @cbHdrValues, @cbStatus)
+
+  SET @urlKey   = '"publishedURL":"'
+  SET @urlPos   = Add(IndexOf(@cbResp, @urlKey), Length(@urlKey))
+  SET @urlSlice = Substring(@cbResp, @urlPos, 200)
+  SET @pubUrl   = Substring(@urlSlice, 1, Subtract(IndexOf(@urlSlice, '"'), 1))
+
+  IF NOT Empty(@pubUrl) THEN
+    SET @result = Concat('{"success":true,"url":"', @pubUrl, '"}')
+  ELSE
+    SET @result = Concat('{"error":"Upload failed. Status:', @cbStatus, '"}')
+  ENDIF
+
+/* ---- UNKNOWN ---- */
+ELSE
+
+  SET @result = Concat('{"error":"unknown action: ', @action, '"}')
+
+ENDIF
+]%%%%=v(@result)=%%
