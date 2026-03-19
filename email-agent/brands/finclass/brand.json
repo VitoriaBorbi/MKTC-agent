@@ -2,26 +2,21 @@
   "name": "Finclass",
   "platform": "Salesforce Marketing Cloud (SFMC)",
   "colors": {
-    "primary": "#00e7f9",
-    "secondary": "#0a0e27",
+    "primary": "#00E7F9",
+    "secondary": "#092F4F",
+    "accent_yellow": "#FFDD00",
     "background": "#FFFFFF",
-    "card_bg": "#FFFFFF",
-    "text": "#000000",
-    "text_light": "#555555",
-    "text_on_dark": "#D5D5D5",
-    "cta_bg": "#00e7f9",
-    "cta_text": "#000000",
-    "footer_bg": "#FFFFFF",
+    "background_outer": "#F5F5F5",
+    "text": "#1A1A1A",
+    "text_secondary": "#555555",
     "footer_text": "#4c4c4c",
     "footer_links": "#cacaca",
-    "footer_accent": "#9ba7e0",
-    "footer_border": "#9ba7e0",
-    "divider": "#9ba7e0",
-    "hr_header": "#01bbe9"
+    "divider": "#E0E0E0"
   },
   "fonts": {
     "heading": "Arial, Helvetica, sans-serif",
-    "body": "Arial, Helvetica, sans-serif"
+    "body": "Arial, Helvetica, sans-serif",
+    "note": "Montserrat é a fonte de marca mas não é email-safe. Usar Arial como fallback universal."
   },
   "sizes": {
     "h1": "28px",
@@ -29,12 +24,18 @@
     "h3": "18px",
     "body": "16px",
     "small": "13px",
-    "footer": "12px"
+    "footer": "12px",
+    "line_height": "1.75"
+  },
+  "cta": {
+    "border_radius": "40px",
+    "height": "52px",
+    "note": "Botão pill — bulletproof com VML para Outlook. Ver templates para implementação completa."
   },
   "logo": {
     "url": "https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png",
     "alt": "Finclass",
-    "width": 180
+    "width": 160
   },
   "footer": {
     "company": "Finclass",
@@ -62,18 +63,76 @@
       }
     }
   },
-  "sfmc": {
-    "preheader_ampscript": "%%=AttributeValue(\"_Preheader\")=%%",
-    "view_email_url": "%%view_email_url%%",
-    "open_counter": "<custom name=\"opencounter\" type=\"tracking\"/>",
-    "user_match": "<custom name=\"usermatch\" type=\"tracking\"/>",
-    "category_id": 275234,
-    "category_path": "Content Builder/Email/Outros",
-    "img_category_id": 275201,
-    "img_category_path": "Content Builder/Email/Imagens",
-    "campaign_category_id": 275626,
-    "campaign_category_path": "Content Builder/Email/Campanha",
-    "send_classification": "84"
+  "templates": {
+    "news": {
+      "file": "templates/news.html",
+      "description": "Newsletter FinNews — hero banner navy + editorial longo + assinatura do autor",
+      "slots": ["email_subject", "email_preheader", "email_titulo_serie", "email_subtitulo_serie", "email_data", "email_corpo", "email_autor_nome", "email_autor_titulo", "email_autor_foto", "email_hero_icon_html"]
+    },
+    "campanha": {
+      "file": "templates/campanha.html",
+      "description": "Campanha/Venda — copy longa, múltiplas imagens e CTAs, tom agressivo",
+      "slots": ["email_subject", "email_preheader", "email_corpo", "email_cta_texto", "email_cta_url", "email_assinatura", "email_hero_html"]
+    },
+    "relatorio": {
+      "file": "templates/relatorio.html",
+      "description": "Relatório/Análise — texto curto, CTA navy único",
+      "slots": ["email_subject", "email_preheader", "email_corpo", "email_cta_texto", "email_cta_url"]
+    },
+    "conteudo": {
+      "file": "templates/conteudo.html",
+      "description": "Conteúdo/Vídeo — intro + bullets + CTA amarelo + assinatura",
+      "slots": ["email_subject", "email_preheader", "email_corpo", "email_cta_texto", "email_cta_url", "email_assinatura"]
+    },
+    "comunicado": {
+      "file": "templates/comunicado.html",
+      "description": "Comunicado/Aviso — texto livre, CTA opcional",
+      "slots": ["email_subject", "email_preheader", "email_corpo", "email_cta_html"]
+    },
+    "consultor-elite": {
+      "file": "templates/consultor-elite.html",
+      "description": "Consultor de Elite — brand própria, formato minimal, sem social icons",
+      "slots": ["email_subject", "email_preheader", "email_corpo"]
+    }
   },
-  "tone": "Premium, educativo, aspiracional. Linguagem sofisticada e acessivel sobre investimentos e educacao financeira. Voltado para quem busca aprender com os melhores do mercado."
+  "sfmc": {
+    "send_classification": "84",
+    "sender_profiles": {
+      "campanha":        { "name": "Equipe Finclass",       "id": 194 },
+      "conteudo":        { "name": "Conteúdo - Finclass",   "id": 270 },
+      "consultor-elite": { "name": "Consultor de Elite",    "id": 294 },
+      "news":            { "name": "Fin News",              "id": 285 },
+      "relatorio":       { "name": "Equipe Finclass",       "id": 194, "note": "ou analista específico — ver lista abaixo" },
+      "relatorio_analistas": [
+        { "name": "Rodrigo Xavier - Finclass",    "id": 280 },
+        { "name": "Ricardo Figueiredo - Finclass", "id": 199 },
+        { "name": "Eduardo Perez",                 "id": 319 },
+        { "name": "Evandro Medeiros",              "id": 318 }
+      ],
+      "comunicado":      { "name": "Equipe Finclass",       "id": 194 }
+    },
+    "content_builder": {
+      "root": 274200,
+      "email": 275176,
+      "campanha": 275626,
+      "imagens": 275201,
+      "outros": 275234
+    },
+    "tracking_categories": {
+      "campanha": 320491,
+      "campanha_path": "my tracking / Campanhas / 2026",
+      "relatorio": 278546,
+      "relatorio_path": "my tracking / Assinantes / Recomendacoes",
+      "conteudo": 315907,
+      "conteudo_path": "my tracking / Outros / Conteúdo Finclass",
+      "consultor-elite": 317554,
+      "consultor-elite_path": "my tracking / Outros / Conteúdo Finclass / Consultor de Elite",
+      "news": 320503,
+      "news_path": "my tracking / Newsletter / 2026",
+      "comunicado": 276056,
+      "comunicado_path": "my tracking / Outros"
+    },
+    "note_campanha": "Para campanhas, criar subpasta por campanha dentro do category 320491 (ex: ANV0006). O /send skill cria a subpasta automaticamente."
+  },
+  "tone": "Premium, educativo, aspiracional. Linguagem sofisticada e acessível sobre investimentos e educação financeira. Voltado para quem busca aprender com os melhores do mercado."
 }

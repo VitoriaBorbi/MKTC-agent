@@ -1,0 +1,9 @@
+{
+  "EMAIL_SUBJECT": "Uma oportunidade que você não pode ignorar",
+  "HERO_IMAGE_URL": "https://placehold.co/600x300/1a1a2e/ffffff?text=Imagem+Hero",
+  "HERO_IMAGE_ALT": "Imagem de destaque da campanha",
+  "HEADLINE": "Chegou a hora de dar o próximo passo",
+  "BODY_COPY": "<p style=\"margin:0 0 14px 0;\">Você já se perguntou o que separa quem realiza seus sonhos de quem apenas os sonha? A resposta está na ação certa, no momento certo.</p><p style=\"margin:0 0 14px 0;\">Preparamos algo especial para você. Uma oportunidade única de transformar a forma como você pensa sobre dinheiro, carreira e futuro.</p><p style=\"margin:0;\">Não deixe para amanhã o que pode mudar tudo hoje.</p>",
+  "CTA_TEXT": "Quero saber mais",
+  "CTA_URL": "https://exemplo.com"
+}

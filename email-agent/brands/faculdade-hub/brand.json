@@ -68,7 +68,30 @@
     "category_path": "Content Builder/Claude Code",
     "img_category_id": 320779,
     "img_category_path": "Content Builder/Claude Code/img",
-    "send_classification": "83"
+    "send_classification": "83",
+    "mid": "518005749",
+    "sender_profiles": {
+      "bruno-perini":   { "id": 297, "name": "Bruno Perini - Faculdade Hub" },
+      "faculdade-hub":  { "id": 286, "name": "Faculdade HUB" },
+      "mba":            { "id": 142, "name": "MBA - Faculdade HUB" },
+      "myhub-ia":       { "id": 311, "name": "MyHUB.IA" },
+      "thiago-nigro":   { "id": 230, "name": "Thiago Nigro - Faculdade HUB" }
+    },
+    "templates": {
+      "news": {
+        "sender_profile_id": 286,
+        "sender_profile_name": "Faculdade HUB",
+        "tracking_category_id": 316407,
+        "tracking_category_path": "my tracking > Campanhas > Newsletter"
+      },
+      "campanha": {
+        "sender_profile_id": 286,
+        "sender_profile_name": "Faculdade HUB",
+        "tracking_category_id": 278080,
+        "tracking_category_path": "my tracking > Campanhas"
+      }
+    },
+    "_nota_sender": "Sender pode ser sobrescrito na col AF da planilha (ex: MBA=142, Bruno Perini=297, Thiago Nigro=230, MyHUB.IA=311)"
   },
   "tone": "Profissional, confiavel, academico. Linguagem clara e objetiva sobre educacao superior, MBA e desenvolvimento de carreira."
 }

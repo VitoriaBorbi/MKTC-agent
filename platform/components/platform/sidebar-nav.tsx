@@ -12,6 +12,7 @@ import {
   BookmarkIcon,
   PaletteIcon,
   DatabaseIcon,
+  GitBranchIcon,
 } from 'lucide-react'
 import { BU } from '@/types'
 
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard',   icon: LayoutDashboardIcon, href: 'dashboard' },
   { label: 'Fila',        icon: InboxIcon,            href: 'fila' },
   { label: 'Campanhas',   icon: FolderOpenIcon,       href: 'campanhas' },
+  { label: 'Jornadas',    icon: GitBranchIcon,        href: 'jornadas' },
   { label: 'Catálogo',    icon: GridIcon,             href: 'catalogo' },
   { label: 'Histórico',   icon: HistoryIcon,          href: 'historico' },
 ]

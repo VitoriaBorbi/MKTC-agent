@@ -1,0 +1,15 @@
+{
+  "EMAIL_SUBJECT": "3 coisas que você precisa saber esta semana",
+  "HERO_IMAGE_URL": "https://placehold.co/600x200/1a1a2e/ffffff?text=Newsletter+Semanal",
+  "HERO_IMAGE_ALT": "Newsletter semanal",
+  "HEADLINE": "O que aconteceu e o que vem por aí",
+  "BODY_COPY": "<p style=\"margin:0;\">Esta semana foi movimentada. Separamos os três pontos mais importantes que merecem a sua atenção agora.</p>",
+  "SECTION_1_TITLE": "O mercado deu um sinal claro",
+  "SECTION_1_BODY": "<p style=\"margin:0;\">Os dados desta semana mostram uma tendência que poucos estão percebendo. Quem entender primeiro sai na frente — e nós explicamos o que significa para você.</p>",
+  "SECTION_2_TITLE": "Uma habilidade que vale mais do que diploma",
+  "SECTION_2_BODY": "<p style=\"margin:0;\">Independente da sua área, existe uma competência que todo profissional de alta performance domina. Falamos com especialistas e resumimos em pontos práticos.</p>",
+  "SECTION_3_TITLE": "Decisão que muda trajetória",
+  "SECTION_3_BODY": "<p style=\"margin:0;\">Uma escolha que parece pequena pode ser o ponto de virada. Descubra como identificar essas oportunidades antes que elas passem.</p>",
+  "CTA_TEXT": "Ler edição completa",
+  "CTA_URL": "https://exemplo.com"
+}

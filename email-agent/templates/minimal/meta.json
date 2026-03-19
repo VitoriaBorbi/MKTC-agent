@@ -1,0 +1,12 @@
+{
+  "id": "minimal",
+  "name": "Minimalista",
+  "description": "Layout limpo sem imagem hero. Foco total na tipografia e na mensagem. CTA com estilo outline (borda, sem preenchimento).",
+  "tags": ["minimal", "cta-unico", "sem-imagem", "tipografia"],
+  "content_zones": ["headline", "body_copy", "cta"],
+  "best_for": ["comunicações institucionais", "mensagens pessoais do fundador", "updates curtos e diretos"],
+  "placeholders": {
+    "identity": ["COLOR_BG", "COLOR_TEXT", "COLOR_PRIMARY", "COLOR_HR", "FONT_HEADING", "FONT_BODY", "LOGO_URL", "LOGO_ALT", "LOGO_WIDTH", "FOOTER_BLOCK"],
+    "content": ["EMAIL_SUBJECT", "HEADLINE", "BODY_COPY", "CTA_TEXT", "CTA_URL"]
+  }
+}

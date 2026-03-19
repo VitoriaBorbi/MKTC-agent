@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>email agendado</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+
+  /* Vignette */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 25%,
+      rgba(0,0,0,0.55) 65%,
+      rgba(0,0,0,0.93) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .stage {
+    position: fixed; inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    animation: stageFadeOut 0.8s ease-in 4.4s forwards;
+  }
+
+  /* Horizontal lines */
+  .line-wrap {
+    display: flex;
+    align-items: center;
+    width: min(780px, 86vw);
+    opacity: 0;
+    animation: fadeInLine 0.7s ease-out 0.55s forwards;
+  }
+  .line-wrap.flip { transform: scaleX(-1); }
+
+  .line-l {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(155, 40, 15, 0.55));
+  }
+  .line-r {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to left, transparent, rgba(155, 40, 15, 0.55));
+  }
+  .line-gap { width: 56px; }
+
+  /* Main title */
+  .title {
+    font-family: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
+    font-size: clamp(44px, 7.5vw, 84px);
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #831508;
+    padding: 20px 56px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation:
+      titleIn  1s ease-out 0.15s forwards,
+      titleGlow 3.8s ease-in-out 0.7s forwards;
+  }
+
+  /* Subtitle */
+  .sub {
+    font-family: 'Cinzel', 'Palatino Linotype', serif;
+    font-size: clamp(10px, 1.3vw, 13px);
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: rgba(165, 72, 35, 0.5);
+    margin-top: 10px;
+    opacity: 0;
+    animation: fadeIn 0.9s ease-out 1s forwards;
+  }
+
+  @keyframes titleIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes titleGlow {
+    0%   { text-shadow: none; }
+    35%  {
+      text-shadow:
+        0 0 18px rgba(210, 55, 18, 0.75),
+        0 0 50px rgba(185, 38, 10, 0.42),
+        0 0 110px rgba(160, 28, 5, 0.22);
+    }
+    85%  {
+      text-shadow:
+        0 0 18px rgba(210, 55, 18, 0.75),
+        0 0 50px rgba(185, 38, 10, 0.42),
+        0 0 110px rgba(160, 28, 5, 0.22);
+    }
+    100% {
+      text-shadow:
+        0 0 10px rgba(210, 55, 18, 0.3),
+        0 0 30px rgba(185, 38, 10, 0.15);
+    }
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  @keyframes fadeInLine {
+    to { opacity: 1; }
+  }
+  @keyframes stageFadeOut {
+    to { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="line-wrap">
+    <div class="line-l"></div>
+    <div class="line-gap"></div>
+    <div class="line-r"></div>
+  </div>
+
+  <div class="title">EMAIL AGENDADO</div>
+
+  <div class="line-wrap flip">
+    <div class="line-l"></div>
+    <div class="line-gap"></div>
+    <div class="line-r"></div>
+  </div>
+
+  <div class="sub" id="sub">enviado para o sfmc</div>
+</div>
+
+<script>
+// ── Parâmetros de URL ──────────────────────────────────────
+const p = new URLSearchParams(window.location.search);
+const parts = [p.get('key'), p.get('dt'), p.get('bu')].filter(Boolean);
+if (parts.length) document.getElementById('sub').textContent = parts.join('  ·  ');
+
+// ── Som: sintetizar o YOU DIED do Dark Souls ──────────────
+function playSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+
+    // Master compressor para evitar clipagem
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -12;
+    comp.ratio.value = 6;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.4;
+    comp.connect(ctx.destination);
+
+    // Reverb simples via ConvolverNode (impulse sintético)
+    function makeReverb(duration, decay) {
+      const rate = ctx.sampleRate;
+      const len = rate * duration;
+      const buf = ctx.createBuffer(2, len, rate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+        }
+      }
+      const conv = ctx.createConvolver();
+      conv.buffer = buf;
+      conv.connect(comp);
+      return conv;
+    }
+
+    const verb = makeReverb(3.5, 2.2);
+
+    // ── 1. CRASH grave (thud inicial) ────────────────────
+    const crash = ctx.createOscillator();
+    const crashGain = ctx.createGain();
+    crash.frequency.setValueAtTime(90, t);
+    crash.frequency.exponentialRampToValueAtTime(28, t + 0.55);
+    crashGain.gain.setValueAtTime(0, t);
+    crashGain.gain.linearRampToValueAtTime(0.9, t + 0.02);
+    crashGain.gain.exponentialRampToValueAtTime(0.001, t + 1.4);
+    crash.connect(crashGain);
+    crashGain.connect(comp);
+    crashGain.connect(verb);
+    crash.start(t); crash.stop(t + 1.5);
+
+    // ── 2. CORO ESCURO — acorde Am (A1-E2-A2-C#3-E3) ───
+    const chord = [
+      { f: 55,    type: 'sawtooth', v: 0.18, at: 0.0 },
+      { f: 82.4,  type: 'sawtooth', v: 0.14, at: 0.1 },
+      { f: 110,   type: 'sawtooth', v: 0.12, at: 0.15 },
+      { f: 138.6, type: 'sawtooth', v: 0.09, at: 0.2 },
+      { f: 164.8, type: 'sine',     v: 0.08, at: 0.25 },
+    ];
+    chord.forEach(({ f, type, v, at }) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      const flt = ctx.createBiquadFilter();
+      osc.type = type;
+      osc.frequency.value = f;
+      flt.type = 'lowpass';
+      flt.frequency.value = f * 3.5;
+      flt.Q.value = 0.7;
+      g.gain.setValueAtTime(0, t + at);
+      g.gain.linearRampToValueAtTime(v, t + at + 0.9);
+      g.gain.setValueAtTime(v, t + 3.4);
+      g.gain.linearRampToValueAtTime(0, t + 5.2);
+      osc.connect(flt); flt.connect(g);
+      g.connect(comp); g.connect(verb);
+      osc.start(t + at); osc.stop(t + 5.5);
+    });
+
+    // ── 3. STING ALTO — coro agudo ───────────────────────
+    const high = [
+      { f: 220,   v: 0.06, at: 0.45 },
+      { f: 277.2, v: 0.05, at: 0.5  },
+      { f: 329.6, v: 0.04, at: 0.55 },
+      { f: 440,   v: 0.03, at: 0.6  },
+    ];
+    high.forEach(({ f, v, at }) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      g.gain.setValueAtTime(0, t + at);
+      g.gain.linearRampToValueAtTime(v, t + at + 0.6);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 5.2);
+      osc.connect(g); g.connect(comp); g.connect(verb);
+      osc.start(t + at); osc.stop(t + 5.5);
+    });
+
+  } catch (e) {
+    console.warn('Audio falhou:', e);
+  }
+}
+
+// Tocar ao carregar (Edge --app não bloqueia autoplay)
+window.addEventListener('load', () => {
+  setTimeout(playSound, 80);
+  setTimeout(() => window.close(), 5400);
+});
+</script>
+</body>
+</html>

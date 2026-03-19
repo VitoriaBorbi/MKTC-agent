@@ -1,0 +1,7 @@
+{
+  "EMAIL_SUBJECT": "Uma mensagem importante para você",
+  "HEADLINE": "Algumas coisas valem a pena parar para pensar",
+  "BODY_COPY": "<p style=\"margin:0 0 16px 0;\">Olá,</p><p style=\"margin:0 0 16px 0;\">Há momentos em que uma única ideia muda tudo. Não é sobre quantidade — é sobre a qualidade do que você escolhe absorver.</p><p style=\"margin:0 0 16px 0;\">Hoje quero compartilhar algo que tem feito diferença real na vida de muitas pessoas. Sem enrolação, direto ao ponto.</p><p style=\"margin:0;\">Reserve dois minutos. Vale a pena.</p>",
+  "CTA_TEXT": "Ler a mensagem completa",
+  "CTA_URL": "https://exemplo.com"
+}

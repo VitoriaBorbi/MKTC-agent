@@ -8,7 +8,29 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+async function aiGenerate(systemPrompt: string, parts: Array<{text?: string; inlineData?: {mimeType: string; data: string}}>): Promise<string> {
+  const content: Anthropic.MessageParam['content'] = []
+  for (const p of parts) {
+    if (p.inlineData) {
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: p.inlineData.mimeType as Anthropic.Base64ImageSource['media_type'], data: p.inlineData.data },
+      })
+    } else if (p.text) {
+      content.push({ type: 'text', text: p.text })
+    }
+  }
+  const msg = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 4096,
+    system: systemPrompt,
+    messages: [{ role: 'user', content }],
+  })
+  const block = msg.content.find(b => b.type === 'text')
+  return block && block.type === 'text' ? block.text : ''
+}
 
 const SYSTEM_PROMPT = `Você é um especialista em jornadas de email marketing. Analise o mapa de jornada e o briefing fornecidos. Retorne APENAS um JSON minificado válido, sem markdown, sem texto extra, sem blocos de código.
 
@@ -43,35 +65,19 @@ export async function POST(req: Request) {
 
     const userText = `Jornada: ${name}\nBU/Marca: ${bu}\n\nBriefing:\n${briefing}\n\nRetorne APENAS o JSON da jornada (sem markdown, sem explicação).`
 
-    type UserContent = Anthropic.MessageParam['content']
-    const userContent: UserContent = []
+    const parts: Array<{text?: string; inlineData?: {mimeType: string; data: string}}> = []
 
     if (image) {
-      // image may or may not have data: prefix
-      const parts = image.split(',')
-      const data = parts.length > 1 ? parts[1] : parts[0]
-      const header = parts.length > 1 ? parts[0] : ''
-      const mediaType = (header.match(/data:([^;]+)/)?.[1] || 'image/jpeg') as
-        'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
-
-      if (data) {
-        userContent.push({
-          type: 'image',
-          source: { type: 'base64', media_type: mediaType, data },
-        })
-      }
+      const imgParts = image.split(',')
+      const data = imgParts.length > 1 ? imgParts[1] : imgParts[0]
+      const header = imgParts.length > 1 ? imgParts[0] : ''
+      const mimeType = header.match(/data:([^;]+)/)?.[1] || 'image/jpeg'
+      if (data) parts.push({ inlineData: { mimeType, data } })
     }
 
-    userContent.push({ type: 'text', text: userText })
+    parts.push({ text: userText })
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userContent }],
-    })
-
-    const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rawText = await aiGenerate(SYSTEM_PROMPT, parts)
     const jsonText = stripJson(rawText)
 
     let data: unknown

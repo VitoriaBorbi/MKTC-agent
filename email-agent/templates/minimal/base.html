@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+      xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{EMAIL_SUBJECT}}</title>
+  <!--[if !mso]><!-->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!--<![endif]-->
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+</head>
+<body style="margin:0; padding:0; background-color:{{COLOR_BG}}; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
+
+  <!-- SFMC Tracking -->
+  <div style="font-size:0; line-height:0;"><custom name="opencounter" type="tracking"/><custom name="usermatch" type="tracking" /></div>
+
+  <!-- PREHEADER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+    <tr>
+      <td style="font-size:0; width:0; height:0; display:none; overflow:hidden; mso-hide:all; max-height:0;">
+        <span style="font-size:0; width:0; height:0; display:none; overflow:hidden; mso-hide:all; max-height:0;">
+          %%=AttributeValue("_Preheader")=%%&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        </span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- VIEW IN BROWSER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:{{COLOR_BG}};" bgcolor="{{COLOR_BG}}">
+    <tr>
+      <td align="right" style="padding:8px 20px;">
+        <span style="font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#999999;">
+          Caso não consiga visualizar,
+          <a href="%%view_email_url%%" style="color:#999999; text-decoration:underline;">clique aqui</a>.
+        </span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- HEADER: Logo (clean, sem HR) -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr>
+      <td align="center" style="padding:28px 40px 24px 40px;">
+        <img src="{{LOGO_URL}}" alt="{{LOGO_ALT}}" width="{{LOGO_WIDTH}}" height="auto"
+             style="display:block; border:0; width:{{LOGO_WIDTH}}px;" border="0" />
+      </td>
+    </tr>
+  </table>
+
+  <!-- DIVIDER TOP -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr>
+      <td style="padding:0 40px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+          <tr>
+            <td style="border-bottom:1px solid #eeeeee; font-size:1px; line-height:1px;">&nbsp;</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- HEADLINE -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr>
+      <td align="center" style="padding:40px 50px 16px 50px;
+                                 font-family:{{FONT_HEADING}};
+                                 font-size:30px;
+                                 font-weight:bold;
+                                 line-height:1.3;
+                                 color:{{COLOR_TEXT}};">
+        {{HEADLINE}}
+      </td>
+    </tr>
+  </table>
+
+  <!-- DECORATIVE ACCENT -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr>
+      <td align="center" style="padding-bottom:24px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="60" align="center">
+          <tr>
+            <td style="border-bottom:3px solid {{COLOR_PRIMARY}}; font-size:1px; line-height:1px;">&nbsp;</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- BODY COPY -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr>
+      <td style="padding:0 50px 32px 50px;
+                 font-family:{{FONT_BODY}};
+                 font-size:16px;
+                 line-height:1.75;
+                 color:{{COLOR_TEXT}};">
+        {{BODY_COPY}}
+      </td>
+    </tr>
+  </table>
+
+  <!-- CTA: link-style com bordas -->
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr>
+      <td align="center" style="padding:0 50px 48px 50px;">
+        <!--[if mso]>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+          href="{{CTA_URL}}" style="height:52px;v-text-anchor:middle;width:260px;"
+          arcsize="50%" stroke="t" strokecolor="{{COLOR_PRIMARY}}" fillcolor="#ffffff">
+          <w:anchorlock/>
+          <center style="color:{{COLOR_PRIMARY}};font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;">{{CTA_TEXT}}</center>
+        </v:roundrect>
+        <![endif]-->
+        <!--[if !mso]><!-->
+        <a href="{{CTA_URL}}"
+           style="border:2px solid {{COLOR_PRIMARY}};
+                  border-radius:100px;
+                  color:{{COLOR_PRIMARY}};
+                  display:inline-block;
+                  font-family:Arial,Helvetica,sans-serif;
+                  font-size:15px;
+                  font-weight:bold;
+                  line-height:48px;
+                  text-align:center;
+                  text-decoration:none;
+                  width:260px;
+                  -webkit-text-size-adjust:none;
+                  mso-hide:all;">{{CTA_TEXT}}</a>
+        <!--<![endif]-->
+      </td>
+    </tr>
+  </table>
+
+  <!-- FOOTER -->
+  {{FOOTER_BLOCK}}
+
+</body>
+</html>

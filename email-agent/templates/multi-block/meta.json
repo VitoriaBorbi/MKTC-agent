@@ -1,0 +1,12 @@
+{
+  "id": "multi-block",
+  "name": "Newsletter",
+  "description": "Estrutura de newsletter com imagem de capa, introdução e 3 seções de conteúdo com barras laterais coloridas. Ideal para comunicações periódicas.",
+  "tags": ["newsletter", "hero", "imagem", "multi-secao"],
+  "content_zones": ["hero_image", "headline", "body_copy", "section_1", "section_2", "section_3", "cta"],
+  "best_for": ["newsletters semanais", "resumos de conteúdo", "curadoria de temas"],
+  "placeholders": {
+    "identity": ["COLOR_BG", "COLOR_TEXT", "COLOR_TEXT_LIGHT", "COLOR_PRIMARY", "COLOR_HR", "COLOR_CTA_BG", "COLOR_CTA_TEXT", "FONT_HEADING", "FONT_BODY", "LOGO_URL", "LOGO_ALT", "LOGO_WIDTH", "FOOTER_BLOCK"],
+    "content": ["EMAIL_SUBJECT", "HERO_IMAGE_URL", "HERO_IMAGE_ALT", "HEADLINE", "BODY_COPY", "SECTION_1_TITLE", "SECTION_1_BODY", "SECTION_2_TITLE", "SECTION_2_BODY", "SECTION_3_TITLE", "SECTION_3_BODY", "CTA_TEXT", "CTA_URL"]
+  }
+}

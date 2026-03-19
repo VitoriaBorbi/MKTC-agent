@@ -8,7 +8,29 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+async function aiGenerate(systemPrompt: string, parts: Array<{text?: string; inlineData?: {mimeType: string; data: string}}>): Promise<string> {
+  const content: Anthropic.MessageParam['content'] = []
+  for (const p of parts) {
+    if (p.inlineData) {
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: p.inlineData.mimeType as Anthropic.Base64ImageSource['media_type'], data: p.inlineData.data },
+      })
+    } else if (p.text) {
+      content.push({ type: 'text', text: p.text })
+    }
+  }
+  const msg = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 8192,
+    system: systemPrompt,
+    messages: [{ role: 'user', content }],
+  })
+  const block = msg.content.find(b => b.type === 'text')
+  return block && block.type === 'text' ? block.text : ''
+}
 
 interface Brand {
   name: string
@@ -232,27 +254,16 @@ NÃO insira a imagem de referência no email. Use-a apenas como guia de design.`
 
 Gere o HTML completo do email seguindo a estrutura obrigatória (com header e footer da marca ${brand.name}).`
 
-    type UserContent = Anthropic.MessageParam['content']
-    const userContent: UserContent = []
+    const parts: Array<{text?: string; inlineData?: {mimeType: string; data: string}}> = []
 
     if (refImageB64) {
       const [header, data] = refImageB64.split(',')
-      const mediaType = header?.match(/data:([^;]+)/)?.[1] as
-        'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' | undefined
-      if (data && mediaType) {
-        userContent.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data } })
-      }
+      const mimeType = header?.match(/data:([^;]+)/)?.[1]
+      if (data && mimeType) parts.push({ inlineData: { mimeType, data } })
     }
-    userContent.push({ type: 'text', text: userText })
+    parts.push({ text: userText })
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 8192,
-      system,
-      messages: [{ role: 'user', content: userContent }],
-    })
-
-    const rawHtml = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rawHtml = await aiGenerate(system, parts)
     const html = stripMarkdown(rawHtml)
 
     // Save METADATA ONLY to SFMC via GET (HTML_Content omitted — too large for URL)

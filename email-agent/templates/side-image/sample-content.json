@@ -1,0 +1,9 @@
+{
+  "EMAIL_SUBJECT": "Conheça quem vai te guiar nessa jornada",
+  "HEADLINE": "Aprenda com quem já chegou lá",
+  "BODY_COPY": "<p style=\"margin:0 0 12px 0;\">Nem todo conselho vale igual. O que faz a diferença é aprender com quem viveu na prática o que você quer construir.</p><p style=\"margin:0;\">Descubra a história por trás dos resultados e o método que transformou trajetórias reais.</p>",
+  "SIDE_IMAGE_URL": "https://placehold.co/210x280/1a1a2e/ffffff?text=Foto",
+  "SIDE_IMAGE_ALT": "Foto do especialista ou produto",
+  "CTA_TEXT": "Conhecer a história",
+  "CTA_URL": "https://exemplo.com"
+}

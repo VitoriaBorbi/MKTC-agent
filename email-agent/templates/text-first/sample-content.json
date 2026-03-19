@@ -1,0 +1,9 @@
+{
+  "EMAIL_SUBJECT": "O que você precisa saber antes de tomar essa decisão",
+  "HEADLINE": "Antes de agir, você precisa entender isso",
+  "BODY_COPY": "<p style=\"margin:0 0 14px 0;\">Toda grande decisão começa com a informação certa. E é exatamente isso que trazemos para você hoje: um olhar aprofundado sobre o que realmente importa neste momento.</p><p style=\"margin:0 0 14px 0;\">Ao longo dos últimos meses, acompanhamos de perto como as pessoas que mais crescem tomam suas decisões. E o padrão é sempre o mesmo: conhecimento antes de ação.</p><p style=\"margin:0;\">Continue lendo e descubra o que elas sabem que você ainda não sabe.</p>",
+  "HERO_IMAGE_URL": "https://placehold.co/520x260/1a1a2e/ffffff?text=Imagem+de+Apoio",
+  "HERO_IMAGE_ALT": "Imagem de apoio ao conteúdo",
+  "CTA_TEXT": "Acessar agora",
+  "CTA_URL": "https://exemplo.com"
+}

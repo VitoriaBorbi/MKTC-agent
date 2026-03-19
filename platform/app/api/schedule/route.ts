@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BU } from '@/types'
 
+export const maxDuration = 120
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -301,8 +303,8 @@ export async function POST(req: NextRequest) {
     const emailName = `${safeName}_${ts}`
     const esdKey = `${safeName.slice(0, 30)}-${ts}`
 
-    // Create Email in Email Studio (no folder — ES folder IDs differ from CB)
-    const esEmailId = await createESEmail(subdomain, token, emailName, assunto, html)
+    // Create Email in Email Studio
+    const esEmailId = await createESEmail(subdomain, token, emailName, assunto, html, trackingFolderId || undefined)
 
     // Create EmailSendDefinition
     await createESD(subdomain, token, {

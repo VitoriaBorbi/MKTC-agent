@@ -46,38 +46,6 @@ async function getBUToken(subdomain: string, mid: string): Promise<string> {
   return data.access_token as string
 }
 
-async function getEnterpriseToken(subdomain: string): Promise<string> {
-  const res = await fetch(`https://${subdomain}.auth.marketingcloudapis.com/v2/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      grant_type: 'client_credentials',
-      client_id: process.env.SFMC_CLIENT_ID,
-      client_secret: process.env.SFMC_CLIENT_SECRET,
-    }),
-  })
-  if (!res.ok) throw new Error(`Auth SFMC enterprise falhou (${res.status})`)
-  const data = await res.json()
-  return data.access_token as string
-}
-
-async function getEventDefinitionKey(
-  subdomain: string,
-  token: string
-): Promise<string> {
-  // Reuse an existing APIEvent EventDefinition — creating new ones requires a DE
-  const res = await fetch(
-    `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/eventDefinitions?type=APIEvent&$pagesize=1`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  )
-  if (!res.ok) throw new Error(`EventDef list falhou (${res.status})`)
-  const data = await res.json()
-  const items: Array<{ eventDefinitionKey?: string }> = data.items ?? data.definitions ?? []
-  if (items.length === 0) throw new Error('Nenhuma EventDefinition do tipo APIEvent encontrada na conta')
-  const key = items[0].eventDefinitionKey
-  if (!key) throw new Error('EventDefinition sem eventDefinitionKey')
-  return key
-}
 
 async function createEmailAsset(
   subdomain: string,
@@ -112,90 +80,6 @@ async function createEmailAsset(
   return data.id as number
 }
 
-function outcome(next: string) {
-  return { next, arguments: {}, metaData: {} }
-}
-
-function buildJourneyPayload(
-  name: string,
-  description: string,
-  steps: Step[],
-  assetIds: number[],
-  eventDefinitionKey: string
-): object {
-  const activities: object[] = []
-  const firstKey = 'email-activity-1'
-
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i]
-    const emailKey = `email-activity-${i + 1}`
-    const isLast = i === steps.length - 1
-    const nextDelay = isLast ? null : steps[i + 1]
-    const waitKey = `wait-${i + 1}`
-    const nextEmailKey = `email-activity-${i + 2}`
-
-    const emailOutcomes = isLast ? [] : nextDelay && nextDelay.delay > 0
-      ? [outcome(waitKey)]
-      : [outcome(nextEmailKey)]
-
-    activities.push({
-      key: emailKey,
-      name: step.name,
-      type: 'EMAILV2',
-      outcomes: emailOutcomes,
-      arguments: { triggeredSend: {} },
-      configurationArguments: {
-        applicationExtensionKey: 'jb-email-activity',
-      },
-      metaData: { version: 1, isConfigured: false },
-    })
-
-    if (!isLast && nextDelay && nextDelay.delay > 0) {
-      const unit = (nextDelay.delayUnit || 'days').toUpperCase()
-      activities.push({
-        key: waitKey,
-        name: `Aguardar ${nextDelay.delay} ${unit === 'HOURS' ? 'horas' : 'dias'}`,
-        type: 'WAIT',
-        outcomes: [outcome(nextEmailKey)],
-        arguments: {},
-        configurationArguments: {
-          waitDuration: nextDelay.delay,
-          waitUnit: unit === 'HOURS' ? 'HOURS' : 'DAYS',
-        },
-        metaData: { version: 1, isConfigured: true },
-      })
-    }
-  }
-
-  return {
-    key: `journey-${crypto.randomUUID()}`,
-    name,
-    description: description || '',
-    workflowApiVersion: 1.0,
-    triggers: [
-      {
-        key: 'entry-1',
-        name: 'Entrada API',
-        type: 'APIEvent',
-        configurationArguments: {
-          eventDefinitionKey,
-          transactional: false,
-        },
-        metaData: {
-          eventDefinitionKey,
-        },
-        outcomes: activities.length > 0 ? [outcome(firstKey)] : [],
-      },
-    ],
-    defaults: {
-      email: [],
-      properties: {
-        analyticsTracking: { enabled: false },
-      },
-    },
-    activities,
-  }
-}
 
 export async function OPTIONS() {
   return new Response(null, { headers: CORS })
@@ -219,12 +103,11 @@ export async function POST(req: Request) {
     const mid = MID_MAP[bu]
     if (!mid) return Response.json({ success: false, error: `MID não configurado para BU: ${bu}` }, { status: 400, headers: CORS })
 
-    // BU token for Content Builder; enterprise token for Journey Builder (JB operates at enterprise level)
+    // BU token for Content Builder
     const buToken = await getBUToken(subdomain, mid)
-    const jbToken = await getEnterpriseToken(subdomain)
     const categoryId = CB_CATEGORY[bu]
 
-    // 1. Create email assets in Content Builder (BU token)
+    // Create email assets in Content Builder (BU token)
     const assetIds: number[] = []
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
@@ -233,40 +116,14 @@ export async function POST(req: Request) {
       assetIds.push(id)
     }
 
-    // 2. Get existing EventDefinition key (enterprise token)
-    const eventDefinitionKey = await getEventDefinitionKey(subdomain, jbToken)
-
-    // 3. Create Journey Builder journey draft
-    const journeyPayload = buildJourneyPayload(name, description, steps, assetIds, eventDefinitionKey)
-
     const emails = steps.map((s, i) => ({ name: s.name, assetId: assetIds[i] }))
 
-    const jbRes = await fetch(
-      `https://${subdomain}.rest.marketingcloudapis.com/interaction/v1/interactions`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jbToken}` },
-        body: JSON.stringify(journeyPayload),
-      }
-    )
-    const jbResData = await jbRes.json()
-
-    if (!jbRes.ok) {
-      return Response.json({
-        success: true, partial: true,
-        warning: `CB ok. JB falhou: ${JSON.stringify(jbResData)}`,
-        emails,
-      }, { headers: CORS })
-    }
-
-    const jbData = jbResData
-
+    // Journey Builder must be configured manually in the SFMC UI using the asset IDs above.
+    // The JB API does not support fully configuring EMAILV2 activities programmatically.
     return Response.json({
       success: true,
-      journeyId: jbData.id,
-      journeyKey: jbData.key,
-      journeyName: jbData.name,
       emails,
+      note: 'Emails criados no Content Builder. Configure a jornada no Journey Builder usando os asset IDs acima.',
     }, { headers: CORS })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido'

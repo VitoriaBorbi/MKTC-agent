@@ -1,0 +1,12 @@
+{
+  "id": "side-image",
+  "name": "Imagem Lateral",
+  "description": "Layout de 2 colunas: texto à esquerda e imagem à direita. Compatível com Outlook via MSO conditionals. Em mobile, empilha verticalmente.",
+  "tags": ["2-colunas", "imagem", "cta-unico"],
+  "content_zones": ["headline", "body_copy", "side_image", "cta"],
+  "best_for": ["apresentação de produto ou pessoa", "depoimentos com foto", "comunicações com visual de revista"],
+  "placeholders": {
+    "identity": ["COLOR_BG", "COLOR_TEXT", "COLOR_TEXT_LIGHT", "COLOR_PRIMARY", "COLOR_HR", "COLOR_CTA_BG", "COLOR_CTA_TEXT", "FONT_HEADING", "FONT_BODY", "LOGO_URL", "LOGO_ALT", "LOGO_WIDTH", "FOOTER_BLOCK"],
+    "content": ["EMAIL_SUBJECT", "HEADLINE", "BODY_COPY", "SIDE_IMAGE_URL", "SIDE_IMAGE_ALT", "CTA_TEXT", "CTA_URL"]
+  }
+}

@@ -1,11 +1,11 @@
 ---
 name: queue
-version: "3.0"
+version: "4.0"
 language: "pt-BR"
 description: >
   Agente de fila de email marketing. Lê as planilhas Google Sheets de controle (uma por BU),
-  processa pendentes (gera HTML + preview PNG → aguardando aprovação do stakeholder),
-  agenda aprovados, reprocessa itens em revisão, e arquiva enviados no Histórico.
+  processa pendentes (slot-filling nos templates fixos + preview PNG → aguardando aprovação),
+  agenda aprovados com sender/tracking/naming automáticos, reprocessa revisões, e arquiva enviados.
 tags:
   - email-marketing
   - queue
@@ -53,25 +53,33 @@ email-agent/brands/<bu>/brand.json                    ← send_classification de
 
 **Colunas da aba Fila (A–AG, 33 colunas):**
 
-| Col | Campo | Quem preenche |
-|-----|-------|---------------|
-| A | status | Stakeholder/Agente |
-| B | tipo | Stakeholder — `individual` ou `campanha` |
-| C | nome | Stakeholder |
-| D | docx_link | Stakeholder — URL do .docx no Drive |
-| E | data_envio | Stakeholder — YYYY-MM-DD |
-| F | horario | Stakeholder — HH:MM (BRT) |
-| G–P | de_envio_1..10 | Stakeholder |
-| Q–Z | de_exclusao_1..10 | Stakeholder |
-| AA | sfmc_asset_id | **Agente** |
-| AB | sfmc_send_id | **Agente** |
-| AC | obs | Ambos — feedback de revisão vai aqui |
-| AD | template_id | Stakeholder — opcional (ex: `full-hero`) |
-| AE | preview_url | **Agente** — URL do PNG preview hospedado no SFMC |
-| AF | send_classification | Stakeholder — CustomerKey do SendClassification SFMC |
-| AG | campanha | Stakeholder — código da campanha (ex: `VIT0000`, `SSL0001`, `FCE0013`) |
+| Col | Índice | Campo | Quem preenche | Valores válidos |
+|-----|--------|-------|---------------|-----------------|
+| A | 0 | status | Stakeholder/Agente | ver workflow abaixo |
+| B | 1 | tipo | Stakeholder | `individual` \| `campanha` |
+| C | 2 | nome | Stakeholder | nome livre |
+| D | 3 | docx_link | Stakeholder | URL do .docx no Drive |
+| E | 4 | data_envio | Stakeholder | DD/MM/YYYY |
+| F | 5 | horario | Stakeholder | HH:MM ou HHh (BRT) |
+| G–P | 6–15 | de_envio_1..10 | Stakeholder | uma DE por célula |
+| Q–Z | 16–25 | de_exclusao_1..10 | Stakeholder | uma DE por célula |
+| AA | 26 | sfmc_asset_id | **Agente** | ID do asset no CB |
+| AB | 27 | sfmc_send_id | **Agente** | CustomerKey do ESD |
+| AC | 28 | obs | Ambos | feedback de revisão |
+| AD | 29 | template_id | Stakeholder | `news` \| `campanha` \| `conteudo` \| `relatorio` \| `comunicado` \| `consultor-elite` |
+| AE | 30 | preview_url | **Agente** | URL do PNG preview no SFMC |
+| AF | 31 | send_classification | Stakeholder/Agente | CustomerKey da send class |
+| AG | 32 | campanha | Stakeholder | código da campanha (ex: `CARN0004`, `SSL0001`) |
+| AH | 33 | sender_profile | Stakeholder/Agente | override do sender (ex: `297 — Bruno Perini`) |
+| AI | 34 | tracking_category | Stakeholder/Agente | override da tracking category (ex: `316407 — Newsletter`) |
 
-**Índices 0-based:** `[0]status [1]tipo [2]nome [3]docx_link [4]data_envio [5]horario [6..15]de_envio [16..25]de_exclusao [26]sfmc_asset_id [27]sfmc_send_id [28]obs [29]template_id [30]preview_url [31]send_classification [32]campanha`
+**Índices 0-based:** `[0]status [1]tipo [2]nome [3]docx [4]data [5]horario [6..15]de_envio_1..10 [16..25]de_exclusao_1..10 [26]asset_id [27]send_id [28]obs [29]template_id [30]preview [31]send_class [32]campanha [33]sender_profile [34]tracking_category`
+
+> **Distinção importante — coluna B vs coluna AD:**
+> - **Coluna B (`tipo`)** = tipo de **workflow**: `individual` (1 email do docx) | `campanha` (N emails com marcadores `=== EMAIL N ===`)
+> - **Coluna AD (`template_id`)** = tipo de **template**: qual layout usar — determina automaticamente sender, CB category e tracking
+>
+> **Regra DEs (colunas G–P e Q–Z):** uma DE por célula, sem vírgulas. O agente coleta todas as células não-vazias do intervalo G–P como de_envio e Q–Z como de_exclusao.
 
 **Workflow de status:**
 ```
@@ -146,9 +154,9 @@ Para cada linha com `ativo=sim`, calcular próximas datas e verificar arquivo no
 ```bash
 FILE_LINK="https://drive.google.com/file/d/${FILE_ID}/view"
 
-curl -s -X POST "$SHEETS_API/values/Fila%21A%3AAG:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS" \
+curl -s -X POST "$SHEETS_API/values/Fila%21A%3AQ:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS" \
   -H "$GAUTH" -H "Content-Type: application/json" \
-  -d "{\"values\": [[\"pendente\",\"individual\",\"${NOME_SERIE} ${TARGET_DATE}\",\"${FILE_LINK}\",\"${TARGET_DATE}\",\"${HORARIO}\",\"${DE_ENVIO}\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"${DE_EXCLUSAO}\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"auto: recorrente\",\"\",\"\",\"\",\"\"]]}"
+  -d "{\"values\": [[\"pendente\",\"individual\",\"\",\"${NOME_SERIE} ${TARGET_DATE}\",\"${FILE_LINK}\",\"${TARGET_DATE}\",\"${HORARIO}\",\"${DE_ENVIO}\",\"${DE_EXCLUSAO}\",\"\",\"\",\"auto: recorrente\",\"\",\"\",\"\",\"\",\"\"]]}"
 ```
 
 > Nota do nome da aba: `Historico` sem acento.
@@ -158,7 +166,7 @@ curl -s -X POST "$SHEETS_API/values/Fila%21A%3AAG:append?valueInputOption=RAW&in
 ## Passo 3: Ler Fila → agrupar por status
 
 ```bash
-FILA_RESP=$(curl -s "$SHEETS_API/values/Fila%21A2%3AAG1000" -H "$GAUTH")
+FILA_RESP=$(curl -s "$SHEETS_API/values/Fila%21A2%3AQ1000" -H "$GAUTH")
 ```
 
 Filtrar e agrupar por status (guardar número da linha para cada item):
@@ -244,71 +252,173 @@ unzip -o /tmp/docx_work/doc.docx "word/document.xml" "word/_rels/document.xml.re
 unzip -j /tmp/docx_work/doc.docx "word/media/*" -d /tmp/docx_work/media/ 2>/dev/null || true
 ```
 
-### 5-C: Gerar HTML conforme tipo
+### 5-C: Gerar HTML — slot-filling com template fixo
 
-**Se `tipo=individual`:** executar o fluxo completo de extração e geração da skill `/email`:
-- Extrair subject, preheader, copy, imagens do docx
-- Ler `brand.json` da BU + template_id da col AD (se preenchido, usar esse template; senão usar o default da BU)
-- Gerar HTML completo
-- Nomear: `YYYY-MM-DD-<bu>-<slug-nome>.html`
+Ler a tabela de auto-config via `template_id` da col AD (campo `[29]`):
+
+| template | Arquivo template | Sender Profile | CB Category | Tracking Category |
+|---|---|---|---|---|
+| `news` | `templates/news.html` | Fin News (285) | 275176 | 320503 |
+| `campanha` | `templates/campanha.html` | Equipe Finclass (194) | 275626 | 320491 |
+| `conteudo` | `templates/conteudo.html` | Conteúdo - Finclass (270) | 275176 | 315907 |
+| `relatorio` | `templates/relatorio.html` | Equipe Finclass (194) | 275176 | 278546 |
+| `comunicado` | `templates/comunicado.html` | Equipe Finclass (194) | 275234 | 276056 |
+| `consultor-elite` | `templates/consultor-elite.html` | Consultor de Elite (294) | 275176 | 317554 |
+
+> ⚠️ Se `template_id` vazio (col AD): marcar `erro_html` + obs "template_id não preenchido na col AD" e pular.
+
+Guardar para uso nos passos seguintes:
+```bash
+TEMPLATE_ID="${ROW_VALUES[29]}"  # col AD, index 29
+SENDER_PROFILE_ID=<id da tabela acima>
+CB_CATEGORY_ID=<category da tabela acima>
+TRACKING_CATEGORY_ID=<tracking da tabela acima>
+TEMPLATE_FILE="email-agent/brands/${BU}/templates/${TEMPLATE_ID}.html"
+```
+
+**Se `tipo=individual`:** executar slot-filling completo (mesmos passos da skill `/email`):
+1. Extrair do docx: subject, preheader e todo o corpo da copy (parágrafos, imagens, links, negrito, cores)
+2. Carregar `$TEMPLATE_FILE` — **nunca reescrever a estrutura**, apenas preencher os `{{slots}}`
+3. Para imagens: fazer upload no SFMC (categoria `$CB_CATEGORY_ID`, token BU) e substituir src no HTML
+4. Se `template_id=campanha` e copy contiver link PMP: gerar bloco AMPscript (ver skill `/email` Passo 8)
+5. Nomear arquivo: `/tmp/queue_work/<BU>-<YYYY-MM-DD>-<slug-nome>.html`
 
 Se subject/preheader não encontrado no docx: marcar `erro_html` + obs descritiva e pular.
 
-**Se `tipo=campanha`:** executar o fluxo da skill `/campaign`:
-- Detectar marcadores `=== EMAIL N - Nome ===`
-- Para cada seção: extrair subject, preheader, copy, imagens
+**Se `tipo=campanha`:** executar slot-filling para cada email (mesmos passos da skill `/campaign`):
+- Detectar marcadores `=== EMAIL N - Nome ===` no docx
+- Para cada seção: carregar `$TEMPLATE_FILE` e preencher slots com a copy daquela seção
 - Gerar N HTMLs em `/tmp/queue_work/`
+- Se link PMP presente: cada email = cópia separada com `TODO_EMAILID` próprio (substituído individualmente no Passo 5-D)
 
-### 5-D: Upload HTML(s) e imagens para SFMC
+### 5-D: Upload HTML(s) e imagens para SFMC + naming convention
 
 ```bash
 source email-agent/.env
-BRAND_CFG=$(cat "email-agent/brands/${BU}/brand.json")
-CAMPAIGN_CODE="${ROW_VALUES[32]}"  # col AG
+CAMPAIGN_CODE="${ROW_VALUES[32]}"  # col AG, index 32
+ROW_NOME="${ROW_VALUES[2]}"        # col C, index 2
+ROW_DOCX="${ROW_VALUES[3]}"        # col D, index 3
+ROW_DATA="${ROW_VALUES[4]}"        # col E, index 4
+ROW_HORARIO="${ROW_VALUES[5]}"     # col F, index 5
 
-# Determinar categoria do Content Builder
-# Padrão: categoria "Campanha" da BU (ex: 275626 para Finclass)
-CATEGORY_ID=$(echo "$BRAND_CFG" | grep -o '"category_id":[0-9]*' | grep -o '[0-9]*')
+# Coletar DEs de envio: cols G–P (índices 6–15), uma por célula
+DE_ENVIO_LIST=()
+for i in $(seq 6 15); do
+  [ -n "${ROW_VALUES[$i]}" ] && DE_ENVIO_LIST+=("${ROW_VALUES[$i]}")
+done
 
-# Se campanha preenchida: tentar criar/achar subcategoria com esse nome dentro da categoria campanha
-if [ -n "$CAMPAIGN_CODE" ]; then
-  CB_CAMPANHA_CAT=$(echo "$BRAND_CFG" | grep -o '"campaign_category_id":[0-9]*' | grep -o '[0-9]*')
-  if [ -n "$CB_CAMPANHA_CAT" ]; then
-    # Buscar subpasta com o nome do código de campanha
-    SFMC_BU_TOK=$(curl -s -X POST \
-      "https://${SFMC_SUBDOMAIN}.auth.marketingcloudapis.com/v2/token" \
+# Coletar DEs de exclusão: cols Q–Z (índices 16–25), uma por célula
+DE_EXCL_LIST=()
+for i in $(seq 16 25); do
+  [ -n "${ROW_VALUES[$i]}" ] && DE_EXCL_LIST+=("${ROW_VALUES[$i]}")
+done
+
+# CB category já determinada no Passo 5-C: $CB_CATEGORY_ID
+# Para template_id=campanha: verificar subpasta com código de campanha
+if [ "$TEMPLATE_ID" = "campanha" ] && [ -n "$CAMPAIGN_CODE" ]; then
+  SFMC_BU_TOK=$(curl -s -X POST \
+    "https://${SFMC_SUBDOMAIN}.auth.marketingcloudapis.com/v2/token" \
+    -H "Content-Type: application/json" \
+    -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"${SFMC_CLIENT_ID}\",\"client_secret\":\"${SFMC_CLIENT_SECRET}\",\"account_id\":\"${MID_FINCLASS}\"}" \
+    | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+  SUB_RESP=$(curl -s \
+    "https://${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com/asset/v1/content/categories?%24filter=parentId%20eq%20${CB_CATEGORY_ID}&%24pagesize=200" \
+    -H "Authorization: Bearer $SFMC_BU_TOK")
+
+  CAMP_CAT_ID=$(echo "$SUB_RESP" | grep -o "\"id\":[0-9]*[^}]*\"name\":\"${CAMPAIGN_CODE}\"" | grep -o '"id":[0-9]*' | grep -o '[0-9]*' | head -1)
+
+  if [ -z "$CAMP_CAT_ID" ]; then
+    CREATE_RESP=$(curl -s -X POST \
+      "https://${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com/asset/v1/content/categories" \
+      -H "Authorization: Bearer $SFMC_BU_TOK" \
       -H "Content-Type: application/json" \
-      -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"${SFMC_CLIENT_ID}\",\"client_secret\":\"${SFMC_CLIENT_SECRET}\",\"account_id\":\"${MID_FINCLASS}\"}" \
-      | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
-
-    # Listar subpastas da categoria campanha
-    SUB_RESP=$(curl -s \
-      "https://${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com/asset/v1/content/categories?%24filter=parentId%20eq%20${CB_CAMPANHA_CAT}&%24pagesize=200" \
-      -H "Authorization: Bearer $SFMC_BU_TOK")
-
-    # Buscar ID da subpasta com o nome do código de campanha
-    CAMP_CAT_ID=$(echo "$SUB_RESP" | grep -o "\"id\":[0-9]*[^}]*\"name\":\"${CAMPAIGN_CODE}\"" | grep -o '"id":[0-9]*' | grep -o '[0-9]*' | head -1)
-
-    if [ -z "$CAMP_CAT_ID" ]; then
-      # Criar subpasta se não existir
-      CREATE_RESP=$(curl -s -X POST \
-        "https://${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com/asset/v1/content/categories" \
-        -H "Authorization: Bearer $SFMC_BU_TOK" \
-        -H "Content-Type: application/json" \
-        -d "{\"name\":\"${CAMPAIGN_CODE}\",\"parentId\":${CB_CAMPANHA_CAT}}")
-      CAMP_CAT_ID=$(echo "$CREATE_RESP" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
-    fi
-
-    [ -n "$CAMP_CAT_ID" ] && CATEGORY_ID="$CAMP_CAT_ID" && echo "✓ CB subcategoria: ${CAMPAIGN_CODE} (ID=$CAMP_CAT_ID)"
+      -d "{\"name\":\"${CAMPAIGN_CODE}\",\"parentId\":${CB_CATEGORY_ID}}")
+    CAMP_CAT_ID=$(echo "$CREATE_RESP" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
   fi
+
+  [ -n "$CAMP_CAT_ID" ] && CB_CATEGORY_ID="$CAMP_CAT_ID" && echo "✓ CB subcategoria: ${CAMPAIGN_CODE} (ID=$CAMP_CAT_ID)"
 fi
 ```
 
 Executar upload de imagens + HTML seguindo o fluxo da skill `/email` (Passos 9-12).
 
-Para `TODO_EMAILID`: substituir pelo `sfmc_asset_id` retornado e fazer PUT de atualização.
+**Após o POST REST (upload do email), executar o fluxo de ES_ID:**
 
-Guardar: `SFMC_ASSET_ID` (individual) ou `SFMC_ASSET_IDS[]` (campanha — array com N IDs).
+```bash
+# 1. Guardar Asset ID retornado pelo POST REST
+CB_ASSET_ID=$(echo "$POST_RESP" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+
+# 2. SOAP Retrieve para obter o Email Studio ID (campo diferente do Asset ID)
+#    O Email Studio ID é o que vai no @emailid do AMPscript PMP
+SOAP_RETRIEVE='<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:et="http://exacttarget.com/wsdl/partnerAPI">
+  <soapenv:Header>
+    <fueloauth xmlns="http://exacttarget.com">'"$SFMC_BU_TOK"'</fueloauth>
+  </soapenv:Header>
+  <soapenv:Body>
+    <RetrieveRequestMsg xmlns="http://exacttarget.com/wsdl/partnerAPI">
+      <RetrieveRequest>
+        <ObjectType>Email</ObjectType>
+        <Properties>ID</Properties>
+        <Properties>Name</Properties>
+        <Filter xsi:type="SimpleFilterPart">
+          <Property>Name</Property>
+          <SimpleOperator>equals</SimpleOperator>
+          <Value>'"$EMAIL_NAME_TEMP"'</Value>
+        </Filter>
+      </RetrieveRequest>
+    </RetrieveRequestMsg>
+  </soapenv:Body>
+</soapenv:Envelope>'
+
+SOAP_RESP=$(curl -s -X POST \
+  "https://${SFMC_SUBDOMAIN}.soap.marketingcloudapis.com/Service.asmx" \
+  -H "Content-Type: text/xml" \
+  -H "SOAPAction: Retrieve" \
+  --data "$SOAP_RETRIEVE")
+
+ES_ID=$(echo "$SOAP_RESP" | grep -o '<ID>[0-9]*</ID>' | head -1 | sed 's/<[^>]*>//g')
+echo "✓ Email Studio ID: $ES_ID (Asset ID: $CB_ASSET_ID)"
+
+# 3. Substituir TODO_EMAILID pelo ES_ID no HTML e fazer PUT para atualizar o asset
+sed -i "s/TODO_EMAILID/${ES_ID}/g" "$HTML_FILE"
+
+# Montar payload de atualização e fazer PUT
+# (usar awk -f escape_html.awk para escapar HTML, depois --data-binary @file)
+# ...PUT para https://${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com/asset/v1/content/assets/${CB_ASSET_ID}...
+echo "✓ TODO_EMAILID substituído por $ES_ID → asset atualizado via PUT"
+```
+
+**Naming convention do asset (após ter o ES_ID):**
+
+```bash
+TODAY=$(date +%Y%m%d)
+# Determinar tipo PMP: CAP (captação), VND (venda), AQU (aquecimento)
+# Inferir do nome ou da copy; perguntar ao usuário apenas se genuinamente ambíguo
+TIPO_PMP="VND"  # ex: VND
+
+# Para campanha individual (tipo=individual):
+# Formato: [TIPO][ES_ID][EML][YYYYMMDD][CAMPANHA][BASE]
+# DE_BASE = primeira DE da lista (col H, index 7, comma-separated)
+FIRST_DE=$(echo "${ROW_VALUES[7]}" | cut -d',' -f1 | xargs)
+DE_BASE=$(echo "$FIRST_DE" | tr '[:lower:]' '[:upper:]' | tr ' ' '_' | cut -c1-20)
+if [ -n "$CAMPAIGN_CODE" ]; then
+  EMAIL_FINAL_NAME="[${TIPO_PMP}][${ES_ID}][EML][${TODAY}][${CAMPAIGN_CODE}][${DE_BASE}]"
+else
+  EMAIL_FINAL_NAME="[${TIPO_PMP}][${ES_ID}][EML][${TODAY}][${ROW_SLUG^^}]"
+fi
+
+# Renomear asset via PUT (atualizar campo "name")
+# ...PUT com {"name":"$EMAIL_FINAL_NAME", "id":$CB_ASSET_ID, "customerKey":"$CUSTOMER_KEY"}...
+echo "✓ Asset renomeado: $EMAIL_FINAL_NAME"
+```
+
+> **Nota:** Para `tipo=campanha` com N emails + PMP, cada email tem seu próprio `ES_ID` — criar N cópias, cada uma com `TODO_EMAILID` substituído pelo seu ES_ID individual e nome com DE base correspondente.
+
+Guardar: `SFMC_ASSET_ID=$CB_ASSET_ID` (individual) ou `SFMC_ASSET_IDS[]` (campanha — array com N IDs).
 
 ### 5-E: Screenshot + upload preview PNG
 
@@ -333,11 +443,22 @@ if [ "$ROW_TIPO" = "campanha" ]; then
   OBS_UPDATED="${ROW_OBS:+$ROW_OBS | }Previews: ${PREVIEW_ALL_URLS}"
 fi
 
-ROW_CAMPANHA="${ROW_VALUES[32]}"
+# Construir 10 campos de DE para escrita (índices 6-15 e 16-25)
+de_fields() { local a=("$@"); printf '"%s",' "${a[@]:0:10}"; for i in $(seq ${#a[@]} 9); do printf '""',; done; }
+DE_ENV_JSON=$(de_fields "${DE_ENVIO_LIST[@]}"); DE_ENV_JSON="${DE_ENV_JSON%,}"
+DE_EXC_JSON=$(de_fields "${DE_EXCL_LIST[@]}"); DE_EXC_JSON="${DE_EXC_JSON%,}"
+
+ROW_CAMPANHA="${ROW_VALUES[32]}"  # col AG, index 32
+
+printf '{"values": [["aguardando_aprovacao","%s","%s","%s","%s","%s",%s,%s,"%s","","  %s","%s","%s","%s","",""]]}\n' \
+  "$ROW_TIPO" "$ROW_NOME" "$ROW_DOCX" "$ROW_DATA" "$ROW_HORARIO" \
+  "$DE_ENV_JSON" "$DE_EXC_JSON" \
+  "$SFMC_ASSET_ID" "$OBS_UPDATED" "$TEMPLATE_ID" "$PREVIEW_URL" "$ROW_SEND_CLASS" "$ROW_CAMPANHA" \
+  > /tmp/fila_put.json
 
 curl -s -X PUT "$SHEETS_API/values/Fila%21A${ROW_NUM}%3AAG${ROW_NUM}?valueInputOption=RAW" \
   -H "$GAUTH" -H "Content-Type: application/json" \
-  -d "{\"values\": [[\"aguardando_aprovacao\",\"${ROW_TIPO}\",\"${ROW_NOME}\",\"${ROW_DOCX}\",\"${ROW_DATA}\",\"${ROW_HORARIO}\",${DE_ENVIO_JSON},${DE_EXCL_JSON},\"${SFMC_ASSET_ID}\",\"\",\"${OBS_UPDATED}\",\"${ROW_TEMPLATE_ID}\",\"${PREVIEW_URL}\",\"${ROW_SEND_CLASS}\",\"${ROW_CAMPANHA}\"]]}"
+  --data-binary @/tmp/fila_put.json
 ```
 
 ```
@@ -357,16 +478,24 @@ Para cada item em `aprovados[]`, em ordem de `data_envio`:
 
 ### 6-A: Ler send_classification
 
-A coluna AF pode conter o valor selecionado no dropdown (ex: `"84 — Equipe Finclass"`) ou só o CustomerKey (`"84"`). Extrair sempre a parte antes do ` — `:
+A coluna AF (índice 31) pode conter o CustomerKey da send class (ex: `"84"`). Extrair sempre a parte antes do ` — ` se houver texto extra:
 
 ```bash
-# Ler da coluna AF (índice 31 = col AF)
+# Coletar DEs de envio: cols G–P (índices 6–15)
+DE_ENVIO_LIST=()
+for i in $(seq 6 15); do [ -n "${ROW_VALUES[$i]}" ] && DE_ENVIO_LIST+=("${ROW_VALUES[$i]}"); done
+
+# Coletar DEs de exclusão: cols Q–Z (índices 16–25)
+DE_EXCL_LIST=()
+for i in $(seq 16 25); do [ -n "${ROW_VALUES[$i]}" ] && DE_EXCL_LIST+=("${ROW_VALUES[$i]}"); done
+
+# Ler da coluna AF (índice 31)
 RAW_CLASS="${ROW_VALUES[31]}"
 
 # Extrair CustomerKey: parte antes do " — " (ou valor inteiro se não houver " — ")
 SEND_CLASS=$(echo "$RAW_CLASS" | sed 's/ —.*//')
 
-# Fallback: ler do brand.json se col AF vazia
+# Fallback: ler do brand.json se col O vazia
 if [ -z "$SEND_CLASS" ]; then
   SEND_CLASS=$(grep -o '"send_classification":"[^"]*"' "email-agent/brands/${BU}/brand.json" | cut -d'"' -f4)
 fi
@@ -375,33 +504,89 @@ fi
 if [ -z "$SEND_CLASS" ]; then
   curl -s -X PUT "$SHEETS_API/values/Fila%21A${ROW_NUM}%3AAC${ROW_NUM}?valueInputOption=RAW" \
     -H "$GAUTH" -H "Content-Type: application/json" \
-    -d "{\"values\": [[\"erro_agendamento\",${COLS_B_AB_JSON},\"send_classification não configurado (col AF nem brand.json)\"]]}"
+    -d "{\"values\": [[\"erro_agendamento\",\"${ROW_VALUES[1]}\",\"${ROW_VALUES[2]}\",\"${ROW_VALUES[3]}\",\"${ROW_VALUES[4]}\",\"${ROW_VALUES[5]}\",\"send_classification não configurado (col AF nem brand.json)\"]]}"
   echo "❌ [${ROW_NUM}] send_classification ausente — pulando"
   continue
 fi
 ```
 
-### 6-B: Criar Email Studio + ESD + agendar
+### 6-B: Criar Email Studio + ESD + agendar (auto-config por template)
+
+Ler `template_id` da col AD (`[29]`) e usar a tabela de auto-config para determinar **sender profile** e **tracking category** automaticamente — sem perguntar ao usuário:
+
+```bash
+TEMPLATE_ID="${ROW_VALUES[29]}"  # col AD, index 29
+BRAND_JSON="email-agent/brands/${BU}/brand.json"
+
+# Auto-config por template_id
+# Prioridade: brand.json[sfmc.templates] → fallback hardcoded (Finclass)
+TMPL_SENDER=$(node -e "
+  const b=JSON.parse(require('fs').readFileSync('$BRAND_JSON','utf8'));
+  const t=b.sfmc?.templates?.['$TEMPLATE_ID'];
+  if(t) console.log(t.sender_profile_id);
+" 2>/dev/null)
+TMPL_TRACKING=$(node -e "
+  const b=JSON.parse(require('fs').readFileSync('$BRAND_JSON','utf8'));
+  const t=b.sfmc?.templates?.['$TEMPLATE_ID'];
+  if(t) console.log(t.tracking_category_id);
+" 2>/dev/null)
+
+if [ -n "$TMPL_SENDER" ] && [ -n "$TMPL_TRACKING" ]; then
+  SENDER_PROFILE_ID="$TMPL_SENDER"
+  TRACKING_CAT_ID="$TMPL_TRACKING"
+else
+  # Fallback: Finclass hardcoded (tabela de referência)
+  case "$TEMPLATE_ID" in
+    news)            SENDER_PROFILE_ID=285; TRACKING_CAT_ID=320503 ;;
+    campanha)        SENDER_PROFILE_ID=194; TRACKING_CAT_ID=320491 ;;
+    conteudo)        SENDER_PROFILE_ID=270; TRACKING_CAT_ID=315907 ;;
+    relatorio)       SENDER_PROFILE_ID=194; TRACKING_CAT_ID=278546 ;;
+    comunicado)      SENDER_PROFILE_ID=194; TRACKING_CAT_ID=276056 ;;
+    consultor-elite) SENDER_PROFILE_ID=294; TRACKING_CAT_ID=317554 ;;
+    *)
+      echo "❌ template_id desconhecido para BU $BU: $TEMPLATE_ID"
+      # marcar erro_agendamento e pular
+      continue ;;
+  esac
+fi
+```
+
+> ℹ️ `send_classification` vem de col O (Passo 6-A); sender_profile e tracking vêm de `brand.json[sfmc.templates]` ou fallback Finclass.
+> Para Hub: apenas `news` e `campanha` — qualquer outro template na col C marcará `erro_agendamento`.
 
 Executar os Passos 2-7 da skill `/send` usando os valores da linha:
-- `sfmc_asset_id` da col AA → criar Email object no Email Studio via SOAP
-- `de_envio_1` da col G → buscar ObjectID via SOAP Retrieve
-- `de_exclusao_1..10` das cols Q-Z → buscar ObjectIDs via SOAP
+- `sfmc_asset_id` da col AA (index 26) → criar Email object no Email Studio via SOAP
+- `de_envio` das cols G–P (índices 6–15, array `DE_ENVIO_LIST`) → buscar ObjectIDs via SOAP Retrieve para cada DE
+- `de_exclusao` das cols Q–Z (índices 16–25, array `DE_EXCL_LIST`) → buscar ObjectIDs via SOAP para cada DE
 - `data_envio` + `horario` → converter BRT→UTC (+3h)
-- `send_classification` → `SEND_CLASS`
+- `send_classification` → `SEND_CLASS` (Passo 6-A)
+- `sender_profile` → `SENDER_PROFILE_ID` (auto-config acima)
+- `tracking` → `TRACKING_CAT_ID` (auto-config acima)
 
-**Convenção de nome para o ESD:**
+**Naming convention do ESD — baseada no template:**
+
+Para emails de campanha (template = `campanha`), usar o padrão PMP com tipo:
 ```bash
-CAMPAIGN_CODE="${ROW_VALUES[32]}"  # col AG
-ROW_SLUG=$(echo "$ROW_NOME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed 's/[^a-z0-9-]//g' | cut -c1-30)
+CAMPAIGN_CODE="${ROW_VALUES[32]}"  # col AG, index 32
 HORARIO_TAG=$(echo "$ROW_HORARIO" | sed 's/://g' | cut -c1-4)  # ex: 1000
+# DE_BASE = primeira DE da lista (col G, índice 6 do array DE_ENVIO_LIST)
+FIRST_DE="${DE_ENVIO_LIST[0]}"
+DE_BASE=$(echo "$FIRST_DE" | tr '[:lower:]' '[:upper:]' | tr ' _' '-' | sed 's/[^A-Z0-9-]//g' | cut -c1-20)
 
-if [ -n "$CAMPAIGN_CODE" ]; then
-  ESD_KEY="${CAMPAIGN_CODE}-${ROW_SLUG}-${HORARIO_TAG}"
+if [ "$TEMPLATE_ID" = "campanha" ] && [ -n "$CAMPAIGN_CODE" ]; then
+  # ex: CARN0004-EMAIL-1-09H (para campanha com múltiplos emails)
+  ESD_KEY="${CAMPAIGN_CODE}-EMAIL-${EMAIL_NUM}-${HORARIO_TAG:0:2}H"
 else
-  ESD_KEY="${ROW_SLUG}-${HORARIO_TAG}"
+  # Para outros tipos: slug do nome + horario
+  ROW_SLUG=$(echo "$ROW_NOME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed 's/[^a-z0-9-]//g' | cut -c1-30)
+  if [ -n "$CAMPAIGN_CODE" ]; then
+    ESD_KEY="${CAMPAIGN_CODE}-${ROW_SLUG}-${HORARIO_TAG}"
+  else
+    ESD_KEY="${ROW_SLUG}-${HORARIO_TAG}"
+  fi
 fi
-# Truncar para 36 chars máx (limite SFMC CustomerKey = 36)
+
+# Truncar para 36 chars máx (limite SFMC CustomerKey)
 ESD_KEY=$(echo "$ESD_KEY" | cut -c1-36)
 ```
 
@@ -409,21 +594,61 @@ ESD_KEY=$(echo "$ESD_KEY" | cut -c1-36)
 SFMC_SEND_ID="$ESD_CUSTOMER_KEY"
 ```
 
-**Para campanha:** o `sfmc_asset_id` contém o ID do primeiro email. Agendamentos de campanhas devem ser criados como múltiplos ESDs com intervalo conforme horário base + offset por email. Ler todos os IDs do campo obs se foram armazenados lá, ou usar a convenção de nome para reconstruir os IDs.
+**Para `tipo=campanha` (N emails):** criar N ESDs separados. O `sfmc_asset_id` contém o ID do primeiro email; os demais IDs foram gravados no campo obs no Passo 5-F. Reconstruir o array de IDs a partir do obs, ou usar a convenção de nome para localizar os assets via SOAP Retrieve.
 
 ### 6-C: Atualizar linha → agendado
 
 ```bash
-ROW_CAMPANHA="${ROW_VALUES[32]}"
+ROW_CAMPANHA="${ROW_VALUES[32]}"  # col AG, index 32
+
+de_fields() { local a=("$@"); printf '"%s",' "${a[@]:0:10}"; for i in $(seq ${#a[@]} 9); do printf '""',; done; }
+DE_ENV_JSON=$(de_fields "${DE_ENVIO_LIST[@]}"); DE_ENV_JSON="${DE_ENV_JSON%,}"
+DE_EXC_JSON=$(de_fields "${DE_EXCL_LIST[@]}"); DE_EXC_JSON="${DE_EXC_JSON%,}"
+
+printf '{"values": [["agendado","%s","%s","%s","%s","%s",%s,%s,"%s","%s","%s","%s","%s","%s","%s",""]]}\n' \
+  "$ROW_TIPO" "$ROW_NOME" "$ROW_DOCX" "$ROW_DATA" "$ROW_HORARIO" \
+  "$DE_ENV_JSON" "$DE_EXC_JSON" \
+  "$SFMC_ASSET_ID" "$SFMC_SEND_ID" "$ROW_OBS" "$TEMPLATE_ID" "$ROW_PREVIEW_URL" "$SEND_CLASS" "$ROW_CAMPANHA" \
+  > /tmp/fila_put.json
 
 curl -s -X PUT "$SHEETS_API/values/Fila%21A${ROW_NUM}%3AAG${ROW_NUM}?valueInputOption=RAW" \
   -H "$GAUTH" -H "Content-Type: application/json" \
-  -d "{\"values\": [[\"agendado\",\"${ROW_TIPO}\",\"${ROW_NOME}\",\"${ROW_DOCX}\",\"${ROW_DATA}\",\"${ROW_HORARIO}\",${DE_ENVIO_JSON},${DE_EXCL_JSON},\"${SFMC_ASSET_ID}\",\"${SFMC_SEND_ID}\",\"${ROW_OBS}\",\"${ROW_TEMPLATE_ID}\",\"${ROW_PREVIEW_URL}\",\"${SEND_CLASS}\",\"${ROW_CAMPANHA}\"]]}"
+  --data-binary @/tmp/fila_put.json
 ```
 
 ```
 ✅ [1/M] Agendado: "<nome>" → <data> <horario> BRT | ESD: <SFMC_SEND_ID>
 ```
+
+### 6-D: Popup "EMAIL AGENDADO" (Dark Souls)
+
+Após cada agendamento bem-sucedido, abrir o popup comemorativo:
+
+```bash
+mkdir -p /c/tmp
+
+# 1. Gerar WAV sintético (Node.js) e tocar via PowerShell
+node email-agent/scripts/gen-sound.mjs /c/tmp/you-scheduled.wav
+powershell.exe -c "(New-Object System.Media.SoundPlayer 'C:\tmp\you-scheduled.wav').PlaySync()" &
+
+# 2. Abrir popup visual (Edge --app = sem chrome)
+POPUP_TMP="/c/tmp/you-scheduled-$(date +%s).html"
+cp "email-agent/scripts/you-scheduled.html" "$POPUP_TMP"
+
+ESD_ENC=$(echo "$SFMC_SEND_ID" | sed 's/ /%20/g; s/\[/%5B/g; s/\]/%5D/g')
+DT_ENC=$(echo "$ROW_DATA $ROW_HORARIO" | sed 's/ /%20/g')
+BU_ENC=$(echo "$BU" | sed 's/ /%20/g')
+
+MSEDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+[ ! -f "$MSEDGE" ] && MSEDGE="/c/Program Files/Microsoft/Edge/Application/msedge.exe"
+
+"$MSEDGE" \
+  --app="file:///C:/tmp/$(basename $POPUP_TMP)?key=${ESD_ENC}&dt=${DT_ENC}&bu=${BU_ENC}" \
+  --window-size=1280,720 \
+  2>/dev/null &
+```
+
+> Som gerado via Node.js (WAV sintético), tocado direto pelo Windows — sem depender de autoplay do browser. Popup fecha sozinho em ~5 segundos.
 
 ---
 
@@ -440,7 +665,7 @@ Para cada item em `revisoes[]`:
 ### 7-B: Ler feedback do campo obs
 
 ```bash
-FEEDBACK="${ROW_VALUES[28]}"  # col AC
+FEEDBACK="${ROW_VALUES[28]}"  # col AC, index 28
 ```
 
 O agente deve incorporar o `FEEDBACK` como instruções adicionais ao gerar o HTML:
@@ -462,11 +687,22 @@ Executar **SUB: Preview PNG** com o novo HTML.
 ### 7-E: Atualizar linha → aguardando_aprovacao + limpar obs
 
 ```bash
-ROW_CAMPANHA="${ROW_VALUES[32]}"
+ROW_CAMPANHA="${ROW_VALUES[32]}"  # col AG, index 32
+TEMPLATE_ID="${ROW_VALUES[29]}"   # col AD, index 29
+
+de_fields() { local a=("$@"); printf '"%s",' "${a[@]:0:10}"; for i in $(seq ${#a[@]} 9); do printf '""',; done; }
+DE_ENV_JSON=$(de_fields "${DE_ENVIO_LIST[@]}"); DE_ENV_JSON="${DE_ENV_JSON%,}"
+DE_EXC_JSON=$(de_fields "${DE_EXCL_LIST[@]}"); DE_EXC_JSON="${DE_EXC_JSON%,}"
+
+printf '{"values": [["aguardando_aprovacao","%s","%s","%s","%s","%s",%s,%s,"%s","","","%s","%s","%s",""]]}\n' \
+  "$ROW_TIPO" "$ROW_NOME" "$ROW_DOCX" "$ROW_DATA" "$ROW_HORARIO" \
+  "$DE_ENV_JSON" "$DE_EXC_JSON" \
+  "$NEW_SFMC_ASSET_ID" "$TEMPLATE_ID" "$NEW_PREVIEW_URL" "$ROW_CAMPANHA" \
+  > /tmp/fila_put.json
 
 curl -s -X PUT "$SHEETS_API/values/Fila%21A${ROW_NUM}%3AAG${ROW_NUM}?valueInputOption=RAW" \
   -H "$GAUTH" -H "Content-Type: application/json" \
-  -d "{\"values\": [[\"aguardando_aprovacao\",\"${ROW_TIPO}\",\"${ROW_NOME}\",\"${ROW_DOCX}\",\"${ROW_DATA}\",\"${ROW_HORARIO}\",${DE_ENVIO_JSON},${DE_EXCL_JSON},\"${NEW_SFMC_ASSET_ID}\",\"\",\"\",\"${ROW_TEMPLATE_ID}\",\"${NEW_PREVIEW_URL}\",\"${ROW_SEND_CLASS}\",\"${ROW_CAMPANHA}\"]]}"
+  --data-binary @/tmp/fila_put.json
 # obs zerado → stakeholder pode escrever novo feedback se precisar
 ```
 
@@ -613,7 +849,7 @@ rm -f /tmp/mktc_key.pem /tmp/preview_upload.json
 | Upload SFMC falha | `erro_upload_sfmc` | Retry uma vez; se persistir, marcar erro |
 | send_classification ausente | `erro_agendamento` | Obs: mensagem descritiva |
 | ESD/agendamento falha | `erro_agendamento` | Linha permanece; obs com detalhe do erro |
-| HTML contém `TODO_EMAILID` | — | Substituir pelo sfmc_asset_id e fazer PUT automático |
+| HTML contém `TODO_EMAILID` | — | Após POST REST: SOAP Retrieve para obter ES_ID → sed substitui → PUT atualiza. Nunca usar Asset ID no lugar do ES_ID |
 | data_envio no passado | — | Avisar no resumo; processar normalmente (SFMC agenda no passado → envia imediatamente) |
 | Recorrente sem arquivo no Drive | — | Silencioso — não cria entrada na Fila |
 | BU não encontrada em `brands/` | `erro_html` | Marcar e pular |
@@ -631,3 +867,7 @@ rm -f /tmp/mktc_key.pem /tmp/preview_upload.json
 7. **Reautenticar antes de operações longas** — tokens Google expiram em 1h; SFMC em ~20min
 8. **A BU é sempre implícita** — cada planilha pertence a uma única BU; não há coluna "bu"
 9. **Ranges URL-encoded** — usar `%21` para `!` e `%3A` para `:` em todos os endpoints da Sheets API
+10. **Slot-filling, nunca reescrita** — carregar o template fixo do `template_id`, preencher os `{{slots}}`, nunca reescrever a estrutura HTML
+11. **Auto-config obrigatório** — sender profile, tracking category e CB category são determinados pelo `template` da col C (index 2); nunca perguntar ao usuário esses valores
+12. **ES_ID ≠ Asset ID** — após POST REST, sempre fazer SOAP Retrieve para obter o Email Studio ID real antes de substituir `TODO_EMAILID`; usar Asset ID no AMPscript quebra o rastreio PMP
+13. **N DEs + PMP = N emails** — quando `tipo=campanha` com PMP e múltiplas DEs, criar uma cópia do email por DE, cada uma com seu próprio ES_ID no AMPscript e no nome
