@@ -42,11 +42,14 @@ TOKEN=$(curl -s -X POST "https://${SFMC_SUBDOMAIN}.auth.marketingcloudapis.com/v
   -d "{\"grant_type\":\"client_credentials\",\"client_id\":\"${SFMC_CLIENT_ID}\",\"client_secret\":\"${SFMC_CLIENT_SECRET}\",\"account_id\":\"${MID_FINCLASS}\"}" \
   | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
 
-# Listar assets da pasta de campanhas (campaign_test_category_id do brand.json)
-CATEGORY_ID=320783
-curl -s "https://${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com/asset/v1/content/assets?%24filter=category.id%20eq%20${CATEGORY_ID}&%24orderby=id%20desc&%24pagesize=20" \
-  -H "Authorization: Bearer $TOKEN" \
-  | grep -oP '"id":\K[0-9]{5,}(?=.*?"name":"2026[^"]*")' | head -10
+# Listar assets recentes — usar categorias válidas da BU Finclass
+# 275176 = Email (avulsos/news) | 275626 = Campanha
+# NÃO usar 320783 (categoria removida/inacessível via API)
+for CATEGORY_ID in 275626 275176; do
+  curl -s "https://${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com/asset/v1/content/assets?%24filter=category.id%20eq%20${CATEGORY_ID}&%24orderby=id%20desc&%24pagesize=10" \
+    -H "Authorization: Bearer $TOKEN" \
+    | grep -oP '"id":\K[0-9]{5,}' | head -5
+done | sort -rn | head -10
 ```
 
 Mostrar lista encontrada e perguntar: **quais enviar e em qual ordem**.
@@ -111,7 +114,7 @@ xml_get() { echo "$1" | grep -o "<${2}>[^<]*</${2}>" | head -1 | sed 's/<[^>]*>/
 ### 3-A: Send Classification
 
 ```bash
-cat > /tmp/soap_req.xml << SOAPEOF
+cat > /tmp/soap_sendclass.xml << SOAPEOF
 <?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -135,7 +138,7 @@ cat > /tmp/soap_req.xml << SOAPEOF
 </soapenv:Envelope>
 SOAPEOF
 
-RESP=$(curl -s -X POST "$SOAP_URL" -H "Content-Type: text/xml;charset=UTF-8" -H "SOAPAction: Retrieve" --data-binary @/tmp/soap_req.xml)
+RESP=$(curl -s -X POST "$SOAP_URL" -H "Content-Type: text/xml;charset=UTF-8" -H "SOAPAction: Retrieve" --data-binary @/tmp/soap_sendclass.xml)
 SEND_CLASS_KEY=$(xml_get "$RESP" "CustomerKey")
 echo "SendClassification Key: $SEND_CLASS_KEY"
 ```
@@ -148,7 +151,7 @@ Se não encontrar, listar todas:
 ### 3-B: DE de envio — buscar ObjectID e campos
 
 ```bash
-cat > /tmp/soap_req.xml << SOAPEOF
+cat > /tmp/soap_send_de.xml << SOAPEOF
 <?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -174,7 +177,7 @@ cat > /tmp/soap_req.xml << SOAPEOF
 </soapenv:Envelope>
 SOAPEOF
 
-RESP=$(curl -s -X POST "$SOAP_URL" -H "Content-Type: text/xml;charset=UTF-8" -H "SOAPAction: Retrieve" --data-binary @/tmp/soap_req.xml)
+RESP=$(curl -s -X POST "$SOAP_URL" -H "Content-Type: text/xml;charset=UTF-8" -H "SOAPAction: Retrieve" --data-binary @/tmp/soap_send_de.xml)
 SEND_DE_OID=$(xml_get "$RESP" "ObjectID")
 SEND_DE_CK=$(xml_get "$RESP" "CustomerKey")
 echo "Send DE ObjectID: $SEND_DE_OID"
@@ -347,17 +350,18 @@ Se o email precisar ser **atualizado** (já existe no Email Studio com ID conhec
 
 ## Passo 5: Calcular horários de envio em UTC
 
-> ⚠️ **CRÍTICO:** `StartDateTime` deve ser em **UTC**. A conta SFMC exibe os horários internamente em CST (UTC-6), mas o SOAP aceita e valida em UTC. BRT (Brasília) = UTC-3.
+> ⚠️ **CRÍTICO:** `StartDateTime` sem indicador de fuso: SFMC interpreta o valor como **UTC+1** e subtrai 1h internamente. Portanto a regra correta é `hora_submeter = BRT + 4h` (não +3h). Confirmado em produção (MBAIA0003 agendou 1h antes quando se usou +3h).
 
 ```bash
 SEND_DATE_BRT="2026-02-21"  # data fornecida pelo usuário (BRT)
 START_TIME_BRT="14:00"       # horário BRT fornecido pelo usuário
 INTERVAL_MIN=5               # intervalo em minutos
 
-# Converter BRT → UTC (BRT = UTC-3, portanto UTC = BRT + 3h)
+# Converter BRT → valor a submeter (+4h): hora_submeter = BRT + 4h
+# Exemplo: 19:00 BRT → submeter 23:00 → SFMC subtrai 1h → armazena 22:00 UTC → dispara 19:00 BRT ✓
 BRT_H=$(echo "$START_TIME_BRT" | cut -d: -f1 | sed 's/^0*//')
 BRT_M=$(echo "$START_TIME_BRT" | cut -d: -f2 | sed 's/^0*//')
-UTC_TOTAL=$(( BRT_H * 60 + BRT_M + 180 ))  # +180min = +3h
+UTC_TOTAL=$(( BRT_H * 60 + BRT_M + 240 ))  # +240min = +4h (não +3h!)
 
 # Ajuste de data se passar da meia-noite
 UTC_DATE="$SEND_DATE_BRT"
@@ -579,7 +583,7 @@ rm -f /tmp/soap_*.xml /tmp/soap_email*.xml
 | `%%Campo%%` não existe na DE | Substituir pelo campo correto ou remover antes de criar o email |
 | `CategoryID does not belong to the User` | Omitir CategoryID (ESD vai para pasta raiz) |
 | ESD já existe (conflito de CustomerKey) | Adicionar sufixo `-v2` e tentar novamente |
-| `Exception during ScheduleEmailSendDefinition` | Provavelmente personalization string inválida no email — revisar campos da DE vs. AMPscript |
+| `Exception during ScheduleEmailSendDefinition` | Duas causas comuns: (1) personalization string inválida — revisar campos da DE vs. `%%Campo%%` no HTML; (2) `<Action>start</Action>` ausente no `ScheduleRequestMsg` — confirmar que está presente |
 | `StartDateTime must be a future DateTime` | Horário passado — recalcular com tempo atual + margem de 5 min |
 | Create OK mas Schedule falha | Reportar ESD criado; oferecer retry do Schedule com horário atualizado |
 | Token expirado durante loop | Reautenticar silenciosamente e repetir a operação |
@@ -599,9 +603,10 @@ rm -f /tmp/soap_*.xml /tmp/soap_email*.xml
    - `RecurrenceType=Once` não existe no enum do SFMC — causa SOAP Fault imediato
    - Envio único: apenas `<ScheduleDefinition><StartDateTime>UTC_DATETIME</StartDateTime></ScheduleDefinition>`
 
-3. **StartDateTime em UTC**
-   - BRT (Brasília) = UTC-3 → somar 3h para converter
-   - A conta exibe CST (UTC-6) internamente mas valida em UTC
+3. **StartDateTime — conversão BRT obrigatória: +4h (não +3h)**
+   - SFMC interpreta `StartDateTime` sem indicador de fuso como UTC+1 e subtrai 1h internamente
+   - Regra: `hora_submeter = BRT + 4h` → ex: 19:00 BRT → submeter 23:00 → SFMC dispara 19:00 BRT
+   - Erro clássico: submeter BRT+3h → SFMC agenda 1h antes → confirmado em MBAIA0003 (2026-03-19)
 
 4. **Content Builder ID ≠ Email Studio ID**
    - Assets do Content Builder (`asset.id`) não funcionam como `Email.ID` no ESD

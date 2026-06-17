@@ -18,7 +18,7 @@
     @media only screen and (max-width: 600px) {
       .email-container { width: 100% !important; }
       .body-td { padding: 28px 20px !important; }
-      .hero-img { width: 100% !important; height: auto !important; }
+      .card-td { padding: 28px 20px !important; }
       .cta-link { width: 85% !important; }
       .footer-td { padding: 16px 20px !important; }
     }
@@ -26,30 +26,24 @@
     @media (prefers-color-scheme: dark) {
       .email-bg { background-color: #111111 !important; }
       .email-container { background-color: #1e1e1e !important; }
-      .header-bg { background-color: #0a0e27 !important; }
+      .header-bg { background-color: #1e1e1e !important; }
       .body-bg { background-color: #1e1e1e !important; }
       .body-text { color: #e0e0e0 !important; }
-      .body-text-strong { color: #ffffff !important; }
-      .divider-bg { background-color: #2a2a2a !important; }
-      .highlight-bg { background-color: #1a2535 !important; }
-      .social-bg { background-color: #0a0e27 !important; }
-      .footer-bg { background-color: #0a0e27 !important; }
+      .card-bg { background-color: #2a2a2a !important; border-color: #444444 !important; }
+      .social-bg { background-color: #111111 !important; }
+      .footer-bg { background-color: #111111 !important; }
     }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f5f5f5;">
 
-  <!-- Tracking -->
   <div style="font-size: 0; line-height: 0;"><custom name="opencounter" type="tracking"/><custom name="usermatch" type="tracking"/></div>
 
-  <!-- Preheader oculto -->
   <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f5f5f5;">{{email_preheader}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
 
-  <!-- Wrapper externo -->
   <table class="email-bg" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5;">
   <tr><td align="center" style="padding: 20px 0;">
 
-    <!-- View in browser -->
     <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #f5f5f5;">
       <tr>
         <td align="right" style="padding: 0 8px 8px 8px;">
@@ -58,65 +52,108 @@
       </tr>
     </table>
 
-    <!-- Container principal -->
     <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #ffffff;">
 
-      <!-- HEADER: Logo -->
+      <!-- HEADER -->
       <tr>
-        <td class="header-bg" align="center" style="background-color: #0a0e27; padding: 24px 30px;">
+        <td class="header-bg" align="center" style="background-color: #ffffff; padding: 20px 40px 16px 40px;">
           <a href="https://finclass.com" style="display: inline-block;">
             <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png"
-                 alt="Finclass" width="180" border="0" style="display: block; width: 180px; height: auto;" />
+                 alt="Finclass" width="160" border="0" style="display: block; width: 160px; height: auto;" />
           </a>
-        </td>
-      </tr>
-      <!-- Faixa ciano — DNA visual da marca -->
-      <tr>
-        <td style="background-color: #00e7f9; height: 3px; font-size: 0; line-height: 0;">&nbsp;</td>
-      </tr>
-
-      <!-- HERO IMAGE (opcional — remover bloco se não houver imagem hero) -->
-      {{email_hero_html}}
-      <!-- Ex: <tr><td><img src="https://..." alt="..." width="600" border="0" style="display:block;width:100%;height:auto;" /></td></tr> -->
-
-      <!-- CORPO: copy completa — parágrafos, imagens inline, depoimentos, múltiplos CTAs -->
-      <!-- O /email skill preenche este slot com HTML já formatado -->
-      <tr>
-        <td class="body-td body-bg body-text" style="background-color: #ffffff; padding: 36px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.8;">
-          {{email_corpo}}
-        </td>
-      </tr>
-
-      <!-- CTA PRINCIPAL -->
-      <tr>
-        <td class="body-bg" align="center" style="background-color: #ffffff; padding: 8px 40px 36px 40px;">
-          <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
-            <tr>
-              <td align="center" bgcolor="#00E7F9" style="border-radius: 40px;">
-                <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{email_cta_url}}" style="height:54px;v-text-anchor:middle;width:320px;" arcsize="50%" fillcolor="#00E7F9" stroked="f"><w:anchorlock/><center style="color:#000000;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;letter-spacing:0.5px;">{{email_cta_texto}}</center></v:roundrect><![endif]-->
-                <!--[if !mso]><!-->
-                <a class="cta-link" href="{{email_cta_url}}" target="_blank" style="background-color: #00e7f9; border-radius: 40px; color: #000000; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; line-height: 54px; text-align: center; text-decoration: none; width: 320px; letter-spacing: 0.5px; -webkit-text-size-adjust: none; mso-hide: all;">{{email_cta_texto}}</a>
-                <!--<![endif]-->
-              </td>
-            </tr>
+          <table cellpadding="0" cellspacing="0" border="0" width="160" align="center" style="margin-top: 10px;">
+            <tr><td style="border-bottom: 2px solid #00E7F9; font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
           </table>
         </td>
       </tr>
 
-      <!-- Assinatura da equipe -->
+      <!-- GREETING -->
       <tr>
-        <td class="divider-bg" style="background-color: #f5f5f5; height: 1px; font-size: 1px; line-height: 1px;">&nbsp;</td>
+        <td class="body-td body-bg body-text" style="background-color: #ffffff; padding: 32px 40px 8px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.75;">
+          <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.75;">
+            Ol&aacute;, %%Nome%%!
+          </p>
+        </td>
       </tr>
+
+      <!-- CARD -->
       <tr>
-        <td class="body-bg body-text" style="background-color: #ffffff; padding: 24px 40px 8px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #1a1a1a; line-height: 1.6;">
-          {{email_assinatura}}
-          <!-- Ex: <p>Abraço,<br/><strong>Time Finclass</strong></p> -->
+        <td class="body-bg" style="background-color: #ffffff; padding: 20px 40px 32px 40px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" class="card-bg" style="border: 1px solid #E0E0E0; border-radius: 12px;">
+            <!--[if mso]>
+            <tr><td style="border: 1px solid #E0E0E0; padding: 0;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <![endif]-->
+
+            <!-- CARD ACCENT BAR -->
+            <tr>
+              <td style="padding: 0;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="background-color: #00E7F9; height: 4px; font-size: 1px; line-height: 1px; border-radius: 12px 12px 0 0;">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- CARD HEADLINE -->
+            <tr>
+              <td class="card-td" style="padding: 28px 32px 0 32px;">
+                <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 20px; font-weight: 700; color: #092F4F; line-height: 1.4;">
+                  {{email_card_titulo}}
+                </p>
+              </td>
+            </tr>
+
+            <!-- CARD BODY -->
+            <tr>
+              <td class="card-td body-text" style="padding: 16px 32px 0 32px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.75;">
+                {{email_corpo}}
+              </td>
+            </tr>
+
+            <!-- CARD CTA -->
+            <tr>
+              <td align="center" style="padding: 24px 32px 32px 32px;">
+                <!--[if mso]>
+                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{email_cta_url}}" style="height:52px; v-text-anchor:middle; width:260px;" arcsize="77%" strokecolor="#FFDD00" fillcolor="#FFDD00">
+                  <w:anchorlock/>
+                  <center style="color:#000000; font-family:Arial,sans-serif; font-size:16px; font-weight:bold;">{{email_cta_texto}}</center>
+                </v:roundrect>
+                <![endif]-->
+                <!--[if !mso]><!-->
+                <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+                  <tr>
+                    <td align="center" bgcolor="#FFDD00" style="border-radius: 40px;">
+                      <a href="{{email_cta_url}}" class="cta-link" style="background-color: #FFDD00; border-radius: 40px; color: #000000; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; line-height: 52px; text-align: center; text-decoration: none; width: 260px;">{{email_cta_texto}}</a>
+                    </td>
+                  </tr>
+                </table>
+                <!--<![endif]-->
+              </td>
+            </tr>
+
+            <!--[if mso]>
+            </table>
+            </td></tr>
+            <![endif]-->
+          </table>
+        </td>
+      </tr>
+
+      <!-- ASSINATURA -->
+      <tr>
+        <td class="body-bg body-text" style="background-color: #ffffff; padding: 0 40px 32px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #555555; line-height: 1.75;">
+          <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #555555;">
+            Esperamos que voc&ecirc; goste.<br/>
+            <strong style="color: #1a1a1a;">Equipe Finclass</strong>
+          </p>
         </td>
       </tr>
 
       <!-- SOCIAL ICONS -->
       <tr>
-        <td class="social-bg" align="center" style="background-color: #0a0e27; padding: 20px 40px;">
+        <td class="social-bg" align="center" style="background-color: #f8f8f8; padding: 20px 40px;">
           <table cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="padding: 0 10px;">
@@ -146,23 +183,23 @@
 
       <!-- FOOTER -->
       <tr>
-        <td class="footer-td footer-bg" align="center" style="background-color: #0a0e27; padding: 20px 40px 24px 40px;">
+        <td class="footer-td footer-bg" align="center" style="background-color: #ffffff; padding: 20px 40px 24px 40px;">
           <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom: 12px;">
             <tr>
               <td style="padding: 0 10px;">
-                <a href="%%=CloudPagesURL(35, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #00e7f9; text-decoration: none;">Cancelar e-mails</a>
+                <a href="%%=CloudPagesURL(35, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #cacaca; text-decoration: none;">Cancelar e-mails</a>
               </td>
-              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #444444;">|</td>
+              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #e0e0e0;">|</td>
               <td style="padding: 0 10px;">
-                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #888888; text-decoration: none;">Termos de uso</a>
+                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #cacaca; text-decoration: none;">Termos de uso</a>
               </td>
-              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #444444;">|</td>
+              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #e0e0e0;">|</td>
               <td style="padding: 0 10px;">
-                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #888888; text-decoration: none;">Pol&iacute;tica e privacidade</a>
+                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #cacaca; text-decoration: none;">Pol&iacute;tica e privacidade</a>
               </td>
             </tr>
           </table>
-          <p style="font-family: Verdana, Geneva, sans-serif; font-size: 10px; color: #888888; margin: 0; line-height: 1.6; text-align: center;">
+          <p style="font-family: Verdana, Geneva, sans-serif; font-size: 10px; color: #b0b0b0; margin: 0; line-height: 1.6; text-align: center;">
             <strong>%%Member_Busname%%</strong><br/>
             %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%
           </p>

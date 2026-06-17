@@ -3,197 +3,145 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="supported-color-schemes" content="light dark" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>{{email_subject}}</title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
-  <style type="text/css">
-    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
-    img { border: 0; display: block; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
-    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
-
-    @media only screen and (max-width: 600px) {
-      .email-container { width: 100% !important; }
-      .body-td { padding: 28px 20px !important; }
-      .hero-td { padding: 28px 20px !important; }
-      .hero-right { display: none !important; }
-      .hero-title { font-size: 26px !important; }
-      .footer-td { padding: 16px 20px !important; }
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .email-bg { background-color: #111111 !important; }
-      .email-container { background-color: #1e1e1e !important; }
-      .header-bg { background-color: #1e1e1e !important; }
-      .body-bg { background-color: #1e1e1e !important; }
-      .body-text { color: #e0e0e0 !important; }
-      .body-text-secondary { color: #aaaaaa !important; }
-      .divider-bg { background-color: #2a2a2a !important; }
-      .social-bg { background-color: #111111 !important; }
-      .footer-bg { background-color: #111111 !important; }
-    }
-  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f5f5f5;">
+<body style="margin:0; padding:0; background-color:#f4f4f4;" bgcolor="#f4f4f4">
 
-  <!-- Tracking (email-only, safe aqui) -->
-  <div style="font-size: 0; line-height: 0;"><custom name="opencounter" type="tracking"/><custom name="usermatch" type="tracking"/></div>
+  <!-- Tracking -->
+  <div style="font-size:0; line-height:0;"><custom name="opencounter" type="tracking"/><custom name="usermatch" type="tracking"/></div>
 
   <!-- Preheader oculto -->
-  <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f5f5f5;">{{email_preheader}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+  <div style="display:none; font-size:1px; color:#f4f4f4; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">{{email_preheader}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
 
-  <!-- Wrapper externo -->
-  <table class="email-bg" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5;">
-  <tr><td align="center" style="padding: 20px 0;">
+  <!-- WRAPPER -->
+  <table cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f4f4f4;" bgcolor="#f4f4f4">
+    <tr>
+      <td align="center" style="padding:20px 0;">
 
-    <!-- View in browser -->
-    <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #f5f5f5;">
-      <tr>
-        <td align="right" style="padding: 0 8px 8px 8px;">
-          <span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #999999;">Caso n&atilde;o consiga visualizar, <a href="%%view_email_url%%" style="color: #999999; text-decoration: underline;">clique aqui</a>.</span>
-        </td>
-      </tr>
-    </table>
+        <!-- EMAIL CONTAINER -->
+        <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+          <tr><td>
 
-    <!-- Container principal -->
-    <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #ffffff;">
+            <!-- HEADER: Logo sobre fundo navy -->
+            <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#0a0e27;" bgcolor="#0a0e27">
+              <tr>
+                <td align="center" style="padding:28px 30px;">
+                  <a href="https://finclass.com" style="display:inline-block;">
+                    <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png"
+                         alt="Finclass" width="160" border="0"
+                         style="display:block; border:0; max-width:160px; height:auto;" />
+                  </a>
+                </td>
+              </tr>
+            </table>
 
-      <!-- HEADER: Logo -->
-      <tr>
-        <td class="header-bg" align="center" style="background-color: #ffffff; padding: 20px 40px 16px 40px;">
-          <a href="https://finclass.com" style="display: inline-block;">
-            <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png"
-                 alt="Finclass" width="160" border="0" style="display: block; width: 160px; height: auto;" />
-          </a>
-          <!-- Linha ciano sob o logo -->
-          <table cellpadding="0" cellspacing="0" border="0" width="160" align="center" style="margin-top: 10px;">
-            <tr><td style="border-bottom: 2px solid #00E7F9; font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
-          </table>
-        </td>
-      </tr>
+            <!-- LINHA CIANO -->
+            <table cellspacing="0" cellpadding="0" border="0" width="600" align="center">
+              <tr><td style="background-color:#00e7f9; height:3px; font-size:3px; line-height:3px;" bgcolor="#00e7f9">&nbsp;</td></tr>
+            </table>
 
-      <!-- HERO BANNER: dark navy -->
-      <tr>
-        <td class="hero-td" style="background-color: #092F4F; padding: 32px 40px;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <!-- Esquerda: subtítulo + título + ícone da série -->
-              <td style="vertical-align: middle; padding-right: 16px;">
-                <p style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 700; color: #00E7F9; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 10px 0;">{{email_subtitulo_serie}}</p>
-                <p class="hero-title" style="font-family: Arial, Helvetica, sans-serif; font-size: 30px; font-weight: 700; color: #ffffff; line-height: 1.15; margin: 0;">{{email_titulo_serie}}</p>
-              </td>
-              <!-- Direita: imagem do ícone da série (opcional) -->
-              <td class="hero-right" align="right" style="vertical-align: middle; width: 110px;">
-                <!-- Remover esta célula se não houver ícone -->
-                {{email_hero_icon_html}}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+            <!-- BANNER DA EDIÇÃO (imagem editorial full-width, fundo navy) -->
+            <!-- Se não houver imagem, remover este bloco inteiro -->
+            {{email_banner_html}}
 
-      <!-- Data da edição -->
-      <tr>
-        <td style="background-color: #092F4F; padding: 0 40px 20px 40px; border-bottom: 3px solid #00E7F9;">
-          <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 700; color: #c0cfe0; margin: 0; letter-spacing: 0.5px;">{{email_data}}</p>
-        </td>
-      </tr>
+            <!-- DATE BLOCK: pílula ciano sobre fundo navy -->
+            <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#0a0e27;" bgcolor="#0a0e27">
+              <tr>
+                <td align="left" style="padding:0;">
+                  <table cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td style="background-color:#00e7f9; padding:10px 32px;">
+                        <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:11px; color:#0a0e27; letter-spacing:3px; text-transform:uppercase; font-weight:bold;">{{email_data}}</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
 
-      <!-- CORPO: editorial -->
-      <tr>
-        <td class="body-td body-bg body-text" style="background-color: #ffffff; padding: 36px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.75;">
-          {{email_corpo}}
-        </td>
-      </tr>
+            <!-- CORPO EDITORIAL -->
+            <!-- Contém: parágrafos <p>, quote blocks, dividers, imagens embutidas -->
+            <!-- Cada parágrafo: <p style="margin:0 0 26px 0; font-family:Arial,Helvetica,sans-serif; font-size:15px; color:#333333; line-height:2.2;"> -->
+            <!-- Quote block: <table ...><tr><td style="background-color:#f0fdff; border-left:4px solid #00e7f9; padding:18px 20px; ..."> -->
+            <!-- Divider interno: <table ...><tr><td style="padding:0 40px;"><table ...><tr><td style="background-color:#e8e8e8; height:1px; ..."> -->
+            <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+              <tr>
+                <td style="padding:32px 40px 0 40px;">
+                  {{email_corpo}}
+                </td>
+              </tr>
+            </table>
 
-      <!-- Separador -->
-      <tr>
-        <td class="divider-bg" style="background-color: #f0f0f0; height: 1px; font-size: 1px; line-height: 1px;">&nbsp;</td>
-      </tr>
+            <!-- ASSINATURA DO AUTOR -->
+            <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+              <tr>
+                <td style="padding:0 40px 36px 40px; font-family:Arial,Helvetica,sans-serif; font-size:15px; color:#333333; line-height:1.7;">
+                  Um grande abraço,<br />
+                  <strong style="color:#0a0e27;">{{email_autor_nome}}</strong>
+                </td>
+              </tr>
+            </table>
 
-      <!-- ASSINATURA DO AUTOR -->
-      <tr>
-        <td class="body-bg" style="background-color: #ffffff; padding: 24px 40px 28px 40px;">
-          <table cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td style="padding-right: 16px; vertical-align: middle;">
-                <img src="{{email_autor_foto}}" alt="{{email_autor_nome}}" width="56" height="56" border="0"
-                     style="display: block; width: 56px; height: 56px; border-radius: 50%;" />
-              </td>
-              <td style="vertical-align: middle;">
-                <p class="body-text" style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0 0 3px 0;">{{email_autor_nome}}</p>
-                <p class="body-text-secondary" style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #666666; margin: 0;">{{email_autor_titulo}}</p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+            <!-- FOTO DO AUTOR (retangular, max 220px) -->
+            <!-- Se não houver foto, remover este bloco inteiro -->
+            {{email_autor_foto_html}}
 
-      <!-- SOCIAL ICONS -->
-      <tr>
-        <td class="social-bg" align="center" style="background-color: #f8f8f8; padding: 20px 40px;">
-          <table cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td style="padding: 0 10px;">
-                <a href="https://www.instagram.com/finclass_grupoprimo/" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/a3e829ef-bf3f-4862-b6e4-0241fe9aa5e0.png" alt="Instagram" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
-                </a>
-              </td>
-              <td style="padding: 0 10px;">
-                <a href="https://www.youtube.com/@Finclass" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/b5c20e96-3fba-4250-a410-91c7f3b85553.png" alt="YouTube" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
-                </a>
-              </td>
-              <td style="padding: 0 10px;">
-                <a href="https://www.linkedin.com/company/finclass/" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/721e1e52-8ba6-4ab1-93c5-2081c39f1e97.png" alt="LinkedIn" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
-                </a>
-              </td>
-              <td style="padding: 0 10px;">
-                <a href="https://www.tiktok.com/@finclass_br" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/dfc57152-cb95-4e55-b0dd-5536373b373f.png" alt="TikTok" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
-                </a>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+            <!-- FOOTER navy -->
+            <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#0a0e27;" bgcolor="#0a0e27">
+              <tr>
+                <td align="center" style="padding:32px 24px 20px;">
+                  <table cellspacing="0" cellpadding="0" border="0" align="center">
+                    <tr>
+                      <td style="padding:0 8px;">
+                        <a href="https://www.instagram.com/finclass_grupoprimo/" target="_blank">
+                          <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/a3e829ef-bf3f-4862-b6e4-0241fe9aa5e0.png" alt="Instagram" width="24" height="24" border="0" style="display:block; border:0;" />
+                        </a>
+                      </td>
+                      <td style="padding:0 8px;">
+                        <a href="https://www.youtube.com/@Finclass" target="_blank">
+                          <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/b5c20e96-3fba-4250-a410-91c7f3b85553.png" alt="YouTube" width="24" height="24" border="0" style="display:block; border:0;" />
+                        </a>
+                      </td>
+                      <td style="padding:0 8px;">
+                        <a href="https://www.linkedin.com/company/finclass/" target="_blank">
+                          <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/721e1e52-8ba6-4ab1-93c5-2081c39f1e97.png" alt="LinkedIn" width="24" height="24" border="0" style="display:block; border:0;" />
+                        </a>
+                      </td>
+                      <td style="padding:0 8px;">
+                        <a href="https://www.tiktok.com/@finclass_br" target="_blank">
+                          <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/dfc57152-cb95-4e55-b0dd-5536373b373f.png" alt="TikTok" width="24" height="24" border="0" style="display:block; border:0;" />
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding:0 24px 14px; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#888888; line-height:1.6;">
+                  %%Member_Busname%% %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding:0 24px 28px; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#888888;">
+                  <a href="%%=CloudPagesURL(35, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" target="_blank" style="color:#00e7f9; text-decoration:underline;">Cancelar inscri&ccedil;&atilde;o</a>
+                  &nbsp;&#183;&nbsp;
+                  <a href="%%profile_center_url%%" target="_blank" style="color:#00e7f9; text-decoration:underline;">Atualizar prefer&ecirc;ncias</a>
+                  &nbsp;&#183;&nbsp;
+                  <a href="%%view_email_url%%" target="_blank" style="color:#00e7f9; text-decoration:underline;">Ver no navegador</a>
+                </td>
+              </tr>
+            </table>
 
-      <!-- FOOTER -->
-      <tr>
-        <td class="footer-td footer-bg" align="center" style="background-color: #ffffff; padding: 20px 40px 24px 40px;">
-          <!-- Links legais -->
-          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom: 12px;">
-            <tr>
-              <td style="padding: 0 10px;">
-                <a href="%%=CloudPagesURL(35, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #cacaca; text-decoration: none;">Cancelar e-mails</a>
-              </td>
-              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #e0e0e0;">|</td>
-              <td style="padding: 0 10px;">
-                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #cacaca; text-decoration: none;">Termos de uso</a>
-              </td>
-              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #e0e0e0;">|</td>
-              <td style="padding: 0 10px;">
-                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #cacaca; text-decoration: none;">Pol&iacute;tica e privacidade</a>
-              </td>
-            </tr>
-          </table>
-          <!-- Endereço SFMC -->
-          <p style="font-family: Verdana, Geneva, sans-serif; font-size: 10px; color: #b0b0b0; margin: 0; line-height: 1.6; text-align: center;">
-            <strong>%%Member_Busname%%</strong><br/>
-            %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%
-          </p>
-        </td>
-      </tr>
+          </td></tr>
+        </table><!-- /EMAIL CONTAINER -->
 
-    </table>
-    <!-- /Container principal -->
-
-  </td></tr>
-  </table>
+      </td>
+    </tr>
+  </table><!-- /WRAPPER -->
 
 </body>
 </html>

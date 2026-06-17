@@ -1,0 +1,44 @@
+{
+  "name": "Grupo Primo",
+  "platform": "Salesforce Marketing Cloud (SFMC) — Enterprise BU",
+  "mid": 518004698,
+  "colors": {
+    "primary": "#F05A28",
+    "secondary": "#0d0d0d",
+    "background": "#ffffff",
+    "background_outer": "#e8e8e8",
+    "text": "#111111",
+    "text_secondary": "#333333",
+    "footer_bg": "#0d0d0d",
+    "footer_text": "#777777",
+    "divider": "#e0e0e0"
+  },
+  "fonts": {
+    "heading": "Arial, Helvetica, sans-serif",
+    "body": "Arial, Helvetica, sans-serif"
+  },
+  "footer": {
+    "company": "Grupo Primo",
+    "address_sfmc": "%%Member_Busname%% %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%",
+    "disclaimer": "Este é um comunicado interno do Grupo Primo."
+  },
+  "templates": {
+    "news": {
+      "file": "templates/news.html",
+      "description": "PrimoNews — newsletter interna multi-seção (header banner + corpo livre com imagens/textos + footer Grupo Primo)",
+      "slots": ["email_subject", "email_preheader", "email_header_html", "email_corpo", "email_footer_html"]
+    }
+  },
+  "sfmc": {
+    "content_builder": {
+      "root": 273324,
+      "newsletter_2026": 320659,
+      "newsletter_2026_img": 320660,
+      "abril_2026": 321248
+    },
+    "tracking_categories": {
+      "note": "Definir junto com agendamento manual"
+    }
+  },
+  "tone": "Corporativo, direto, foco em execução, performance e cultura. Linguagem orientada a colaboradores do grupo."
+}

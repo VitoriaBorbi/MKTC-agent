@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="pt-BR">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>{{email_subject}}</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4;" bgcolor="#f4f4f4">
+
+  <div style="font-size:0; line-height:0;"><custom name="opencounter" type="tracking"/><custom name="usermatch" type="tracking"/></div>
+
+  <div style="display:none; font-size:1px; color:#f4f4f4; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">{{email_preheader}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+
+  <table cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f4f4f4;" bgcolor="#f4f4f4">
+    <tr>
+      <td align="center" style="padding:0;">
+
+        <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+
+          <!-- HEADER BANNER (image1: PrimoNews + edição) -->
+          <tr>
+            <td align="center" style="padding:0; font-size:0; line-height:0;">
+              {{email_header_html}}
+            </td>
+          </tr>
+
+          <!-- CORPO MULTI-SEÇÃO -->
+          <tr>
+            <td style="padding:0;">
+              {{email_corpo}}
+            </td>
+          </tr>
+
+          <!-- FOOTER VISUAL (image14: copyright Grupo Primo) -->
+          <tr>
+            <td align="center" style="padding:0; font-size:0; line-height:0;">
+              {{email_footer_html}}
+            </td>
+          </tr>
+
+          <!-- LEGAL / UNSUBSCRIBE -->
+          <tr>
+            <td align="center" style="background-color:#000000; padding:0 24px 28px;" bgcolor="#000000">
+              <p style="margin:0 0 10px 0; font-family:Arial,Helvetica,sans-serif; font-size:11px; color:#777777; line-height:1.6;">
+                %%Member_Busname%% %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%
+              </p>
+              <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:11px; color:#777777;">
+                <a href="%%=CloudPagesURL(35, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" target="_blank" style="color:#F05A28; text-decoration:underline;">Cancelar inscri&ccedil;&atilde;o</a>
+                &nbsp;&#183;&nbsp;
+                <a href="%%profile_center_url%%" target="_blank" style="color:#F05A28; text-decoration:underline;">Atualizar prefer&ecirc;ncias</a>
+                &nbsp;&#183;&nbsp;
+                <a href="%%view_email_url%%" target="_blank" style="color:#F05A28; text-decoration:underline;">Ver no navegador</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

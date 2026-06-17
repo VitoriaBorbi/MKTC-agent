@@ -160,6 +160,8 @@ Para cada seção, verificar se há links na copy. Se não houver:
 - **Link simples:** coletar URL completa. Usar diretamente no `href`.
 - **Link com PMP:** coletar URL base + string PMP. O `@emailid` **não precisa ser informado** — será preenchido automaticamente com o ID do asset após o upload (Passo 8-B).
 
+> ⚠️ **NUNCA usar `%%variavel%%` em `href` de CTA** — isso é personalization string (campo de DE), não AMPscript. Causa falha silenciosa no Schedule. O correto é sempre `%%=v(@variavel)=%%`. Exemplos incorretos: `%%url%%`, `%%link%%`, `%%cta_url%%`.
+
 ### Passo 5: Upload de imagens
 
 Para cada seção N (dentro do loop de geração, Passo 6):

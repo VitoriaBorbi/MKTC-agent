@@ -75,7 +75,14 @@
       "faculdade-hub":  { "id": 286, "name": "Faculdade HUB" },
       "mba":            { "id": 142, "name": "MBA - Faculdade HUB" },
       "myhub-ia":       { "id": 311, "name": "MyHUB.IA" },
+      "sergio-sacani":  { "id": 312, "name": "Sérgio Sacani - MyHUB.IA" },
       "thiago-nigro":   { "id": 230, "name": "Thiago Nigro - Faculdade HUB" }
+    },
+    "official_template": {
+      "name": "[TEMP]_[MBA]_[2024]",
+      "asset_id": 13913,
+      "customer_key": "64e958af-59d6-4709-93d7-15161b2e8a1b",
+      "_nota": "Footer obrigatório: social icons + logo + links fora do container principal, exatamente como este template. Ver campanha.html como referência."
     },
     "templates": {
       "news": {

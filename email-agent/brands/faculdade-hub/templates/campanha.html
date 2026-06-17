@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="pt-BR">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{email_subject}}</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style type="text/css">
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+    img { border: 0; display: block; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+
+    @media only screen and (max-width: 600px) {
+      .email-container { width: 100% !important; }
+      .body-td { padding: 28px 20px !important; }
+      .hero-img { width: 100% !important; height: auto !important; }
+      .cta-link { width: 85% !important; }
+      .footer-td { padding: 16px 20px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0f0f0;">
+
+  <!-- Tracking -->
+  <div style="font-size: 0; line-height: 0;"><custom name="opencounter" type="tracking"/></div>
+
+  <!-- Preheader oculto -->
+  <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f0f0f0;">{{email_preheader}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+
+  <!-- Wrapper externo -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f0f0;">
+  <tr><td align="center" style="padding: 20px 0;">
+
+    <!-- View in browser -->
+    <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #f0f0f0;">
+      <tr>
+        <td align="right" style="padding: 0 8px 8px 8px;">
+          <span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #999999;">Caso n&atilde;o consiga visualizar, <a href="%%view_email_url%%" style="color: #999999; text-decoration: underline;">clique aqui</a>.</span>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Container principal -->
+    <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #ffffff;">
+
+      <!-- HEADER: Logo sobre fundo escuro -->
+      <tr>
+        <td align="center" style="background-color: #0f1014; padding: 24px 30px;">
+          <a href="https://faculdadehub.com.br/" style="display: inline-block;">
+            <img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/4127a0f5-8fef-456f-b13e-760099d30ccc.png"
+                 alt="Faculdade Hub" width="150" border="0" style="display: block; width: 150px; height: auto;" />
+          </a>
+        </td>
+      </tr>
+      <!-- Faixa de acento -->
+      <tr>
+        <td style="background-color: #dfe1d9; height: 3px; font-size: 0; line-height: 0;">&nbsp;</td>
+      </tr>
+
+      <!-- HERO IMAGE (opcional) -->
+      {{email_hero_html}}
+
+      <!-- CORPO: copy completa -->
+      <tr>
+        <td class="body-td" style="background-color: #ffffff; padding: 36px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #000000; line-height: 1.8;">
+          {{email_corpo}}
+        </td>
+      </tr>
+
+      <!-- CTA PRINCIPAL -->
+      <tr>
+        <td align="center" style="background-color: #ffffff; padding: 8px 40px 36px 40px;">
+          <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+            <tr>
+              <td align="center" bgcolor="#000000" style="border-radius: 4px;">
+                <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{email_cta_url}}" style="height:54px;v-text-anchor:middle;width:320px;" arcsize="4%" fillcolor="#000000" stroked="f"><w:anchorlock/><center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;letter-spacing:0.5px;">{{email_cta_texto}}</center></v:roundrect><![endif]-->
+                <!--[if !mso]><!-->
+                <a class="cta-link" href="{{email_cta_url}}" target="_blank" style="background-color: #000000; border-radius: 4px; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; line-height: 54px; text-align: center; text-decoration: none; width: 320px; letter-spacing: 0.5px; -webkit-text-size-adjust: none; mso-hide: all;">{{email_cta_texto}}</a>
+                <!--<![endif]-->
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Assinatura -->
+      <tr>
+        <td style="background-color: #f5f5f5; height: 1px; font-size: 1px; line-height: 1px;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="background-color: #ffffff; padding: 24px 40px 8px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #000000; line-height: 1.6;">
+          {{email_assinatura}}
+        </td>
+      </tr>
+
+      <!-- SOCIAL ICONS -->
+      <tr>
+        <td align="center" style="background-color: #0f1014; padding: 20px 40px;">
+          <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="padding: 0 12px;">
+                <a href="https://www.linkedin.com/school/faculdadehub/" style="display: inline-block;">
+                  <img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/8757d30d-95e7-4e18-90f7-3aa6a291f8c7.png" alt="LinkedIn" width="25" height="25" border="0" style="display: block; width: 25px; height: 25px;" />
+                </a>
+              </td>
+              <td style="padding: 0 12px;">
+                <a href="https://www.instagram.com/faculdadehub/" style="display: inline-block;">
+                  <img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/840a5d53-33a4-4ae3-aab3-340e416a7c4a.png" alt="Instagram" width="25" height="25" border="0" style="display: block; width: 25px; height: 25px;" />
+                </a>
+              </td>
+              <td style="padding: 0 12px;">
+                <a href="https://faculdadehub.com.br/" style="display: inline-block;">
+                  <img src="https://image.mba.grupo-primo.com/lib/fe2811717d640478721079/m/1/f69c22d4-6a07-4a10-a925-ee0eb71f89e4.png" alt="Faculdade Hub" width="25" height="25" border="0" style="display: block; width: 25px; height: 25px;" />
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- FOOTER: Logo + Links -->
+      <tr>
+        <td align="center" style="background-color: #0f1014; padding: 24px 40px 8px 40px;">
+          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom: 12px;">
+            <tr>
+              <td style="padding: 0 10px;">
+                <a href="https://faculdadehub.com.br/" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #D5D5D5; text-decoration: none;">Faculdade Hub</a>
+              </td>
+              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #dfe1d9;">|</td>
+              <td style="padding: 0 10px;">
+                <a href="https://sp.oprimorico.com.br/privacy.html" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #D5D5D5; text-decoration: none;">Pol&iacute;tica de Privacidade</a>
+              </td>
+              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #dfe1d9;">|</td>
+              <td style="padding: 0 10px;">
+                <a href="%%=CloudPagesURL(31, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #D5D5D5; text-decoration: none;">Cancelar Inscri&ccedil;&atilde;o</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- FOOTER: Endereço -->
+      <tr>
+        <td align="center" style="background-color: #0f1014; padding: 0 40px 24px 40px; border-bottom: 4px solid #dfe1d9;">
+          <p style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #818181; margin: 0; line-height: 1.6; text-align: center;">
+            %%Member_Busname%% %%Member_Addr%%, %%Member_City%%, %%Member_State%%, %%Member_PostalCode%% %%Member_Country%%
+          </p>
+          <p style="margin: 8px 0 0 0;">
+            <a href="%%profile_center_url%%" alias="Update Profile" style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #818181; text-decoration: none;">Atualizar perfil</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+
+  </td></tr>
+  </table>
+
+</body>
+</html>

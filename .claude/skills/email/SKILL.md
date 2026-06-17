@@ -56,7 +56,7 @@ Ao selecionar o `tipo`, todas as configurações abaixo são determinadas automa
 
 Cada template tem placeholders `{{slot}}` que serão substituídos:
 
-**news:** `{{email_subject}}` `{{email_preheader}}` `{{email_titulo_serie}}` `{{email_subtitulo_serie}}` `{{email_data}}` `{{email_corpo}}` `{{email_autor_nome}}` `{{email_autor_titulo}}` `{{email_autor_foto}}` `{{email_hero_icon_html}}`
+**news:** `{{email_subject}}` `{{email_preheader}}` `{{email_banner_html}}` `{{email_data}}` `{{email_corpo}}` `{{email_autor_nome}}` `{{email_autor_foto_html}}`
 
 **campanha:** `{{email_subject}}` `{{email_preheader}}` `{{email_corpo}}` `{{email_cta_texto}}` `{{email_cta_url}}` `{{email_assinatura}}` `{{email_hero_html}}`
 
@@ -224,7 +224,7 @@ Se a copy tiver CTAs sem link, usar AskUserQuestion:
 > _"O CTA '[texto]' precisa de link. É um link simples ou com PMP?"_
 
 - **Simples:** pedir URL completa → vai direto no slot `{{email_cta_url}}`
-- **Com PMP:** pedir URL base + string PMP → gerar bloco AMPscript (ver seção abaixo) + slot `{{email_cta_url}}` vira `%%=v(@link_tag)=%%`
+- **Com PMP:** pedir URL base + string PMP → gerar bloco AMPscript (ver seção abaixo) + slot `{{email_cta_url}}` vira `%%=redirectto(@link_tag)=%%`
 
 **Regra CTAs:** todos os CTAs do mesmo email vão para o mesmo link. Não há CTAs diferentes no mesmo email apontando para destinos distintos.
 
@@ -256,7 +256,7 @@ Para cada slot definido no tipo escolhido:
 
 **`{{email_cta_texto}}`** → texto do botão principal
 
-**`{{email_cta_url}}`** → URL (simples) ou `%%=v(@link_tag)=%%` (PMP)
+**`{{email_cta_url}}`** → URL (simples) ou `%%=redirectto(@link_tag)=%%` (PMP)
 
 **`{{email_assinatura}}`** → ex: `<p>Abraço,<br/><strong>Time Finclass</strong></p>`
 
@@ -265,13 +265,28 @@ Para cada slot definido no tipo escolhido:
 **`{{email_cta_html}}`** (comunicado) → bloco completo do botão se houver CTA, ou string vazia
 
 **Slots do news:**
-- `{{email_titulo_serie}}` → nome da série (ex: "FinNews")
-- `{{email_subtitulo_serie}}` → label acima do título (ex: "NEWSLETTER SEMANAL")
-- `{{email_data}}` → data formatada (ex: "18 de março de 2026")
-- `{{email_autor_nome}}` → nome do autor
-- `{{email_autor_titulo}}` → cargo/descrição (ex: "Editor-chefe, Finclass")
-- `{{email_autor_foto}}` → URL da foto (do SFMC após upload)
-- `{{email_hero_icon_html}}` → `<img src="..." .../>` do ícone da série, ou string vazia
+- `{{email_banner_html}}` → bloco completo da imagem hero da edição (table + img, 600px full-width, fundo navy `#0a0e27`). Se não houver imagem: string vazia. Estrutura:
+  ```html
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#0a0e27;" bgcolor="#0a0e27">
+    <tr><td align="center" style="padding:0;">
+      <img src="URL" alt="DESCRICAO" width="600" height="auto" style="display:block;border:0;width:100%;max-width:600px;" border="0" />
+    </td></tr>
+  </table>
+  ```
+- `{{email_data}}` → data formatada em caixa alta (ex: "Quinta-feira, 24 de Março")
+- `{{email_corpo}}` → HTML completo do corpo editorial: parágrafos `<p>`, quote blocks, dividers internos e imagens embutidas. **NÃO envolver em `<table>` externo** — já está dentro do container. Estruturas disponíveis:
+  - Parágrafo: `<p style="margin:0 0 26px 0; font-family:Arial,Helvetica,sans-serif; font-size:15px; color:#333333; line-height:2.2;">...</p>`
+  - Quote block: `<table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 18px 0;"><tr><td style="background-color:#f0fdff; border-left:4px solid #00e7f9; padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:17px; color:#0a0e27; font-style:italic; font-weight:bold; line-height:1.5;">CITAÇÃO</td></tr></table>`
+  - Divider interno: `<table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:10px 0 28px 0;"><tr><td style="background-color:#e8e8e8; height:1px; font-size:1px; line-height:1px;">&nbsp;</td></tr></table>`
+- `{{email_autor_nome}}` → nome do autor (ex: "Felipe Arrais")
+- `{{email_autor_foto_html}}` → bloco table+img da foto do autor (retangular, max 220px, alinhada à esquerda). Se não houver foto: string vazia. Estrutura:
+  ```html
+  <table cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="background-color:#ffffff;" bgcolor="#ffffff">
+    <tr><td align="left" style="padding:0 40px 36px 40px;">
+      <img src="URL" alt="NOME — Finclass" width="220" height="auto" style="display:block;border:0;max-width:220px;" border="0" />
+    </td></tr>
+  </table>
+  ```
 
 #### 3. Substituir slots no draft
 
@@ -286,7 +301,42 @@ O processo correto é:
 
 Se houver link PMP, adicionar o bloco AMPscript logo após `<body>`, antes do tracking div:
 
+**Dois blocos separados, ambos dentro de comentários HTML `<!-- -->`:**
+
+**Bloco 1 — Nome (personalização da saudação):**
 ```html
+<!--
+%%[
+  set @nome = AttributeValue("nome")
+  if empty(@nome) or @nome == "no" or @nome == "." or RegExMatch(@nome, "[0-9]", 0) > 0 then
+    set @line = "Olá"
+  else
+    set @firstName = @nome
+    if indexOf(@nome, "@") > 0 then
+      set @firstName = "nulable"
+    else
+      if indexOf(@nome, " ") > 0 then
+        set @firstName = Substring(@nome,1, Subtract(IndexOf(@nome," "),1))
+      endif
+      if indexOf(@nome, ".") > 0 then
+        set @firstName = Substring(@nome, 1, IndexOf(@nome, "."))
+      endif
+    endif
+    set @name = Propercase(@firstName)
+    if @name == "nulable" then
+      set @line = "Olá,"
+    else
+      set @line = concat("Olá, ",@name)
+    endif
+  endif
+]%%
+-->
+```
+Uso no corpo: `%%=v(@line)=%%`
+
+**Bloco 2 — Link PMP:**
+```html
+<!--
 %%[
   set @link    = 'URL_BASE_COM_?PMP_NO_FINAL'
   set @pmp     = 'FIN-VEX-EML-X-BFIN-YYYYMMDD-ORG-CODXXXX-AS-JOBID'
@@ -311,10 +361,10 @@ Se houver link PMP, adicionar o bloco AMPscript logo após `<body>`, antes do tr
   set @utm_source   = 'Email'
   set @utm_campaign = @8
   set @utm_medium   = 'BaseFinclass'
-  set @utm_contect  = 'Organico'
+  set @utm_content  = 'Organico'
   set @utm_term     = concat(@1,'-',@2,'-',@3,'-',@4,'-',@5,'-',@6,'-',@7,'-',@8,'-',@9,'-',@10,'_',@emailid)
 
-  set @utmComplete = concat('utm_source=',@utm_source,'&utm_campaign=',@utm_campaign,'&utm_medium=',@utm_medium,'&utm_contect=',@utm_contect,'&utm_term=',@utm_term)
+  set @utmComplete = concat('utm_source=',@utm_source,'&utm_campaign=',@utm_campaign,'&utm_medium=',@utm_medium,'&utm_content=',@utm_content,'&utm_term=',@utm_term)
 
   set @email        = AttributeValue("Email")
   set @encodedEmail = Base64Encode(@email)
@@ -322,45 +372,20 @@ Se houver link PMP, adicionar o bloco AMPscript logo após `<body>`, antes do tr
 
   set @tag      = concat(@eParam,'&',@pmpComplete,'&',@utmComplete)
   set @link_tag = concat(@link,@tag)
-
-  /* URL individual da DE — fallback se campo 'url' existir na DE */
-  set @cta_href = AttributeValue("url")
-  if empty(@cta_href) then
-    set @cta_href = "https://consumer.hotmart.com/"
-  endif
-
-  /* Personalização do nome */
-  set @nome = AttributeValue("nome")
-  if empty(@nome) or @nome == "no" or @nome == "." or RegExMatch(@nome, "[0-9]", 0) > 0 then
-    set @line = "Olá"
-  else
-    set @firstName = @nome
-    if indexOf(@nome, "@") > 0 then
-      set @firstName = "nulable"
-    else
-      if indexOf(@nome, " ") > 0 then
-        set @firstName = Substring(@nome,1, Subtract(IndexOf(@nome," "),1))
-      endif
-      if indexOf(@nome, ".") > 0 then
-        set @firstName = Substring(@nome, 1, IndexOf(@nome, "."))
-      endif
-    endif
-    set @name = Propercase(@firstName)
-    if @name == "nulable" then
-      set @line = "Olá,"
-    else
-      set @line = concat("Olá, ",@name)
-    endif
-  endif
 ]%%
+-->
 ```
+Uso no href do botão CTA: `href="%%=redirectto(@link_tag)=%%"`
 
 **Notas críticas sobre o AMPscript:**
+- **Sempre dentro de `<!-- -->`** — AMPscript fora de comentários HTML renderiza texto visível no email
+- **`redirectto` no href, não `v()`** — `%%=redirectto(@link_tag)=%%` ativa click tracking no SFMC; `%%=v()=%%` não rastreia cliques
+- `%%=v(@line)=%%` — apenas para output de texto inline (saudação), não para links
 - `TODO_EMAILID` é um placeholder — substituído pelo **Email Studio ID** no Passo 9-C (nunca pelo Asset ID)
 - Posição 6 (`@6`) = **sempre** `FormatDate(now(),"YYYYMMdd")` — nunca a data estática da string PMP
 - `@10 = [JobID]` — JobID dinâmico do SFMC, nunca estático
-- Para múltiplos PMPs diferentes no mesmo email: criar blocos separados com variáveis renomeadas (`@link2`, `@pmp2`, `@link_tag2`, etc.)
-- Todos os CTAs do mesmo email usam o mesmo `@link_tag`
+- Para múltiplos PMPs: blocos separados com variáveis renomeadas (`@link2`, `@pmp2`, `@link_tag2`)
+- **NUNCA `%%variavel%%` em href** — personalization string (campo de DE) em href quebra o Schedule silenciosamente
 
 #### 5. Nomear o arquivo de output
 

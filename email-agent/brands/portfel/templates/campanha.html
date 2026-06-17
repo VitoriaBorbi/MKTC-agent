@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="pt-BR">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
+  <title>{{email_subject}}</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style type="text/css">
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+    img { border: 0; display: block; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+
+    @media only screen and (max-width: 600px) {
+      .email-container { width: 100% !important; }
+      .body-td { padding: 28px 22px !important; }
+      .hero-img { width: 100% !important; height: auto !important; }
+      .cta-link { width: 88% !important; }
+      .footer-td { padding: 22px !important; }
+      .sig-td { padding: 24px 22px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0f4fb;">
+
+  <!-- Tracking -->
+  <div style="font-size: 0; line-height: 0;"><custom name="opencounter" type="tracking"/><custom name="usermatch" type="tracking"/></div>
+
+  <!-- Preheader oculto -->
+  <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f0f4fb;">{{email_preheader}}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+
+  <!-- Wrapper externo -->
+  <table class="email-bg" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f4fb;">
+    <tr><td align="center" style="padding: 20px 0;">
+
+      <!-- View in browser -->
+      <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #f0f4fb;">
+        <tr>
+          <td align="right" style="padding: 0 8px 8px 8px;">
+            <span style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #555555;">Caso n&atilde;o consiga visualizar, <a href="%%view_email_url%%" style="color: #003087; text-decoration: underline;">clique aqui</a>.</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Container principal -->
+      <table width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="background-color: #ffffff;">
+
+        <!-- HEADER: Logo sobre fundo azul royal -->
+        <tr>
+          <td align="center" style="background-color: #003087; padding: 28px 30px;">
+            <a href="https://portfel.com.br" style="display: inline-block;">
+              <img src="https://image.mail.portfel.com.br/lib/fe2f11717d64047b771777/m/1/9c22d171-2ea0-4f6d-81a6-acced45aff9f.png"
+                   alt="Portfel" width="120" border="0" style="display: block; width: 120px; height: auto;" />
+            </a>
+          </td>
+        </tr>
+        <!-- Faixa marinho de transi&ccedil;&atilde;o -->
+        <tr>
+          <td style="background-color: #001F5A; height: 4px; font-size: 0; line-height: 0;">&nbsp;</td>
+        </tr>
+
+        <!-- HERO opcional -->
+        {{email_hero_html}}
+
+        <!-- CORPO -->
+        <tr>
+          <td class="body-td" style="background-color: #ffffff; padding: 36px 40px 8px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.7;">
+            {{email_corpo}}
+          </td>
+        </tr>
+
+        <!-- CTA BLOCK (slot html flex&iacute;vel: 1 bot&atilde;o, m&uacute;ltiplos bot&otilde;es ou vazio) -->
+        {{email_cta_html}}
+
+        <!-- ASSINATURA -->
+        <tr>
+          <td class="sig-td" style="background-color: #003087; padding: 28px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #ffffff; line-height: 1.6;">
+            {{email_assinatura}}
+          </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td class="footer-td" align="center" style="background-color: #001F5A; padding: 24px 40px;">
+            <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom: 12px;">
+              <tr>
+                <td style="padding: 0 10px;">
+                  <a href="%%unsub_center_url%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #AABFEA; text-decoration: none;">Cancelar inscri&ccedil;&atilde;o</a>
+                </td>
+                <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #4a5d8a;">|</td>
+                <td style="padding: 0 10px;">
+                  <a href="%%profile_center_url%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #AABFEA; text-decoration: none;">Centro de prefer&ecirc;ncias</a>
+                </td>
+              </tr>
+            </table>
+            <p style="font-family: Verdana, Geneva, sans-serif; font-size: 11px; color: #AABFEA; margin: 0; line-height: 1.6; text-align: center;">
+              <strong style="color: #ffffff;">%%Member_Busname%%</strong><br/>
+              %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%
+            </p>
+          </td>
+        </tr>
+
+      </table>
+
+    </td></tr>
+  </table>
+
+</body>
+</html>

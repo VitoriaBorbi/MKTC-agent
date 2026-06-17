@@ -24,16 +24,15 @@
     }
 
     @media (prefers-color-scheme: dark) {
-      .email-bg { background-color: #111111 !important; }
-      .email-container { background-color: #1e1e1e !important; }
-      .header-bg { background-color: #0a0e27 !important; }
-      .body-bg { background-color: #1e1e1e !important; }
+      .email-bg { background-color: #0f1014 !important; }
+      .email-container { background-color: #1a1a1a !important; }
+      .header-bg { background-color: #0f1014 !important; }
+      .body-bg { background-color: #1a1a1a !important; }
       .body-text { color: #e0e0e0 !important; }
-      .body-text-strong { color: #ffffff !important; }
       .divider-bg { background-color: #2a2a2a !important; }
-      .highlight-bg { background-color: #1a2535 !important; }
-      .social-bg { background-color: #0a0e27 !important; }
-      .footer-bg { background-color: #0a0e27 !important; }
+      .social-bg { background-color: #0f1014 !important; }
+      .footer-bg { background-color: #0f1014 !important; }
+      .highlight-cell { background-color: #1e2210 !important; }
     }
   </style>
 </head>
@@ -63,24 +62,22 @@
 
       <!-- HEADER: Logo -->
       <tr>
-        <td class="header-bg" align="center" style="background-color: #0a0e27; padding: 24px 30px;">
-          <a href="https://finclass.com" style="display: inline-block;">
-            <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/c6b407e1-8e55-4b00-abd8-19f20df026dc.png"
-                 alt="Finclass" width="180" border="0" style="display: block; width: 180px; height: auto;" />
+        <td class="header-bg" align="center" style="background-color: #0f1014; padding: 24px 30px;">
+          <a href="https://sp.cursoviverderenda.com/" style="display: inline-block;">
+            <img src="https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/813699e2-15be-49d3-943e-705a97294c2c.png"
+                 alt="Bruno Perini" width="150" border="0" style="display: block; width: 150px; height: auto;" />
           </a>
         </td>
       </tr>
-      <!-- Faixa ciano — DNA visual da marca -->
+      <!-- Faixa verde-lima -->
       <tr>
-        <td style="background-color: #00e7f9; height: 3px; font-size: 0; line-height: 0;">&nbsp;</td>
+        <td style="background-color: #b2ec05; height: 3px; font-size: 0; line-height: 0;">&nbsp;</td>
       </tr>
 
       <!-- HERO IMAGE (opcional — remover bloco se não houver imagem hero) -->
       {{email_hero_html}}
-      <!-- Ex: <tr><td><img src="https://..." alt="..." width="600" border="0" style="display:block;width:100%;height:auto;" /></td></tr> -->
 
-      <!-- CORPO: copy completa — parágrafos, imagens inline, depoimentos, múltiplos CTAs -->
-      <!-- O /email skill preenche este slot com HTML já formatado -->
+      <!-- CORPO -->
       <tr>
         <td class="body-td body-bg body-text" style="background-color: #ffffff; padding: 36px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #1a1a1a; line-height: 1.8;">
           {{email_corpo}}
@@ -92,10 +89,10 @@
         <td class="body-bg" align="center" style="background-color: #ffffff; padding: 8px 40px 36px 40px;">
           <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
             <tr>
-              <td align="center" bgcolor="#00E7F9" style="border-radius: 40px;">
-                <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{email_cta_url}}" style="height:54px;v-text-anchor:middle;width:320px;" arcsize="50%" fillcolor="#00E7F9" stroked="f"><w:anchorlock/><center style="color:#000000;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;letter-spacing:0.5px;">{{email_cta_texto}}</center></v:roundrect><![endif]-->
+              <td align="center" bgcolor="#b2ec05" style="border-radius: 40px;">
+                <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{email_cta_url}}" style="height:54px;v-text-anchor:middle;width:320px;" arcsize="50%" fillcolor="#b2ec05" stroked="f"><w:anchorlock/><center style="color:#000000;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;letter-spacing:0.5px;">{{email_cta_texto}}</center></v:roundrect><![endif]-->
                 <!--[if !mso]><!-->
-                <a class="cta-link" href="{{email_cta_url}}" target="_blank" style="background-color: #00e7f9; border-radius: 40px; color: #000000; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; line-height: 54px; text-align: center; text-decoration: none; width: 320px; letter-spacing: 0.5px; -webkit-text-size-adjust: none; mso-hide: all;">{{email_cta_texto}}</a>
+                <a class="cta-link" href="{{email_cta_url}}" target="_blank" style="background-color: #b2ec05; border-radius: 40px; color: #000000; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; line-height: 54px; text-align: center; text-decoration: none; width: 320px; letter-spacing: 0.5px; -webkit-text-size-adjust: none; mso-hide: all;">{{email_cta_texto}}</a>
                 <!--<![endif]-->
               </td>
             </tr>
@@ -103,40 +100,39 @@
         </td>
       </tr>
 
-      <!-- Assinatura da equipe -->
+      <!-- Assinatura -->
       <tr>
-        <td class="divider-bg" style="background-color: #f5f5f5; height: 1px; font-size: 1px; line-height: 1px;">&nbsp;</td>
+        <td class="divider-bg" style="background-color: #f0f0f0; height: 1px; font-size: 1px; line-height: 1px;">&nbsp;</td>
       </tr>
       <tr>
-        <td class="body-bg body-text" style="background-color: #ffffff; padding: 24px 40px 8px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #1a1a1a; line-height: 1.6;">
+        <td class="body-bg body-text" style="background-color: #ffffff; padding: 24px 40px 32px 40px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #1a1a1a; line-height: 1.7;">
           {{email_assinatura}}
-          <!-- Ex: <p>Abraço,<br/><strong>Time Finclass</strong></p> -->
         </td>
       </tr>
 
       <!-- SOCIAL ICONS -->
       <tr>
-        <td class="social-bg" align="center" style="background-color: #0a0e27; padding: 20px 40px;">
+        <td class="social-bg" align="center" style="background-color: #0f1014; padding: 20px 40px;">
           <table cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="padding: 0 10px;">
-                <a href="https://www.instagram.com/finclass_grupoprimo/" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/a3e829ef-bf3f-4862-b6e4-0241fe9aa5e0.png" alt="Instagram" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
+                <a href="https://www.instagram.com/bruno_perini/" style="display: inline-block;">
+                  <img src="https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/a7134293-755e-4dcd-b2dd-19273f863232.png" alt="Instagram" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
                 </a>
               </td>
               <td style="padding: 0 10px;">
-                <a href="https://www.youtube.com/@Finclass" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/b5c20e96-3fba-4250-a410-91c7f3b85553.png" alt="YouTube" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
+                <a href="https://twitter.com/perinibruno" style="display: inline-block;">
+                  <img src="https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/648b810f-2754-483f-a14e-073c1973773f.png" alt="Twitter" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
                 </a>
               </td>
               <td style="padding: 0 10px;">
-                <a href="https://www.linkedin.com/company/finclass/" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/721e1e52-8ba6-4ab1-93c5-2081c39f1e97.png" alt="LinkedIn" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
+                <a href="https://www.youtube.com/channel/UCCE-jo1GvBJqyj1b287h7jA" style="display: inline-block;">
+                  <img src="https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/b5d47e22-8f9b-4ba7-b608-586ccca413e5.png" alt="YouTube" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
                 </a>
               </td>
               <td style="padding: 0 10px;">
-                <a href="https://www.tiktok.com/@finclass_br" style="display: inline-block;">
-                  <img src="https://image.mkt.finclass.com/lib/fe2811717d640478721277/m/1/dfc57152-cb95-4e55-b0dd-5536373b373f.png" alt="TikTok" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
+                <a href="https://sp.cursoviverderenda.com/" style="display: inline-block;">
+                  <img src="https://image.mail.vocemaisrico.com/lib/fe3111717d64047b771775/m/1/4f774713-1485-4e1c-bde5-97233051fe52.png" alt="Site" width="28" height="28" border="0" style="display: block; width: 28px; height: 28px;" />
                 </a>
               </td>
             </tr>
@@ -146,23 +142,19 @@
 
       <!-- FOOTER -->
       <tr>
-        <td class="footer-td footer-bg" align="center" style="background-color: #0a0e27; padding: 20px 40px 24px 40px;">
+        <td class="footer-td footer-bg" align="center" style="background-color: #0f1014; padding: 20px 40px 24px 40px;">
           <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom: 12px;">
             <tr>
               <td style="padding: 0 10px;">
-                <a href="%%=CloudPagesURL(35, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #00e7f9; text-decoration: none;">Cancelar e-mails</a>
+                <a href="%%=CloudPagesURL(905, 'email', emailaddr, 'jobID', jobid, 'emailName', emailname_)=%%" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #b2ec05; text-decoration: none;">Cancelar e-mails</a>
               </td>
               <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #444444;">|</td>
               <td style="padding: 0 10px;">
-                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #888888; text-decoration: none;">Termos de uso</a>
-              </td>
-              <td style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #444444;">|</td>
-              <td style="padding: 0 10px;">
-                <a href="" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #888888; text-decoration: none;">Pol&iacute;tica e privacidade</a>
+                <a href="https://sp.cursoviverderenda.com/paradigma/privacy.html" style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #818181; text-decoration: none;">Pol&iacute;tica de privacidade</a>
               </td>
             </tr>
           </table>
-          <p style="font-family: Verdana, Geneva, sans-serif; font-size: 10px; color: #888888; margin: 0; line-height: 1.6; text-align: center;">
+          <p style="font-family: Verdana, Geneva, sans-serif; font-size: 10px; color: #818181; margin: 0; line-height: 1.6; text-align: center;">
             <strong>%%Member_Busname%%</strong><br/>
             %%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%
           </p>

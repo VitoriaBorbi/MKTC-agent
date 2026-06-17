@@ -1,0 +1,53 @@
+═══════════════════════════════════════════════════
+BAR0001 "O Legado" — Versão WPP — ET Barsi
+Data: 09/06/2026
+═══════════════════════════════════════════════════
+
+────────────── COPY ──────────────
+
+👽 Todo mundo olhando pra cima procurando sinal de vida inteligente. Enquanto isso, tem um senhor de 86 anos aqui embaixo comprando as mesmas ações há 60 anos, ignorando o pânico das manchetes e vivendo de forma simples tendo *bilhões* em dividendos. Comportamento de outro planeta? Pode ser — mas foi exatamente esse código que fez de *Barsi* o maior investidor PF da bolsa brasileira.
+
+No *O Legado*, ele abre o manual completo ao lado do Grupo Primo. São 16 produtos — de R$36k por apenas *12x de R$416*. Oferta encerra dia 12/06.
+
+👉 [LINK_BU]
+
+────────────── LINKS POR BU ──────────────
+
+🔵 FINCLASS
+https://pc.oprimorico.com.br/bar0001/pre-inscricao-agf-e-grupoprimo/?pmp=LAN-LIN-WPP-API-BFIN-20260609-ORG-BAR0001-OLGD-ET_BARSI&utm_campaign=BAR0001&utm_source=WHATSAPPINDIV.API&utm_medium=BASEFINCLASS&utm_content=ORGANICO&utm_term=LAN-LIN-WPP-API-BFIN-20260609-ORG-BAR0001-OLGD-ET_BARSI
+
+🟠 THIAGO NIGRO
+https://pc.oprimorico.com.br/bar0001/pre-inscricao-agf-e-grupoprimo/?pmp=LAN-LIN-WPP-API-BNG-20260609-ORG-BAR0001-OLGD-ET_BARSI&utm_campaign=BAR0001&utm_source=WHATSAPPINDIV.API&utm_medium=BASETHIAGONIGRO&utm_content=ORGANICO&utm_term=LAN-LIN-WPP-API-BNG-20260609-ORG-BAR0001-OLGD-ET_BARSI
+
+🟢 BRUNO PERINI
+https://pc.oprimorico.com.br/bar0001/pre-inscricao-agf-e-grupoprimo/bp/?pmp=LAN-LIN-WPP-API-BBP-20260609-ORG-BAR0001-OLGD-ET_BARSI&utm_campaign=BAR0001&utm_source=WHATSAPPINDIV.API&utm_medium=BASEBRUNOPERINI&utm_content=ORGANICO&utm_term=LAN-LIN-WPP-API-BBP-20260609-ORG-BAR0001-OLGD-ET_BARSI
+
+🔴 HUB
+https://pc.oprimorico.com.br/bar0001/pre-inscricao-agf-e-grupoprimo/?pmp=LAN-LIN-WPP-API-BMBA-20260609-ORG-BAR0001-OLGD-ET_BARSI&utm_campaign=BAR0001&utm_source=WHATSAPPINDIV.API&utm_medium=BASEMBA&utm_content=ORGANICO&utm_term=LAN-LIN-WPP-API-BMBA-20260609-ORG-BAR0001-OLGD-ET_BARSI
+
+────────────── IMAGEM HEADER ──────────────
+
+v3 — USAR ESTA (Barsi + espaço, só headline):
+URL pública:   https://image.m.grupo-primo.com/lib/fe2611717d640479731d78/m/1/d470aac1-762c-4674-ab2a-1b0804572f81.png
+Dimensões:     800 × 418 px (ratio 1.91:1 — padrão WPP header)
+
+v2 — descartada:
+Asset ID (CB): 40745
+URL pública:   https://image.m.grupo-primo.com/lib/fe2611717d640479731d78/m/1/31fadd24-7370-4e50-8ec9-a7f24936b399.png
+
+v1 — descartada (sem foto Barsi):
+Asset ID (CB): 40744
+URL pública:   https://image.m.grupo-primo.com/lib/fe2611717d640479731d78/m/1/330478a7-f81c-41c6-a690-4920e2fa1418.png
+
+────────────── NOTAS ──────────────
+- Substituir [LINK_BU] pelo link encurtado do short domain de cada BU:
+    Finclass → finc.ly/...
+    TN       → r.oprimorico.com.br/...
+    BP       → r.vocemaisrico.com/...
+    HUB      → r.clique.ly/...
+- *asteriscos* = negrito no WhatsApp
+- Contagem da copy (sem link): ~490 chars
+- NÃO criar novo template Meta sem aprovação prévia —
+  verificar se template ET_BARSI ou similar já está aprovado
+  ou encaixar o texto em template genérico já aprovado (ex: bt0001_vendas_abertura)
+═══════════════════════════════════════════════════
